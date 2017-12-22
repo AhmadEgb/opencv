@@ -182,8 +182,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
     endforeach()
   elseif(NOT ((IOS OR ANDROID) AND NOT BUILD_SHARED_LIBS))
     # Remove unreferenced functions: function level linking
-    add_extra_compiler_option(-ffunction-sections)
-    add_extra_compiler_option(-fdata-sections)
+    if(NOT OPENCV_SKIP_FUNCTION_SECTIONS)
+        add_extra_compiler_option(-ffunction-sections)
+        add_extra_compiler_option(-fdata-sections)
+    endif()
     if(NOT APPLE AND NOT OPENCV_SKIP_GC_SECTIONS)
       set(OPENCV_EXTRA_EXE_LINKER_FLAGS "${OPENCV_EXTRA_EXE_LINKER_FLAGS} -Wl,--gc-sections")
     endif()
@@ -345,4 +347,12 @@ endif()
 
 if(ENABLE_BUILD_HARDENING)
   include(${CMAKE_CURRENT_LIST_DIR}/OpenCVCompilerDefenses.cmake)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX AND ENABLE_SIZE_OPTIMIZATION)
+  foreach(flags
+          CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_RELEASE CMAKE_CXX_FLAGS_DEBUG
+          CMAKE_C_FLAGS CMAKE_C_FLAGS_RELEASE CMAKE_C_FLAGS_DEBUG)
+    string(REGEX REPLACE "-O[0-3]?" "-Os" ${flags} "${${flags}}")
+  endforeach()
 endif()
