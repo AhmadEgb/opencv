@@ -165,6 +165,8 @@ if(NOT OPENCV_CUSTOM_PACKAGE_INFO)
   set(CPACK_DEBIAN_COMPONENT_TESTS_NAME "lib${CMAKE_PROJECT_NAME}-tests")
 endif(NOT OPENCV_CUSTOM_PACKAGE_INFO)
 
+set(CPACK_SOURCE_IGNORE_FILES "\\\\.git/" "\\\\.cache/" "\\\\.github/" "\\\\.gitattributes" "\\\\.gitignore" "\\\\.tgitconfig")
+
 include(CPack)
 
 ENDif(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
