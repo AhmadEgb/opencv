@@ -44,25 +44,24 @@
 
 #ifdef HAVE_JASPER
 
-#include "grfmt_jpeg2000.hpp"
-#include "opencv2/imgproc.hpp"
+#    include "grfmt_jpeg2000.hpp"
+#    include "opencv2/imgproc.hpp"
 
-#ifdef _WIN32
-#define JAS_WIN_MSVC_BUILD 1
-#ifdef __GNUC__
-#define HAVE_STDINT_H 1
-#endif
-#endif
+#    ifdef _WIN32
+#        define JAS_WIN_MSVC_BUILD 1
+#        ifdef __GNUC__
+#            define HAVE_STDINT_H 1
+#        endif
+#    endif
 
-#undef VERSION
+#    undef VERSION
 
-#include <jasper/jasper.h>
+#    include <jasper/jasper.h>
 // FIXME bad hack
-#undef uchar
-#undef ulong
+#    undef uchar
+#    undef ulong
 
-namespace cv
-{
+namespace cv {
 
 struct JasperInitializer
 {
@@ -77,65 +76,61 @@ static JasperInitializer initialize_jasper;
 
 Jpeg2KDecoder::Jpeg2KDecoder()
 {
-    static const unsigned char signature_[12] = { 0, 0, 0, 0x0c, 'j', 'P', ' ', ' ', 13, 10, 0x87, 10};
+    static const unsigned char signature_[12] = {0, 0, 0, 0x0c, 'j', 'P', ' ', ' ', 13, 10, 0x87, 10};
     m_signature = String((const char*)signature_, (const char*)signature_ + sizeof(signature_));
     m_stream = 0;
     m_image = 0;
 }
 
 
-Jpeg2KDecoder::~Jpeg2KDecoder()
-{
-}
+Jpeg2KDecoder::~Jpeg2KDecoder() {}
 
-ImageDecoder Jpeg2KDecoder::newDecoder() const
-{
-    return makePtr<Jpeg2KDecoder>();
-}
+ImageDecoder Jpeg2KDecoder::newDecoder() const { return makePtr<Jpeg2KDecoder>(); }
 
-void  Jpeg2KDecoder::close()
+void Jpeg2KDecoder::close()
 {
-    if( m_stream )
+    if (m_stream)
     {
-        jas_stream_close( (jas_stream_t*)m_stream );
+        jas_stream_close((jas_stream_t*)m_stream);
         m_stream = 0;
     }
 
-    if( m_image )
+    if (m_image)
     {
-        jas_image_destroy( (jas_image_t*)m_image );
+        jas_image_destroy((jas_image_t*)m_image);
         m_image = 0;
     }
 }
 
 
-bool  Jpeg2KDecoder::readHeader()
+bool Jpeg2KDecoder::readHeader()
 {
     bool result = false;
 
     close();
-    jas_stream_t* stream = jas_stream_fopen( m_filename.c_str(), "rb" );
+    jas_stream_t* stream = jas_stream_fopen(m_filename.c_str(), "rb");
     m_stream = stream;
 
-    if( stream )
+    if (stream)
     {
-        jas_image_t* image = jas_image_decode( stream, -1, 0 );
+        jas_image_t* image = jas_image_decode(stream, -1, 0);
         m_image = image;
-        if( image ) {
+        if (image)
+        {
             CV_Assert(0 == (jas_image_tlx(image)) && "not supported");
             CV_Assert(0 == (jas_image_tly(image)) && "not supported");
-            m_width = jas_image_width( image );
-            m_height = jas_image_height( image );
+            m_width = jas_image_width(image);
+            m_height = jas_image_height(image);
 
             int cntcmpts = 0; // count the known components
-            int numcmpts = jas_image_numcmpts( image );
+            int numcmpts = jas_image_numcmpts(image);
             int depth = 0;
-            for( int i = 0; i < numcmpts; i++ )
+            for (int i = 0; i < numcmpts; i++)
             {
-                int depth_i = jas_image_cmptprec( image, i );
+                int depth_i = jas_image_cmptprec(image, i);
                 CV_Assert(depth == 0 || depth == depth_i); // component data type mismatch
                 depth = MAX(depth, depth_i);
-                if( jas_image_cmpttype( image, i ) > 2 )
+                if (jas_image_cmpttype(image, i) > 2)
                     continue;
                 int sgnd = jas_image_cmptsgnd(image, i);
                 int xstart = jas_image_cmpttlx(image, i);
@@ -154,7 +149,7 @@ bool  Jpeg2KDecoder::readHeader()
                 cntcmpts++;
             }
 
-            if( cntcmpts )
+            if (cntcmpts)
             {
                 CV_Assert(depth == 8 || depth == 16);
                 CV_Assert(cntcmpts == 1 || cntcmpts == 3);
@@ -164,18 +159,15 @@ bool  Jpeg2KDecoder::readHeader()
         }
     }
 
-    if( !result )
+    if (!result)
         close();
 
     return result;
 }
 
-static void Jpeg2KDecoder_close(Jpeg2KDecoder* ptr)
-{
-    ptr->close();
-}
+static void Jpeg2KDecoder_close(Jpeg2KDecoder* ptr) { ptr->close(); }
 
-bool  Jpeg2KDecoder::readData( Mat& img )
+bool Jpeg2KDecoder::readData(Mat& img)
 {
     Ptr<Jpeg2KDecoder> close_this(this, Jpeg2KDecoder_close);
     bool result = false;
@@ -185,7 +177,7 @@ bool  Jpeg2KDecoder::readData( Mat& img )
     jas_stream_t* stream = (jas_stream_t*)m_stream;
     jas_image_t* image = (jas_image_t*)m_image;
 
-#ifndef _WIN32
+#    ifndef _WIN32
     // At least on some Linux instances the
     // system libjasper segfaults when
     // converting color to grey.
@@ -198,33 +190,33 @@ bool  Jpeg2KDecoder::readData( Mat& img )
         data = clr.ptr();
         step = (int)clr.step;
     }
-#endif
+#    endif
 
-    if( stream && image )
+    if (stream && image)
     {
         bool convert;
         int colorspace;
-        if( color )
+        if (color)
         {
-            convert = (jas_image_clrspc( image ) != JAS_CLRSPC_SRGB);
+            convert = (jas_image_clrspc(image) != JAS_CLRSPC_SRGB);
             colorspace = JAS_CLRSPC_SRGB;
         }
         else
         {
-            convert = (jas_clrspc_fam( jas_image_clrspc( image ) ) != JAS_CLRSPC_FAM_GRAY);
+            convert = (jas_clrspc_fam(jas_image_clrspc(image)) != JAS_CLRSPC_FAM_GRAY);
             colorspace = JAS_CLRSPC_SGRAY; // TODO GENGRAY or SGRAY? (GENGRAY fails on Win.)
         }
 
         // convert to the desired colorspace
-        if( convert )
+        if (convert)
         {
-            jas_cmprof_t *clrprof = jas_cmprof_createfromclrspc( colorspace );
-            if( clrprof )
+            jas_cmprof_t* clrprof = jas_cmprof_createfromclrspc(colorspace);
+            if (clrprof)
             {
-                jas_image_t *_img = jas_image_chclrspc( image, clrprof, JAS_CMXFORM_INTENT_RELCLR );
-                if( _img )
+                jas_image_t* _img = jas_image_chclrspc(image, clrprof, JAS_CMXFORM_INTENT_RELCLR);
+                if (_img)
                 {
-                    jas_image_destroy( image );
+                    jas_image_destroy(image);
                     m_image = image = _img;
                     result = true;
                 }
@@ -233,7 +225,7 @@ bool  Jpeg2KDecoder::readData( Mat& img )
                     jas_cmprof_destroy(clrprof);
                     CV_Error(Error::StsError, "JPEG 2000 LOADER ERROR: cannot convert colorspace");
                 }
-                jas_cmprof_destroy( clrprof );
+                jas_cmprof_destroy(clrprof);
             }
             else
             {
@@ -243,55 +235,58 @@ bool  Jpeg2KDecoder::readData( Mat& img )
         else
             result = true;
 
-        if( result )
+        if (result)
         {
             int ncmpts;
             int cmptlut[3];
-            if( color )
+            if (color)
             {
-                cmptlut[0] = jas_image_getcmptbytype( image, JAS_IMAGE_CT_RGB_B );
-                cmptlut[1] = jas_image_getcmptbytype( image, JAS_IMAGE_CT_RGB_G );
-                cmptlut[2] = jas_image_getcmptbytype( image, JAS_IMAGE_CT_RGB_R );
-                if( cmptlut[0] < 0 || cmptlut[1] < 0 || cmptlut[2] < 0 )
+                cmptlut[0] = jas_image_getcmptbytype(image, JAS_IMAGE_CT_RGB_B);
+                cmptlut[1] = jas_image_getcmptbytype(image, JAS_IMAGE_CT_RGB_G);
+                cmptlut[2] = jas_image_getcmptbytype(image, JAS_IMAGE_CT_RGB_R);
+                if (cmptlut[0] < 0 || cmptlut[1] < 0 || cmptlut[2] < 0)
                     result = false;
                 ncmpts = 3;
             }
             else
             {
-                cmptlut[0] = jas_image_getcmptbytype( image, JAS_IMAGE_CT_GRAY_Y );
-                if( cmptlut[0] < 0 )
+                cmptlut[0] = jas_image_getcmptbytype(image, JAS_IMAGE_CT_GRAY_Y);
+                if (cmptlut[0] < 0)
                     result = false;
                 ncmpts = 1;
             }
 
-            if( result )
+            if (result)
             {
-                for( int i = 0; i < ncmpts; i++ )
+                for (int i = 0; i < ncmpts; i++)
                 {
-                    int maxval = 1 << jas_image_cmptprec( image, cmptlut[i] );
-                    int offset =  jas_image_cmptsgnd( image, cmptlut[i] ) ? maxval / 2 : 0;
+                    int maxval = 1 << jas_image_cmptprec(image, cmptlut[i]);
+                    int offset = jas_image_cmptsgnd(image, cmptlut[i]) ? maxval / 2 : 0;
 
-                    int yend = jas_image_cmptbry( image, cmptlut[i] );
-                    int ystep = jas_image_cmptvstep( image, cmptlut[i] );
-                    int xend = jas_image_cmptbrx( image, cmptlut[i] );
-                    int xstep = jas_image_cmpthstep( image, cmptlut[i] );
+                    int yend = jas_image_cmptbry(image, cmptlut[i]);
+                    int ystep = jas_image_cmptvstep(image, cmptlut[i]);
+                    int xend = jas_image_cmptbrx(image, cmptlut[i]);
+                    int xstep = jas_image_cmpthstep(image, cmptlut[i]);
 
-                    jas_matrix_t *buffer = jas_matrix_create( yend / ystep, xend / xstep );
-                    if( buffer )
+                    jas_matrix_t* buffer = jas_matrix_create(yend / ystep, xend / xstep);
+                    if (buffer)
                     {
-                        if( !jas_image_readcmpt( image, cmptlut[i], 0, 0, xend / xstep, yend / ystep, buffer ))
+                        if (!jas_image_readcmpt(image, cmptlut[i], 0, 0, xend / xstep, yend / ystep, buffer))
                         {
-                            if( img.depth() == CV_8U )
-                                result = readComponent8u( data + i, buffer, validateToInt(step), cmptlut[i], maxval, offset, ncmpts );
+                            if (img.depth() == CV_8U)
+                                result = readComponent8u(data + i, buffer, validateToInt(step), cmptlut[i], maxval,
+                                                         offset, ncmpts);
                             else
-                                result = readComponent16u( ((unsigned short *)data) + i, buffer, validateToInt(step / 2), cmptlut[i], maxval, offset, ncmpts );
-                            if( !result )
+                                result = readComponent16u(((unsigned short*)data) + i, buffer,
+                                                          validateToInt(step / 2), cmptlut[i], maxval, offset,
+                                                          ncmpts);
+                            if (!result)
                             {
-                                jas_matrix_destroy( buffer );
+                                jas_matrix_destroy(buffer);
                                 CV_Error(Error::StsError, "JPEG2000 LOADER ERROR: failed to read component");
                             }
                         }
-                        jas_matrix_destroy( buffer );
+                        jas_matrix_destroy(buffer);
                     }
                 }
             }
@@ -304,139 +299,137 @@ bool  Jpeg2KDecoder::readData( Mat& img )
 
     CV_Assert(result == true);
 
-#ifndef _WIN32
+#    ifndef _WIN32
     if (!clr.empty())
     {
         cv::cvtColor(clr, img, COLOR_BGR2GRAY);
     }
-#endif
+#    endif
 
     return result;
 }
 
 
-bool  Jpeg2KDecoder::readComponent8u( uchar *data, void *_buffer,
-                                      int step, int cmpt,
-                                      int maxval, int offset, int ncmpts )
+bool Jpeg2KDecoder::readComponent8u(uchar* data, void* _buffer, int step, int cmpt, int maxval, int offset,
+                                    int ncmpts)
 {
     jas_matrix_t* buffer = (jas_matrix_t*)_buffer;
     jas_image_t* image = (jas_image_t*)m_image;
-    int xstart = jas_image_cmpttlx( image, cmpt );
-    int xend = jas_image_cmptbrx( image, cmpt );
-    int xstep = jas_image_cmpthstep( image, cmpt );
-    int xoffset = jas_image_tlx( image );
-    int ystart = jas_image_cmpttly( image, cmpt );
-    int yend = jas_image_cmptbry( image, cmpt );
-    int ystep = jas_image_cmptvstep( image, cmpt );
-    int yoffset = jas_image_tly( image );
+    int xstart = jas_image_cmpttlx(image, cmpt);
+    int xend = jas_image_cmptbrx(image, cmpt);
+    int xstep = jas_image_cmpthstep(image, cmpt);
+    int xoffset = jas_image_tlx(image);
+    int ystart = jas_image_cmpttly(image, cmpt);
+    int yend = jas_image_cmptbry(image, cmpt);
+    int ystep = jas_image_cmptvstep(image, cmpt);
+    int yoffset = jas_image_tly(image);
     int x, y, x1, y1, j;
-    int rshift = cvRound(std::log(maxval/256.)/std::log(2.));
+    int rshift = cvRound(std::log(maxval / 256.) / std::log(2.));
     int lshift = MAX(0, -rshift);
     rshift = MAX(0, rshift);
     int delta = (rshift > 0 ? 1 << (rshift - 1) : 0) + offset;
 
-    for( y = 0; y < yend - ystart; )
+    for (y = 0; y < yend - ystart;)
     {
-        jas_seqent_t* pix_row = &jas_matrix_get( buffer, y / ystep, 0 );
+        jas_seqent_t* pix_row = &jas_matrix_get(buffer, y / ystep, 0);
         uchar* dst = data + (y - yoffset) * step - xoffset;
 
-        if( xstep == 1 )
+        if (xstep == 1)
         {
-            if( maxval == 256 && offset == 0 )
-                for( x = 0; x < xend - xstart; x++ )
+            if (maxval == 256 && offset == 0)
+                for (x = 0; x < xend - xstart; x++)
                 {
                     int pix = pix_row[x];
-                    dst[x*ncmpts] = cv::saturate_cast<uchar>(pix);
+                    dst[x * ncmpts] = cv::saturate_cast<uchar>(pix);
                 }
             else
-                for( x = 0; x < xend - xstart; x++ )
+                for (x = 0; x < xend - xstart; x++)
                 {
                     int pix = ((pix_row[x] + delta) >> rshift) << lshift;
-                    dst[x*ncmpts] = cv::saturate_cast<uchar>(pix);
+                    dst[x * ncmpts] = cv::saturate_cast<uchar>(pix);
                 }
         }
-        else if( xstep == 2 && offset == 0 )
-            for( x = 0, j = 0; x < xend - xstart; x += 2, j++ )
+        else if (xstep == 2 && offset == 0)
+            for (x = 0, j = 0; x < xend - xstart; x += 2, j++)
             {
                 int pix = ((pix_row[j] + delta) >> rshift) << lshift;
-                dst[x*ncmpts] = dst[(x+1)*ncmpts] = cv::saturate_cast<uchar>(pix);
+                dst[x * ncmpts] = dst[(x + 1) * ncmpts] = cv::saturate_cast<uchar>(pix);
             }
         else
-            for( x = 0, j = 0; x < xend - xstart; j++ )
+            for (x = 0, j = 0; x < xend - xstart; j++)
             {
                 int pix = ((pix_row[j] + delta) >> rshift) << lshift;
                 pix = cv::saturate_cast<uchar>(pix);
-                for( x1 = x + xstep; x < x1; x++ )
-                    dst[x*ncmpts] = (uchar)pix;
+                for (x1 = x + xstep; x < x1; x++)
+                    dst[x * ncmpts] = (uchar)pix;
             }
         y1 = y + ystep;
-        for( ++y; y < y1; y++, dst += step )
-            for( x = 0; x < xend - xstart; x++ )
-                dst[x*ncmpts + step] = dst[x*ncmpts];
+        for (++y; y < y1; y++, dst += step)
+            for (x = 0; x < xend - xstart; x++)
+                dst[x * ncmpts + step] = dst[x * ncmpts];
     }
 
     return true;
 }
 
 
-bool  Jpeg2KDecoder::readComponent16u( unsigned short *data, void *_buffer,
-                                       int step, int cmpt,
-                                       int maxval, int offset, int ncmpts )
+bool Jpeg2KDecoder::readComponent16u(unsigned short* data, void* _buffer, int step, int cmpt, int maxval,
+                                     int offset, int ncmpts)
 {
     jas_matrix_t* buffer = (jas_matrix_t*)_buffer;
     jas_image_t* image = (jas_image_t*)m_image;
-    int xstart = jas_image_cmpttlx( image, cmpt );
-    int xend = jas_image_cmptbrx( image, cmpt );
-    int xstep = jas_image_cmpthstep( image, cmpt );
-    int xoffset = jas_image_tlx( image );
-    int ystart = jas_image_cmpttly( image, cmpt );
-    int yend = jas_image_cmptbry( image, cmpt );
-    int ystep = jas_image_cmptvstep( image, cmpt );
-    int yoffset = jas_image_tly( image );
+    int xstart = jas_image_cmpttlx(image, cmpt);
+    int xend = jas_image_cmptbrx(image, cmpt);
+    int xstep = jas_image_cmpthstep(image, cmpt);
+    int xoffset = jas_image_tlx(image);
+    int ystart = jas_image_cmpttly(image, cmpt);
+    int yend = jas_image_cmptbry(image, cmpt);
+    int ystep = jas_image_cmptvstep(image, cmpt);
+    int yoffset = jas_image_tly(image);
     int x, y, x1, y1, j;
-    int rshift = cvRound(std::log(maxval/65536.)/std::log(2.));
+    int rshift = cvRound(std::log(maxval / 65536.) / std::log(2.));
     int lshift = MAX(0, -rshift);
     rshift = MAX(0, rshift);
     int delta = (rshift > 0 ? 1 << (rshift - 1) : 0) + offset;
 
-    for( y = 0; y < yend - ystart; )
+    for (y = 0; y < yend - ystart;)
     {
-        jas_seqent_t* pix_row = &jas_matrix_get( buffer, y / ystep, 0 );
+        jas_seqent_t* pix_row = &jas_matrix_get(buffer, y / ystep, 0);
         ushort* dst = data + (y - yoffset) * step - xoffset;
 
-        if( xstep == 1 )
+        if (xstep == 1)
         {
-            if( maxval == 65536 && offset == 0 )
-                for( x = 0; x < xend - xstart; x++ )
+            if (maxval == 65536 && offset == 0)
+                for (x = 0; x < xend - xstart; x++)
                 {
                     int pix = pix_row[x];
-                    dst[x*ncmpts] = cv::saturate_cast<ushort>(pix);
+                    dst[x * ncmpts] = cv::saturate_cast<ushort>(pix);
                 }
             else
-                for( x = 0; x < xend - xstart; x++ )
+                for (x = 0; x < xend - xstart; x++)
                 {
                     int pix = ((pix_row[x] + delta) >> rshift) << lshift;
-                    dst[x*ncmpts] = cv::saturate_cast<ushort>(pix);
+                    dst[x * ncmpts] = cv::saturate_cast<ushort>(pix);
                 }
         }
-        else if( xstep == 2 && offset == 0 )
-            for( x = 0, j = 0; x < xend - xstart; x += 2, j++ )
+        else if (xstep == 2 && offset == 0)
+            for (x = 0, j = 0; x < xend - xstart; x += 2, j++)
             {
                 int pix = ((pix_row[j] + delta) >> rshift) << lshift;
-                dst[x*ncmpts] = dst[(x+1)*ncmpts] = cv::saturate_cast<ushort>(pix);
+                dst[x * ncmpts] = dst[(x + 1) * ncmpts] = cv::saturate_cast<ushort>(pix);
             }
         else
-            for( x = 0, j = 0; x < xend - xstart; j++ )
+            for (x = 0, j = 0; x < xend - xstart; j++)
             {
                 int pix = ((pix_row[j] + delta) >> rshift) << lshift;
                 pix = cv::saturate_cast<ushort>(pix);
-                for( x1 = x + xstep; x < x1; x++ )
-                    dst[x*ncmpts] = (ushort)pix;
+                for (x1 = x + xstep; x < x1; x++)
+                    dst[x * ncmpts] = (ushort)pix;
             }
         y1 = y + ystep;
-        for( ++y; y < y1; y++, dst += step )
-            for( x = 0; x < xend - xstart; x++ )
-                dst[x*ncmpts + step] = dst[x*ncmpts];
+        for (++y; y < y1; y++, dst += step)
+            for (x = 0; x < xend - xstart; x++)
+                dst[x * ncmpts + step] = dst[x * ncmpts];
     }
 
     return true;
@@ -446,38 +439,27 @@ bool  Jpeg2KDecoder::readComponent16u( unsigned short *data, void *_buffer,
 /////////////////////// Jpeg2KEncoder ///////////////////
 
 
-Jpeg2KEncoder::Jpeg2KEncoder()
-{
-    m_description = "JPEG-2000 files (*.jp2)";
-}
+Jpeg2KEncoder::Jpeg2KEncoder() { m_description = "JPEG-2000 files (*.jp2)"; }
 
 
-Jpeg2KEncoder::~Jpeg2KEncoder()
-{
-}
+Jpeg2KEncoder::~Jpeg2KEncoder() {}
 
-ImageEncoder Jpeg2KEncoder::newEncoder() const
-{
-    return makePtr<Jpeg2KEncoder>();
-}
+ImageEncoder Jpeg2KEncoder::newEncoder() const { return makePtr<Jpeg2KEncoder>(); }
 
-bool  Jpeg2KEncoder::isFormatSupported( int depth ) const
-{
-    return depth == CV_8U || depth == CV_16U;
-}
+bool Jpeg2KEncoder::isFormatSupported(int depth) const { return depth == CV_8U || depth == CV_16U; }
 
 
-bool  Jpeg2KEncoder::write( const Mat& _img, const std::vector<int>& )
+bool Jpeg2KEncoder::write(const Mat& _img, const std::vector<int>&)
 {
     int width = _img.cols, height = _img.rows;
     int depth = _img.depth(), channels = _img.channels();
     depth = depth == CV_8U ? 8 : 16;
 
-    if( channels > 3 || channels < 1 )
+    if (channels > 3 || channels < 1)
         return false;
 
     jas_image_cmptparm_t component_info[3];
-    for( int i = 0; i < channels; i++ )
+    for (int i = 0; i < channels; i++)
     {
         component_info[i].tlx = 0;
         component_info[i].tly = 0;
@@ -488,90 +470,90 @@ bool  Jpeg2KEncoder::write( const Mat& _img, const std::vector<int>& )
         component_info[i].prec = depth;
         component_info[i].sgnd = 0;
     }
-    jas_image_t *img = jas_image_create( channels, component_info, (channels == 1) ? JAS_CLRSPC_SGRAY : JAS_CLRSPC_SRGB );
-    if( !img )
+    jas_image_t* img = jas_image_create(channels, component_info,
+                                        (channels == 1) ? JAS_CLRSPC_SGRAY : JAS_CLRSPC_SRGB);
+    if (!img)
         return false;
 
-    if(channels == 1)
-        jas_image_setcmpttype( img, 0, JAS_IMAGE_CT_GRAY_Y );
+    if (channels == 1)
+        jas_image_setcmpttype(img, 0, JAS_IMAGE_CT_GRAY_Y);
     else
     {
-        jas_image_setcmpttype( img, 0, JAS_IMAGE_CT_RGB_B );
-        jas_image_setcmpttype( img, 1, JAS_IMAGE_CT_RGB_G );
-        jas_image_setcmpttype( img, 2, JAS_IMAGE_CT_RGB_R );
+        jas_image_setcmpttype(img, 0, JAS_IMAGE_CT_RGB_B);
+        jas_image_setcmpttype(img, 1, JAS_IMAGE_CT_RGB_G);
+        jas_image_setcmpttype(img, 2, JAS_IMAGE_CT_RGB_R);
     }
 
     bool result;
-    if( depth == 8 )
-        result = writeComponent8u( img, _img );
+    if (depth == 8)
+        result = writeComponent8u(img, _img);
     else
-        result = writeComponent16u( img, _img );
-    if( result )
+        result = writeComponent16u(img, _img);
+    if (result)
     {
-        jas_stream_t *stream = jas_stream_fopen( m_filename.c_str(), "wb" );
-        if( stream )
+        jas_stream_t* stream = jas_stream_fopen(m_filename.c_str(), "wb");
+        if (stream)
         {
-            result = !jas_image_encode( img, stream, jas_image_strtofmt( (char*)"jp2" ), (char*)"" );
+            result = !jas_image_encode(img, stream, jas_image_strtofmt((char*)"jp2"), (char*)"");
 
-            jas_stream_close( stream );
+            jas_stream_close(stream);
         }
-
     }
-    jas_image_destroy( img );
+    jas_image_destroy(img);
 
     return result;
 }
 
 
-bool  Jpeg2KEncoder::writeComponent8u( void *__img, const Mat& _img )
+bool Jpeg2KEncoder::writeComponent8u(void* __img, const Mat& _img)
 {
     jas_image_t* img = (jas_image_t*)__img;
     int w = _img.cols, h = _img.rows, ncmpts = _img.channels();
-    jas_matrix_t *row = jas_matrix_create( 1, w );
-    if(!row)
+    jas_matrix_t* row = jas_matrix_create(1, w);
+    if (!row)
         return false;
 
-    for( int y = 0; y < h; y++ )
+    for (int y = 0; y < h; y++)
     {
         const uchar* data = _img.ptr(y);
-        for( int i = 0; i < ncmpts; i++ )
+        for (int i = 0; i < ncmpts; i++)
         {
-            for( int x = 0; x < w; x++)
-                jas_matrix_setv( row, x, data[x * ncmpts + i] );
-            jas_image_writecmpt( img, i, 0, y, w, 1, row );
+            for (int x = 0; x < w; x++)
+                jas_matrix_setv(row, x, data[x * ncmpts + i]);
+            jas_image_writecmpt(img, i, 0, y, w, 1, row);
         }
     }
 
-    jas_matrix_destroy( row );
+    jas_matrix_destroy(row);
     return true;
 }
 
 
-bool  Jpeg2KEncoder::writeComponent16u( void *__img, const Mat& _img )
+bool Jpeg2KEncoder::writeComponent16u(void* __img, const Mat& _img)
 {
     jas_image_t* img = (jas_image_t*)__img;
     int w = _img.cols, h = _img.rows, ncmpts = _img.channels();
-    jas_matrix_t *row = jas_matrix_create( 1, w );
-    if(!row)
+    jas_matrix_t* row = jas_matrix_create(1, w);
+    if (!row)
         return false;
 
-    for( int y = 0; y < h; y++ )
+    for (int y = 0; y < h; y++)
     {
         const ushort* data = _img.ptr<ushort>(y);
-        for( int i = 0; i < ncmpts; i++ )
+        for (int i = 0; i < ncmpts; i++)
         {
-            for( int x = 0; x < w; x++)
-                jas_matrix_setv( row, x, data[x * ncmpts + i] );
-            jas_image_writecmpt( img, i, 0, y, w, 1, row );
+            for (int x = 0; x < w; x++)
+                jas_matrix_setv(row, x, data[x * ncmpts + i]);
+            jas_image_writecmpt(img, i, 0, y, w, 1, row);
         }
     }
 
-    jas_matrix_destroy( row );
+    jas_matrix_destroy(row);
 
     return true;
 }
 
-}
+} // namespace cv
 
 #endif
 

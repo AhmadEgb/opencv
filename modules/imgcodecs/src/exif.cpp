@@ -45,33 +45,29 @@
 
 namespace {
 
-    class ExifParsingError {
-    };
-}
-
-
-namespace cv
+class ExifParsingError
 {
+};
+} // namespace
 
-ExifEntry_t::ExifEntry_t() :
-    field_float(0), field_double(0), field_u32(0), field_s32(0),
-    tag(INVALID_TAG), field_u16(0), field_s16(0), field_u8(0), field_s8(0)
+
+namespace cv {
+
+ExifEntry_t::ExifEntry_t()
+    : field_float(0), field_double(0), field_u32(0), field_s32(0), tag(INVALID_TAG), field_u16(0), field_s16(0),
+      field_u8(0), field_s8(0)
 {
 }
 
 /**
  * @brief ExifReader constructor
  */
-ExifReader::ExifReader(std::istream& stream) : m_stream(stream), m_format(NONE)
-{
-}
+ExifReader::ExifReader(std::istream& stream) : m_stream(stream), m_format(NONE) {}
 
 /**
  * @brief ExifReader destructor
  */
-ExifReader::~ExifReader()
-{
-}
+ExifReader::~ExifReader() {}
 
 /**
  * @brief Parsing the file and prepare (internally) exif directory structure
@@ -80,14 +76,17 @@ ExifReader::~ExifReader()
  */
 bool ExifReader::parse()
 {
-    CV_TRY {
+    CV_TRY
+    {
         m_exif = getExif();
-        if( !m_exif.empty() )
+        if (!m_exif.empty())
         {
             return true;
         }
         return false;
-    } CV_CATCH (ExifParsingError, e) {
+    }
+    CV_CATCH(ExifParsingError, e)
+    {
         CV_UNUSED(e);
         return false;
     }
@@ -107,7 +106,7 @@ ExifEntry_t ExifReader::getTag(const ExifTagName tag)
     ExifEntry_t entry;
     std::map<int, ExifEntry_t>::iterator it = m_exif.find(tag);
 
-    if( it != m_exif.end() )
+    if (it != m_exif.end())
     {
         entry = it->second;
     }
@@ -121,70 +120,100 @@ ExifEntry_t ExifReader::getTag(const ExifTagName tag)
  *
  *  @return Map where key is tag number and value is ExifEntry_t structure
  */
-std::map<int, ExifEntry_t > ExifReader::getExif()
+std::map<int, ExifEntry_t> ExifReader::getExif()
 {
     const std::streamsize markerSize = 2;
     const std::streamsize offsetToTiffHeader = 6; //bytes from Exif size field to the first TIFF header
     unsigned char appMarker[markerSize];
-    m_exif.erase( m_exif.begin(), m_exif.end() );
+    m_exif.erase(m_exif.begin(), m_exif.end());
 
     std::streamsize count;
 
     bool exifFound = false, stopSearch = false;
-    while( ( !m_stream.eof() ) && !exifFound && !stopSearch )
+    while ((!m_stream.eof()) && !exifFound && !stopSearch)
     {
-        m_stream.read( reinterpret_cast<char*>(appMarker), markerSize );
+        m_stream.read(reinterpret_cast<char*>(appMarker), markerSize);
         count = m_stream.gcount();
-        if( count < markerSize )
+        if (count < markerSize)
         {
             break;
         }
         unsigned char marker = appMarker[1];
         size_t bytesToSkip;
         size_t exifSize;
-        switch( marker )
+        switch (marker)
         {
-            //For all the markers just skip bytes in file pointed by followed two bytes (field size)
-            case SOF0: case SOF2: case DHT: case DQT: case DRI: case SOS:
-            case RST0: case RST1: case RST2: case RST3: case RST4: case RST5: case RST6: case RST7:
-            case APP0: case APP2: case APP3: case APP4: case APP5: case APP6: case APP7: case APP8:
-            case APP9: case APP10: case APP11: case APP12: case APP13: case APP14: case APP15:
-            case COM:
-                bytesToSkip = getFieldSize();
-                if (bytesToSkip < markerSize) {
-                    CV_THROW (ExifParsingError());
-                }
-                m_stream.seekg( static_cast<long>( bytesToSkip - markerSize ), m_stream.cur );
-                if ( m_stream.fail() ) {
-                    CV_THROW (ExifParsingError());
-                }
-                break;
+        //For all the markers just skip bytes in file pointed by followed two bytes (field size)
+        case SOF0:
+        case SOF2:
+        case DHT:
+        case DQT:
+        case DRI:
+        case SOS:
+        case RST0:
+        case RST1:
+        case RST2:
+        case RST3:
+        case RST4:
+        case RST5:
+        case RST6:
+        case RST7:
+        case APP0:
+        case APP2:
+        case APP3:
+        case APP4:
+        case APP5:
+        case APP6:
+        case APP7:
+        case APP8:
+        case APP9:
+        case APP10:
+        case APP11:
+        case APP12:
+        case APP13:
+        case APP14:
+        case APP15:
+        case COM:
+            bytesToSkip = getFieldSize();
+            if (bytesToSkip < markerSize)
+            {
+                CV_THROW(ExifParsingError());
+            }
+            m_stream.seekg(static_cast<long>(bytesToSkip - markerSize), m_stream.cur);
+            if (m_stream.fail())
+            {
+                CV_THROW(ExifParsingError());
+            }
+            break;
 
-            //SOI and EOI don't have the size field after the marker
-            case SOI: case EOI:
-                break;
+        //SOI and EOI don't have the size field after the marker
+        case SOI:
+        case EOI:
+            break;
 
-            case APP1: //actual Exif Marker
-                exifSize = getFieldSize();
-                if (exifSize <= offsetToTiffHeader) {
-                    CV_THROW (ExifParsingError());
-                }
-                m_data.resize( exifSize - offsetToTiffHeader );
-                m_stream.seekg( static_cast<long>( offsetToTiffHeader ), m_stream.cur );
-                if ( m_stream.fail() ) {
-                    CV_THROW (ExifParsingError());
-                }
-                m_stream.read( reinterpret_cast<char*>(&m_data[0]), exifSize - offsetToTiffHeader );
-                exifFound = true;
-                break;
+        case APP1: //actual Exif Marker
+            exifSize = getFieldSize();
+            if (exifSize <= offsetToTiffHeader)
+            {
+                CV_THROW(ExifParsingError());
+            }
+            m_data.resize(exifSize - offsetToTiffHeader);
+            m_stream.seekg(static_cast<long>(offsetToTiffHeader), m_stream.cur);
+            if (m_stream.fail())
+            {
+                CV_THROW(ExifParsingError());
+            }
+            m_stream.read(reinterpret_cast<char*>(&m_data[0]), exifSize - offsetToTiffHeader);
+            exifFound = true;
+            break;
 
-            default: //No other markers are expected according to standard. May be a signal of error
-                stopSearch = true;
-                break;
+        default: //No other markers are expected according to standard. May be a signal of error
+            stopSearch = true;
+            break;
         }
     }
 
-    if( !exifFound )
+    if (!exifFound)
     {
         return m_exif;
     }
@@ -200,16 +229,16 @@ std::map<int, ExifEntry_t > ExifReader::getExif()
  *
  *  @return size of exif field in the file
  */
-size_t ExifReader::getFieldSize ()
+size_t ExifReader::getFieldSize()
 {
     unsigned char fieldSize[2];
-    m_stream.read( reinterpret_cast<char*>(fieldSize), 2 );
+    m_stream.read(reinterpret_cast<char*>(fieldSize), 2);
     std::streamsize count = m_stream.gcount();
     if (count < 2)
     {
         return 0;
     }
-    return ( fieldSize[0] << 8 ) + fieldSize[1];
+    return (fieldSize[0] << 8) + fieldSize[1];
 }
 
 /**
@@ -223,7 +252,7 @@ void ExifReader::parseExif()
 {
     m_format = getFormat();
 
-    if( !checkTagMark() )
+    if (!checkTagMark())
     {
         return;
     }
@@ -234,10 +263,10 @@ void ExifReader::parseExif()
 
     offset += 2; //go to start of tag fields
 
-    for( size_t entry = 0; entry < numEntry; entry++ )
+    for (size_t entry = 0; entry < numEntry; entry++)
     {
-        ExifEntry_t exifEntry = parseExifEntry( offset );
-        m_exif.insert( std::make_pair( exifEntry.tag, exifEntry ) );
+        ExifEntry_t exifEntry = parseExifEntry(offset);
+        m_exif.insert(std::make_pair(exifEntry.tag, exifEntry));
         offset += tiffFieldSize;
     }
 }
@@ -253,17 +282,17 @@ Endianess_t ExifReader::getFormat() const
     if (m_data.size() < 1)
         return NONE;
 
-    if( m_data.size() > 1 && m_data[0] != m_data[1] )
+    if (m_data.size() > 1 && m_data[0] != m_data[1])
     {
         return NONE;
     }
 
-    if( m_data[0] == 'I' )
+    if (m_data[0] == 'I')
     {
         return INTEL;
     }
 
-    if( m_data[0] == 'M' )
+    if (m_data[0] == 'M')
     {
         return MOTO;
     }
@@ -279,9 +308,9 @@ Endianess_t ExifReader::getFormat() const
  */
 bool ExifReader::checkTagMark() const
 {
-    uint16_t tagMark = getU16( 2 );
+    uint16_t tagMark = getU16(2);
 
-    if( tagMark != tagMarkRequired )
+    if (tagMark != tagMarkRequired)
     {
         return false;
     }
@@ -294,20 +323,14 @@ bool ExifReader::checkTagMark() const
  *
  * @return offset of IFD0 field
  */
-uint32_t ExifReader::getStartOffset() const
-{
-    return getU32( 4 );
-}
+uint32_t ExifReader::getStartOffset() const { return getU32(4); }
 
 /**
  * @brief Get the number of Directory Entries in Jpeg file
  *
  * @return The number of directory entries
  */
-size_t ExifReader::getNumDirEntry() const
-{
-    return getU16( offsetNumDir );
-}
+size_t ExifReader::getNumDirEntry() const { return getU16(offsetNumDir); }
 
 /**
  * @brief Parsing particular entry in exif directory
@@ -331,61 +354,61 @@ size_t ExifReader::getNumDirEntry() const
 ExifEntry_t ExifReader::parseExifEntry(const size_t offset)
 {
     ExifEntry_t entry;
-    uint16_t tagNum = getExifTag( offset );
+    uint16_t tagNum = getExifTag(offset);
     entry.tag = tagNum;
 
-    switch( tagNum )
+    switch (tagNum)
     {
-        case IMAGE_DESCRIPTION:
-            entry.field_str = getString( offset );
-            break;
-        case MAKE:
-            entry.field_str = getString( offset );
-            break;
-        case MODEL:
-            entry.field_str = getString( offset );
-            break;
-        case ORIENTATION:
-            entry.field_u16 = getOrientation( offset );
-            break;
-        case XRESOLUTION:
-            entry.field_u_rational = getResolution( offset );
-            break;
-        case YRESOLUTION:
-            entry.field_u_rational = getResolution( offset );
-            break;
-        case RESOLUTION_UNIT:
-            entry.field_u16 = getResolutionUnit( offset );
-            break;
-        case SOFTWARE:
-            entry.field_str = getString( offset );
-            break;
-        case DATE_TIME:
-            entry.field_str = getString( offset );
-            break;
-        case WHITE_POINT:
-            entry.field_u_rational = getWhitePoint( offset );
-            break;
-        case PRIMARY_CHROMATICIES:
-            entry.field_u_rational = getPrimaryChromaticies( offset );
-            break;
-        case Y_CB_CR_COEFFICIENTS:
-            entry.field_u_rational = getYCbCrCoeffs( offset );
-            break;
-        case Y_CB_CR_POSITIONING:
-            entry.field_u16 = getYCbCrPos( offset );
-            break;
-        case REFERENCE_BLACK_WHITE:
-            entry.field_u_rational = getRefBW( offset );
-            break;
-        case COPYRIGHT:
-            entry.field_str = getString( offset );
-            break;
-        case EXIF_OFFSET:
-            break;
-        default:
-            entry.tag = INVALID_TAG;
-            break;
+    case IMAGE_DESCRIPTION:
+        entry.field_str = getString(offset);
+        break;
+    case MAKE:
+        entry.field_str = getString(offset);
+        break;
+    case MODEL:
+        entry.field_str = getString(offset);
+        break;
+    case ORIENTATION:
+        entry.field_u16 = getOrientation(offset);
+        break;
+    case XRESOLUTION:
+        entry.field_u_rational = getResolution(offset);
+        break;
+    case YRESOLUTION:
+        entry.field_u_rational = getResolution(offset);
+        break;
+    case RESOLUTION_UNIT:
+        entry.field_u16 = getResolutionUnit(offset);
+        break;
+    case SOFTWARE:
+        entry.field_str = getString(offset);
+        break;
+    case DATE_TIME:
+        entry.field_str = getString(offset);
+        break;
+    case WHITE_POINT:
+        entry.field_u_rational = getWhitePoint(offset);
+        break;
+    case PRIMARY_CHROMATICIES:
+        entry.field_u_rational = getPrimaryChromaticies(offset);
+        break;
+    case Y_CB_CR_COEFFICIENTS:
+        entry.field_u_rational = getYCbCrCoeffs(offset);
+        break;
+    case Y_CB_CR_POSITIONING:
+        entry.field_u16 = getYCbCrPos(offset);
+        break;
+    case REFERENCE_BLACK_WHITE:
+        entry.field_u_rational = getRefBW(offset);
+        break;
+    case COPYRIGHT:
+        entry.field_str = getString(offset);
+        break;
+    case EXIF_OFFSET:
+        break;
+    default:
+        entry.tag = INVALID_TAG;
+        break;
     }
     return entry;
 }
@@ -396,10 +419,7 @@ ExifEntry_t ExifReader::parseExifEntry(const size_t offset)
  * @param [in] offset Offset to entry in bytes inside raw exif data
  * @return tag number
  */
-uint16_t ExifReader::getExifTag(const size_t offset) const
-{
-    return getU16( offset );
-}
+uint16_t ExifReader::getExifTag(const size_t offset) const { return getU16(offset); }
 
 /**
  * @brief Get string information from raw exif data
@@ -409,17 +429,18 @@ uint16_t ExifReader::getExifTag(const size_t offset) const
  */
 std::string ExifReader::getString(const size_t offset) const
 {
-    size_t size = getU32( offset + 4 );
+    size_t size = getU32(offset + 4);
     size_t dataOffset = 8; // position of data in the field
-    if( size > maxDataSize )
+    if (size > maxDataSize)
     {
-        dataOffset = getU32( offset + 8 );
+        dataOffset = getU32(offset + 8);
     }
-    if (dataOffset > m_data.size() || dataOffset + size > m_data.size()) {
-        CV_THROW (ExifParsingError());
+    if (dataOffset > m_data.size() || dataOffset + size > m_data.size())
+    {
+        CV_THROW(ExifParsingError());
     }
     std::vector<uint8_t>::const_iterator it = m_data.begin() + dataOffset;
-    std::string result( it, it + size ); //copy vector content into result
+    std::string result(it, it + size); //copy vector content into result
 
     return result;
 }
@@ -433,13 +454,13 @@ std::string ExifReader::getString(const size_t offset) const
 uint16_t ExifReader::getU16(const size_t offset) const
 {
     if (offset + 1 >= m_data.size())
-        CV_THROW (ExifParsingError());
+        CV_THROW(ExifParsingError());
 
-    if( m_format == INTEL )
+    if (m_format == INTEL)
     {
-        return m_data[offset] + ( m_data[offset + 1] << 8 );
+        return m_data[offset] + (m_data[offset + 1] << 8);
     }
-    return ( m_data[offset] << 8 ) + m_data[offset + 1];
+    return (m_data[offset] << 8) + m_data[offset + 1];
 }
 
 /**
@@ -451,20 +472,14 @@ uint16_t ExifReader::getU16(const size_t offset) const
 uint32_t ExifReader::getU32(const size_t offset) const
 {
     if (offset + 3 >= m_data.size())
-        CV_THROW (ExifParsingError());
+        CV_THROW(ExifParsingError());
 
-    if( m_format == INTEL )
+    if (m_format == INTEL)
     {
-        return m_data[offset] +
-                ( m_data[offset + 1] << 8 ) +
-                ( m_data[offset + 2] << 16 ) +
-                ( m_data[offset + 3] << 24 );
+        return m_data[offset] + (m_data[offset + 1] << 8) + (m_data[offset + 2] << 16) + (m_data[offset + 3] << 24);
     }
 
-    return ( m_data[offset] << 24 ) +
-            ( m_data[offset + 1] << 16 ) +
-            ( m_data[offset + 2] << 8 ) +
-            m_data[offset + 3];
+    return (m_data[offset] << 24) + (m_data[offset + 1] << 16) + (m_data[offset + 2] << 8) + m_data[offset + 3];
 }
 
 /**
@@ -478,11 +493,10 @@ uint32_t ExifReader::getU32(const size_t offset) const
  */
 u_rational_t ExifReader::getURational(const size_t offset) const
 {
-    uint32_t numerator = getU32( offset );
-    uint32_t denominator = getU32( offset + 4 );
+    uint32_t numerator = getU32(offset);
+    uint32_t denominator = getU32(offset + 4);
 
-    return std::make_pair( numerator, denominator );
-
+    return std::make_pair(numerator, denominator);
 }
 
 /**
@@ -491,10 +505,7 @@ u_rational_t ExifReader::getURational(const size_t offset) const
  * @param [in] offset Offset to entry in bytes inside raw exif data
  * @return orientation number
  */
-uint16_t ExifReader::getOrientation(const size_t offset) const
-{
-    return getU16( offset + 8 );
-}
+uint16_t ExifReader::getOrientation(const size_t offset) const { return getU16(offset + 8); }
 
 /**
  * @brief Get resolution information from raw exif data
@@ -505,8 +516,8 @@ uint16_t ExifReader::getOrientation(const size_t offset) const
 std::vector<u_rational_t> ExifReader::getResolution(const size_t offset) const
 {
     std::vector<u_rational_t> result;
-    uint32_t rationalOffset = getU32( offset + 8 );
-    result.push_back( getURational( rationalOffset ) );
+    uint32_t rationalOffset = getU32(offset + 8);
+    result.push_back(getURational(rationalOffset));
 
     return result;
 }
@@ -517,10 +528,7 @@ std::vector<u_rational_t> ExifReader::getResolution(const size_t offset) const
  * @param [in] offset Offset to entry in bytes inside raw exif data
  * @return resolution unit value
  */
-uint16_t ExifReader::getResolutionUnit(const size_t offset) const
-{
-    return getU16( offset + 8 );
-}
+uint16_t ExifReader::getResolutionUnit(const size_t offset) const { return getU16(offset + 8); }
 
 /**
  * @brief Get White Point information from raw exif data
@@ -534,9 +542,9 @@ uint16_t ExifReader::getResolutionUnit(const size_t offset) const
 std::vector<u_rational_t> ExifReader::getWhitePoint(const size_t offset) const
 {
     std::vector<u_rational_t> result;
-    uint32_t rationalOffset = getU32( offset + 8 );
-    result.push_back( getURational( rationalOffset ) );
-    result.push_back( getURational( rationalOffset + 8 ) );
+    uint32_t rationalOffset = getU32(offset + 8);
+    result.push_back(getURational(rationalOffset));
+    result.push_back(getURational(rationalOffset + 8));
 
     return result;
 }
@@ -551,10 +559,10 @@ std::vector<u_rational_t> ExifReader::getWhitePoint(const size_t offset) const
 std::vector<u_rational_t> ExifReader::getPrimaryChromaticies(const size_t offset) const
 {
     std::vector<u_rational_t> result;
-    uint32_t rationalOffset = getU32( offset + 8 );
-    for( size_t i = 0; i < primaryChromaticiesComponents; i++ )
+    uint32_t rationalOffset = getU32(offset + 8);
+    for (size_t i = 0; i < primaryChromaticiesComponents; i++)
     {
-        result.push_back( getURational( rationalOffset ) );
+        result.push_back(getURational(rationalOffset));
         rationalOffset += 8;
     }
     return result;
@@ -570,10 +578,10 @@ std::vector<u_rational_t> ExifReader::getPrimaryChromaticies(const size_t offset
 std::vector<u_rational_t> ExifReader::getYCbCrCoeffs(const size_t offset) const
 {
     std::vector<u_rational_t> result;
-    uint32_t rationalOffset = getU32( offset + 8 );
-    for( size_t i = 0; i < ycbcrCoeffs; i++ )
+    uint32_t rationalOffset = getU32(offset + 8);
+    for (size_t i = 0; i < ycbcrCoeffs; i++)
     {
-        result.push_back( getURational( rationalOffset ) );
+        result.push_back(getURational(rationalOffset));
         rationalOffset += 8;
     }
     return result;
@@ -586,10 +594,7 @@ std::vector<u_rational_t> ExifReader::getYCbCrCoeffs(const size_t offset) const
  * @return vector with YCbCr positioning value
  *
  */
-uint16_t ExifReader::getYCbCrPos(const size_t offset) const
-{
-    return getU16( offset + 8 );
-}
+uint16_t ExifReader::getYCbCrPos(const size_t offset) const { return getU16(offset + 8); }
 
 /**
  * @brief Get Reference Black&White point information from raw exif data
@@ -606,10 +611,10 @@ std::vector<u_rational_t> ExifReader::getRefBW(const size_t offset) const
 {
     const size_t rationalFieldSize = 8;
     std::vector<u_rational_t> result;
-    uint32_t rationalOffset = getU32( offset + rationalFieldSize );
-    for( size_t i = 0; i < refBWComponents; i++ )
+    uint32_t rationalOffset = getU32(offset + rationalFieldSize);
+    for (size_t i = 0; i < refBWComponents; i++)
     {
-        result.push_back( getURational( rationalOffset ) );
+        result.push_back(getURational(rationalOffset));
         rationalOffset += rationalFieldSize;
     }
     return result;

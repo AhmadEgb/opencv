@@ -47,8 +47,7 @@
 
 #ifdef HAVE_TIFF
 
-namespace cv
-{
+namespace cv {
 
 // native simple TIFF codec
 enum TiffCompression
@@ -65,9 +64,9 @@ enum TiffByteOrder
 };
 
 
-enum  TiffTag
+enum TiffTag
 {
-    TIFF_TAG_WIDTH  = 256,
+    TIFF_TAG_WIDTH = 256,
     TIFF_TAG_HEIGHT = 257,
     TIFF_TAG_BITS_PER_SAMPLE = 258,
     TIFF_TAG_COMPRESSION = 259,
@@ -96,13 +95,13 @@ public:
     TiffDecoder();
     virtual ~TiffDecoder() CV_OVERRIDE;
 
-    bool  readHeader() CV_OVERRIDE;
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    void  close();
-    bool  nextPage() CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
+    bool readData(Mat& img) CV_OVERRIDE;
+    void close();
+    bool nextPage() CV_OVERRIDE;
 
     size_t signatureLength() const CV_OVERRIDE;
-    bool checkSignature( const String& signature ) const CV_OVERRIDE;
+    bool checkSignature(const String& signature) const CV_OVERRIDE;
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
 protected:
@@ -114,8 +113,8 @@ protected:
     size_t m_buf_pos;
 
 private:
-    TiffDecoder(const TiffDecoder &); // copy disabled
-    TiffDecoder& operator=(const TiffDecoder &); // assign disabled
+    TiffDecoder(const TiffDecoder&); // copy disabled
+    TiffDecoder& operator=(const TiffDecoder&); // assign disabled
 };
 
 // ... and writer
@@ -125,30 +124,28 @@ public:
     TiffEncoder();
     virtual ~TiffEncoder() CV_OVERRIDE;
 
-    bool isFormatSupported( int depth ) const CV_OVERRIDE;
+    bool isFormatSupported(int depth) const CV_OVERRIDE;
 
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
 
     bool writemulti(const std::vector<Mat>& img_vec, const std::vector<int>& params) CV_OVERRIDE;
 
     ImageEncoder newEncoder() const CV_OVERRIDE;
 
 protected:
-    void  writeTag( WLByteStream& strm, TiffTag tag,
-                    TiffFieldType fieldType,
-                    int count, int value );
+    void writeTag(WLByteStream& strm, TiffTag tag, TiffFieldType fieldType, int count, int value);
 
-    bool writeLibTiff( const std::vector<Mat>& img_vec, const std::vector<int>& params );
-    bool write_32FC3( const Mat& img );
-    bool write_32FC1( const Mat& img );
+    bool writeLibTiff(const std::vector<Mat>& img_vec, const std::vector<int>& params);
+    bool write_32FC3(const Mat& img);
+    bool write_32FC1(const Mat& img);
 
 private:
-    TiffEncoder(const TiffEncoder &); // copy disabled
-    TiffEncoder& operator=(const TiffEncoder &); // assign disabled
+    TiffEncoder(const TiffEncoder&); // copy disabled
+    TiffEncoder& operator=(const TiffEncoder&); // assign disabled
 };
 
-}
+} // namespace cv
 
 #endif // HAVE_TIFF
 
-#endif/*_GRFMT_TIFF_H_*/
+#endif /*_GRFMT_TIFF_H_*/

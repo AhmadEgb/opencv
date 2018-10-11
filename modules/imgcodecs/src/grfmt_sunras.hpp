@@ -47,21 +47,20 @@
 
 #ifdef HAVE_IMGCODEC_SUNRASTER
 
-namespace cv
-{
+namespace cv {
 
 enum SunRasType
 {
     RAS_OLD = 0,
     RAS_STANDARD = 1,
     RAS_BYTE_ENCODED = 2, /* RLE encoded */
-    RAS_FORMAT_RGB = 3    /* RGB instead of BGR */
+    RAS_FORMAT_RGB = 3 /* RGB instead of BGR */
 };
 
 enum SunRasMapType
 {
-    RMT_NONE = 0,       /* direct color encoding */
-    RMT_EQUAL_RGB = 1   /* paletted image */
+    RMT_NONE = 0, /* direct color encoding */
+    RMT_EQUAL_RGB = 1 /* paletted image */
 };
 
 
@@ -69,25 +68,23 @@ enum SunRasMapType
 class SunRasterDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
-
     SunRasterDecoder();
     virtual ~SunRasterDecoder() CV_OVERRIDE;
 
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
-    void  close();
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
+    void close();
 
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
 protected:
-
-    RMByteStream    m_strm;
-    PaletteEntry    m_palette[256];
-    int             m_bpp;
-    int             m_offset;
-    SunRasType      m_encoding;
-    SunRasMapType   m_maptype;
-    int             m_maplength;
+    RMByteStream m_strm;
+    PaletteEntry m_palette[256];
+    int m_bpp;
+    int m_offset;
+    SunRasType m_encoding;
+    SunRasMapType m_maptype;
+    int m_maplength;
 };
 
 
@@ -97,13 +94,13 @@ public:
     SunRasterEncoder();
     virtual ~SunRasterEncoder() CV_OVERRIDE;
 
-    bool write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
 
     ImageEncoder newEncoder() const CV_OVERRIDE;
 };
 
-}
+} // namespace cv
 
 #endif // HAVE_IMGCODEC_SUNRASTER
 
-#endif/*_GRFMT_SUNRAS_H_*/
+#endif /*_GRFMT_SUNRAS_H_*/

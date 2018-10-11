@@ -45,21 +45,23 @@
 
 #include <stdio.h>
 
-namespace cv
-{
+namespace cv {
 
 #define DECLARE_RBS_EXCEPTION(name) \
-class RBS_ ## name ## _Exception : public cv::Exception \
-{ \
-public: \
-    RBS_ ## name ## _Exception(int code_, const String& err_, const String& func_, const String& file_, int line_) : \
-        cv::Exception(code_, err_, func_, file_, line_) \
-    {} \
-};
+    class RBS_##name##_Exception : public cv::Exception \
+    { \
+    public: \
+        RBS_##name##_Exception(int code_, const String& err_, const String& func_, const String& file_, int line_) \
+            : cv::Exception(code_, err_, func_, file_, line_) \
+        { \
+        } \
+    };
 DECLARE_RBS_EXCEPTION(THROW_EOS)
-#define RBS_THROW_EOS RBS_THROW_EOS_Exception(cv::Error::StsError, "Unexpected end of input stream", CV_Func, __FILE__, __LINE__)
+#define RBS_THROW_EOS \
+    RBS_THROW_EOS_Exception(cv::Error::StsError, "Unexpected end of input stream", CV_Func, __FILE__, __LINE__)
 DECLARE_RBS_EXCEPTION(THROW_FORB)
-#define RBS_THROW_FORB RBS_THROW_FORB_Exception(cv::Error::StsError, "Forrbidden huffman code", CV_Func, __FILE__, __LINE__)
+#define RBS_THROW_FORB \
+    RBS_THROW_FORB_Exception(cv::Error::StsError, "Forrbidden huffman code", CV_Func, __FILE__, __LINE__)
 DECLARE_RBS_EXCEPTION(BAD_HEADER)
 #define RBS_BAD_HEADER RBS_BAD_HEADER_Exception(cv::Error::StsError, "Invalid header", CV_Func, __FILE__, __LINE__)
 
@@ -73,28 +75,27 @@ public:
     RBaseStream();
     virtual ~RBaseStream();
 
-    virtual bool  open( const String& filename );
-    virtual bool  open( const Mat& buf );
-    virtual void  close();
-    bool          isOpened();
-    void          setPos( int pos );
-    int           getPos();
-    void          skip( int bytes );
+    virtual bool open(const String& filename);
+    virtual bool open(const Mat& buf);
+    virtual void close();
+    bool isOpened();
+    void setPos(int pos);
+    int getPos();
+    void skip(int bytes);
 
 protected:
+    bool m_allocated;
+    uchar* m_start;
+    uchar* m_end;
+    uchar* m_current;
+    FILE* m_file;
+    int m_block_size;
+    int m_block_pos;
+    bool m_is_opened;
 
-    bool    m_allocated;
-    uchar*  m_start;
-    uchar*  m_end;
-    uchar*  m_current;
-    FILE*   m_file;
-    int     m_block_size;
-    int     m_block_pos;
-    bool    m_is_opened;
-
-    virtual void  readBlock();
-    virtual void  release();
-    virtual void  allocate();
+    virtual void readBlock();
+    virtual void release();
+    virtual void allocate();
 };
 
 
@@ -105,10 +106,10 @@ class RLByteStream : public RBaseStream
 public:
     virtual ~RLByteStream();
 
-    int     getByte();
-    int     getBytes( void* buffer, int count );
-    int     getWord();
-    int     getDWord();
+    int getByte();
+    int getBytes(void* buffer, int count);
+    int getWord();
+    int getDWord();
 };
 
 // class RMBitStream - uchar-oriented stream.
@@ -118,8 +119,8 @@ class RMByteStream : public RLByteStream
 public:
     virtual ~RMByteStream();
 
-    int     getWord();
-    int     getDWord();
+    int getWord();
+    int getDWord();
 };
 
 // WBaseStream - base class for output streams
@@ -130,26 +131,25 @@ public:
     WBaseStream();
     virtual ~WBaseStream();
 
-    virtual bool  open( const String& filename );
-    virtual bool  open( std::vector<uchar>& buf );
-    virtual void  close();
-    bool          isOpened();
-    int           getPos();
+    virtual bool open(const String& filename);
+    virtual bool open(std::vector<uchar>& buf);
+    virtual void close();
+    bool isOpened();
+    int getPos();
 
 protected:
-
-    uchar*  m_start;
-    uchar*  m_end;
-    uchar*  m_current;
-    int     m_block_size;
-    int     m_block_pos;
-    FILE*   m_file;
-    bool    m_is_opened;
+    uchar* m_start;
+    uchar* m_end;
+    uchar* m_current;
+    int m_block_size;
+    int m_block_pos;
+    FILE* m_file;
+    bool m_is_opened;
     std::vector<uchar>* m_buf;
 
-    virtual void  writeBlock();
-    virtual void  release();
-    virtual void  allocate();
+    virtual void writeBlock();
+    virtual void release();
+    virtual void allocate();
 };
 
 
@@ -160,10 +160,10 @@ class WLByteStream : public WBaseStream
 public:
     virtual ~WLByteStream();
 
-    void  putByte( int val );
-    void  putBytes( const void* buffer, int count );
-    void  putWord( int val );
-    void  putDWord( int val );
+    void putByte(int val);
+    void putBytes(const void* buffer, int count);
+    void putWord(int val);
+    void putDWord(int val);
 };
 
 
@@ -173,17 +173,17 @@ class WMByteStream : public WLByteStream
 {
 public:
     virtual ~WMByteStream();
-    void  putWord( int val );
-    void  putDWord( int val );
+    void putWord(int val);
+    void putDWord(int val);
 };
 
 inline unsigned BSWAP(unsigned v)
 {
-    return (v<<24)|((v&0xff00)<<8)|((v>>8)&0xff00)|((unsigned)v>>24);
+    return (v << 24) | ((v & 0xff00) << 8) | ((v >> 8) & 0xff00) | ((unsigned)v >> 24);
 }
 
-bool bsIsBigEndian( void );
+bool bsIsBigEndian(void);
 
-}
+} // namespace cv
 
-#endif/*_BITSTRM_H_*/
+#endif /*_BITSTRM_H_*/

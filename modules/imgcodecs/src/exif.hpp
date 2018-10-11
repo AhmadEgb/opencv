@@ -52,25 +52,48 @@
 #include <vector>
 #include <iostream>
 
-namespace cv
-{
+namespace cv {
 /**
  * @brief Jpeg markers that can encounter in Jpeg file
  */
 enum AppMarkerTypes
 {
-    SOI   = 0xD8, SOF0  = 0xC0, SOF2  = 0xC2, DHT   = 0xC4,
-    DQT   = 0xDB, DRI   = 0xDD, SOS   = 0xDA,
+    SOI = 0xD8,
+    SOF0 = 0xC0,
+    SOF2 = 0xC2,
+    DHT = 0xC4,
+    DQT = 0xDB,
+    DRI = 0xDD,
+    SOS = 0xDA,
 
-    RST0  = 0xD0, RST1  = 0xD1, RST2  = 0xD2, RST3  = 0xD3,
-    RST4  = 0xD4, RST5  = 0xD5, RST6  = 0xD6, RST7  = 0xD7,
+    RST0 = 0xD0,
+    RST1 = 0xD1,
+    RST2 = 0xD2,
+    RST3 = 0xD3,
+    RST4 = 0xD4,
+    RST5 = 0xD5,
+    RST6 = 0xD6,
+    RST7 = 0xD7,
 
-    APP0  = 0xE0, APP1  = 0xE1, APP2  = 0xE2, APP3  = 0xE3,
-    APP4  = 0xE4, APP5  = 0xE5, APP6  = 0xE6, APP7  = 0xE7,
-    APP8  = 0xE8, APP9  = 0xE9, APP10 = 0xEA, APP11 = 0xEB,
-    APP12 = 0xEC, APP13 = 0xED, APP14 = 0xEE, APP15 = 0xEF,
+    APP0 = 0xE0,
+    APP1 = 0xE1,
+    APP2 = 0xE2,
+    APP3 = 0xE3,
+    APP4 = 0xE4,
+    APP5 = 0xE5,
+    APP6 = 0xE6,
+    APP7 = 0xE7,
+    APP8 = 0xE8,
+    APP9 = 0xE9,
+    APP10 = 0xEA,
+    APP11 = 0xEB,
+    APP12 = 0xEC,
+    APP13 = 0xED,
+    APP14 = 0xEE,
+    APP15 = 0xEF,
 
-    COM   = 0xFE, EOI   = 0xD9
+    COM = 0xFE,
+    EOI = 0xD9
 };
 
 /**
@@ -78,23 +101,23 @@ enum AppMarkerTypes
  */
 enum ExifTagName
 {
-    IMAGE_DESCRIPTION       = 0x010E,   ///< Image Description: ASCII string
-    MAKE                    = 0x010F,   ///< Description of manufacturer: ASCII string
-    MODEL                   = 0x0110,   ///< Description of camera model: ASCII string
-    ORIENTATION             = 0x0112,   ///< Orientation of the image: unsigned short
-    XRESOLUTION             = 0x011A,   ///< Resolution of the image across X axis: unsigned rational
-    YRESOLUTION             = 0x011B,   ///< Resolution of the image across Y axis: unsigned rational
-    RESOLUTION_UNIT         = 0x0128,   ///< Resolution units. '1' no-unit, '2' inch, '3' centimeter
-    SOFTWARE                = 0x0131,   ///< Shows firmware(internal software of digicam) version number
-    DATE_TIME               = 0x0132,   ///< Date/Time of image was last modified
-    WHITE_POINT             = 0x013E,   ///< Chromaticity of white point of the image
-    PRIMARY_CHROMATICIES    = 0x013F,   ///< Chromaticity of the primaries of the image
-    Y_CB_CR_COEFFICIENTS    = 0x0211,   ///< constant to translate an image from YCbCr to RGB format
-    Y_CB_CR_POSITIONING     = 0x0213,   ///< Chroma sample point of subsampling pixel array
-    REFERENCE_BLACK_WHITE   = 0x0214,   ///< Reference value of black point/white point
-    COPYRIGHT               = 0x8298,   ///< Copyright information
-    EXIF_OFFSET             = 0x8769,   ///< Offset to Exif Sub IFD
-    INVALID_TAG             = 0xFFFF    ///< Shows that the tag was not recognized
+    IMAGE_DESCRIPTION = 0x010E, ///< Image Description: ASCII string
+    MAKE = 0x010F, ///< Description of manufacturer: ASCII string
+    MODEL = 0x0110, ///< Description of camera model: ASCII string
+    ORIENTATION = 0x0112, ///< Orientation of the image: unsigned short
+    XRESOLUTION = 0x011A, ///< Resolution of the image across X axis: unsigned rational
+    YRESOLUTION = 0x011B, ///< Resolution of the image across Y axis: unsigned rational
+    RESOLUTION_UNIT = 0x0128, ///< Resolution units. '1' no-unit, '2' inch, '3' centimeter
+    SOFTWARE = 0x0131, ///< Shows firmware(internal software of digicam) version number
+    DATE_TIME = 0x0132, ///< Date/Time of image was last modified
+    WHITE_POINT = 0x013E, ///< Chromaticity of white point of the image
+    PRIMARY_CHROMATICIES = 0x013F, ///< Chromaticity of the primaries of the image
+    Y_CB_CR_COEFFICIENTS = 0x0211, ///< constant to translate an image from YCbCr to RGB format
+    Y_CB_CR_POSITIONING = 0x0213, ///< Chroma sample point of subsampling pixel array
+    REFERENCE_BLACK_WHITE = 0x0214, ///< Reference value of black point/white point
+    COPYRIGHT = 0x8298, ///< Copyright information
+    EXIF_OFFSET = 0x8769, ///< Offset to Exif Sub IFD
+    INVALID_TAG = 0xFFFF ///< Shows that the tag was not recognized
 };
 
 enum Endianess_t
@@ -114,20 +137,20 @@ struct ExifEntry_t
     ExifEntry_t();
 
     std::vector<u_rational_t> field_u_rational; ///< vector of rational fields
-    std::string field_str;                      ///< any kind of textual information
+    std::string field_str; ///< any kind of textual information
 
-    float  field_float;                         ///< Currently is not used
-    double field_double;                        ///< Currently is not used
+    float field_float; ///< Currently is not used
+    double field_double; ///< Currently is not used
 
-    uint32_t field_u32;                         ///< Unsigned 32-bit value
-    int32_t  field_s32;                         ///< Signed 32-bit value
+    uint32_t field_u32; ///< Unsigned 32-bit value
+    int32_t field_s32; ///< Signed 32-bit value
 
-    uint16_t tag;                               ///< Tag number
+    uint16_t tag; ///< Tag number
 
-    uint16_t field_u16;                         ///< Unsigned 16-bit value
-    int16_t  field_s16;                         ///< Signed 16-bit value
-    uint8_t  field_u8;                          ///< Unsigned 8-bit value
-    int8_t   field_s8;                          ///< Signed 8-bit value
+    uint16_t field_u16; ///< Unsigned 16-bit value
+    int16_t field_s16; ///< Signed 16-bit value
+    uint8_t field_u8; ///< Unsigned 8-bit value
+    int8_t field_s8; ///< Signed 8-bit value
 };
 
 /**
@@ -145,7 +168,7 @@ enum ImageOrientation
     IMAGE_ORIENTATION_LT = 5, ///< Mirrored horizontal & rotate 270 CW
     IMAGE_ORIENTATION_RT = 6, ///< Rotate 90 CW
     IMAGE_ORIENTATION_RB = 7, ///< Mirrored horizontal & rotate 90 CW
-    IMAGE_ORIENTATION_LB = 8  ///< Rotate 270 CW
+    IMAGE_ORIENTATION_LB = 8 ///< Rotate 270 CW
 };
 
 /**
@@ -170,7 +193,7 @@ public:
      *
      * @param [in]stream An istream to look for EXIF bytes from
      */
-    explicit ExifReader( std::istream& stream );
+    explicit ExifReader(std::istream& stream);
     ~ExifReader();
 
 
@@ -187,40 +210,40 @@ public:
      * @param [in] tag The tag number
      * @return ExifEntru_t structure. Caller has to know what tag it calls in order to extract proper field from the structure ExifEntry_t
      */
-    ExifEntry_t getTag( const ExifTagName tag );
+    ExifEntry_t getTag(const ExifTagName tag);
 
 private:
     std::istream& m_stream;
     std::vector<unsigned char> m_data;
-    std::map<int, ExifEntry_t > m_exif;
+    std::map<int, ExifEntry_t> m_exif;
     Endianess_t m_format;
 
     void parseExif();
     bool checkTagMark() const;
 
-    size_t getFieldSize ();
+    size_t getFieldSize();
     size_t getNumDirEntry() const;
     uint32_t getStartOffset() const;
-    uint16_t getExifTag( const size_t offset ) const;
-    uint16_t getU16( const size_t offset ) const;
-    uint32_t getU32( const size_t offset ) const;
-    uint16_t getOrientation( const size_t offset ) const;
-    uint16_t getResolutionUnit( const size_t offset ) const;
-    uint16_t getYCbCrPos( const size_t offset ) const;
+    uint16_t getExifTag(const size_t offset) const;
+    uint16_t getU16(const size_t offset) const;
+    uint32_t getU32(const size_t offset) const;
+    uint16_t getOrientation(const size_t offset) const;
+    uint16_t getResolutionUnit(const size_t offset) const;
+    uint16_t getYCbCrPos(const size_t offset) const;
 
     Endianess_t getFormat() const;
 
-    ExifEntry_t parseExifEntry( const size_t offset );
+    ExifEntry_t parseExifEntry(const size_t offset);
 
-    u_rational_t getURational( const size_t offset ) const;
+    u_rational_t getURational(const size_t offset) const;
 
-    std::map<int, ExifEntry_t > getExif();
-    std::string getString( const size_t offset ) const;
-    std::vector<u_rational_t> getResolution( const size_t offset ) const;
-    std::vector<u_rational_t> getWhitePoint( const size_t offset ) const;
-    std::vector<u_rational_t> getPrimaryChromaticies( const size_t offset ) const;
-    std::vector<u_rational_t> getYCbCrCoeffs( const size_t offset ) const;
-    std::vector<u_rational_t> getRefBW( const size_t offset ) const;
+    std::map<int, ExifEntry_t> getExif();
+    std::string getString(const size_t offset) const;
+    std::vector<u_rational_t> getResolution(const size_t offset) const;
+    std::vector<u_rational_t> getWhitePoint(const size_t offset) const;
+    std::vector<u_rational_t> getPrimaryChromaticies(const size_t offset) const;
+    std::vector<u_rational_t> getYCbCrCoeffs(const size_t offset) const;
+    std::vector<u_rational_t> getRefBW(const size_t offset) const;
 
 private:
     static const uint16_t tagMarkRequired = 0x2A;
@@ -247,6 +270,6 @@ private:
 };
 
 
-}
+} // namespace cv
 
 #endif /* _OPENCV_EXIF_HPP_ */

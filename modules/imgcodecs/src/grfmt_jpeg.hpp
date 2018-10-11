@@ -50,30 +50,27 @@
 
 // IJG-based Jpeg codec
 
-namespace cv
-{
+namespace cv {
 
 class JpegDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
-
     JpegDecoder();
     virtual ~JpegDecoder();
 
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
-    void  close();
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
+    void close();
 
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
 protected:
-
     FILE* m_f;
     void* m_state;
 
 private:
-    JpegDecoder(const JpegDecoder &); // copy disabled
-    JpegDecoder& operator=(const JpegDecoder &); // assign disabled
+    JpegDecoder(const JpegDecoder&); // copy disabled
+    JpegDecoder& operator=(const JpegDecoder&); // assign disabled
 };
 
 
@@ -83,12 +80,12 @@ public:
     JpegEncoder();
     virtual ~JpegEncoder();
 
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
     ImageEncoder newEncoder() const CV_OVERRIDE;
 };
 
-}
+} // namespace cv
 
 #endif
 
-#endif/*_GRFMT_JPEG_H_*/
+#endif /*_GRFMT_JPEG_H_*/

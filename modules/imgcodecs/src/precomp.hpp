@@ -58,15 +58,15 @@
 #include <ctype.h>
 
 #if defined _WIN32 || defined WINCE
-    #include <windows.h>
-    #undef small
-    #undef min
-    #undef max
-    #undef abs
+#    include <windows.h>
+#    undef small
+#    undef min
+#    undef max
+#    undef abs
 #endif
 
 #define __BEGIN__ __CV_BEGIN__
-#define __END__  __CV_END__
+#define __END__ __CV_END__
 #define EXIT __CV_EXIT__
 
 #endif /* __IMGCODECS_H_ */

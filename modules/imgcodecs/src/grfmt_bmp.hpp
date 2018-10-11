@@ -45,8 +45,7 @@
 
 #include "grfmt_base.hpp"
 
-namespace cv
-{
+namespace cv {
 
 enum BmpCompression
 {
@@ -61,24 +60,22 @@ enum BmpCompression
 class BmpDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
-
     BmpDecoder();
     ~BmpDecoder() CV_OVERRIDE;
 
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
-    void  close();
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
+    void close();
 
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
 protected:
-
-    RLByteStream    m_strm;
-    PaletteEntry    m_palette[256];
-    int             m_origin;
-    int             m_bpp;
-    int             m_offset;
-    BmpCompression  m_rle_code;
+    RLByteStream m_strm;
+    PaletteEntry m_palette[256];
+    int m_origin;
+    int m_bpp;
+    int m_offset;
+    BmpCompression m_rle_code;
 };
 
 
@@ -89,11 +86,11 @@ public:
     BmpEncoder();
     ~BmpEncoder() CV_OVERRIDE;
 
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
 
     ImageEncoder newEncoder() const CV_OVERRIDE;
 };
 
-}
+} // namespace cv
 
-#endif/*_GRFMT_BMP_H_*/
+#endif /*_GRFMT_BMP_H_*/

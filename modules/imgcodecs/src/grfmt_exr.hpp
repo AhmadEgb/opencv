@@ -45,18 +45,17 @@
 
 #ifdef HAVE_OPENEXR
 
-#if defined __GNUC__ && defined __APPLE__
-#  pragma GCC diagnostic ignored "-Wshadow"
-#endif
+#    if defined __GNUC__ && defined __APPLE__
+#        pragma GCC diagnostic ignored "-Wshadow"
+#    endif
 
-#include <ImfChromaticities.h>
-#include <ImfInputFile.h>
-#include <ImfChannelList.h>
-#include <ImathBox.h>
-#include "grfmt_base.hpp"
+#    include <ImfChromaticities.h>
+#    include <ImfInputFile.h>
+#    include <ImfChannelList.h>
+#    include <ImathBox.h>
+#    include "grfmt_base.hpp"
 
-namespace cv
-{
+namespace cv {
 
 using namespace Imf;
 using namespace Imath;
@@ -66,40 +65,39 @@ using namespace Imath;
 class ExrDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
-
     ExrDecoder();
     ~ExrDecoder() CV_OVERRIDE;
 
-    int   type() const CV_OVERRIDE;
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
-    void  close();
+    int type() const CV_OVERRIDE;
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
+    void close();
 
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
 protected:
-    void  UpSample( uchar *data, int xstep, int ystep, int xsample, int ysample );
-    void  UpSampleX( float *data, int xstep, int xsample );
-    void  UpSampleY( uchar *data, int xstep, int ystep, int ysample );
-    void  ChromaToBGR( float *data, int numlines, int step );
-    void  RGBToGray( float *in, float *out );
+    void UpSample(uchar* data, int xstep, int ystep, int xsample, int ysample);
+    void UpSampleX(float* data, int xstep, int xsample);
+    void UpSampleY(uchar* data, int xstep, int ystep, int ysample);
+    void ChromaToBGR(float* data, int numlines, int step);
+    void RGBToGray(float* in, float* out);
 
-    InputFile      *m_file;
-    Imf::PixelType  m_type;
-    Box2i           m_datawindow;
-    bool            m_ischroma;
-    const Channel  *m_red;
-    const Channel  *m_green;
-    const Channel  *m_blue;
-    Chromaticities  m_chroma;
-    int             m_bit_depth;
-    bool            m_native_depth;
-    bool            m_iscolor;
-    bool            m_isfloat;
+    InputFile* m_file;
+    Imf::PixelType m_type;
+    Box2i m_datawindow;
+    bool m_ischroma;
+    const Channel* m_red;
+    const Channel* m_green;
+    const Channel* m_blue;
+    Chromaticities m_chroma;
+    int m_bit_depth;
+    bool m_native_depth;
+    bool m_iscolor;
+    bool m_isfloat;
 
 private:
-    ExrDecoder(const ExrDecoder &); // copy disabled
-    ExrDecoder& operator=(const ExrDecoder &); // assign disabled
+    ExrDecoder(const ExrDecoder&); // copy disabled
+    ExrDecoder& operator=(const ExrDecoder&); // assign disabled
 };
 
 
@@ -109,13 +107,13 @@ public:
     ExrEncoder();
     ~ExrEncoder() CV_OVERRIDE;
 
-    bool  isFormatSupported( int depth ) const CV_OVERRIDE;
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool isFormatSupported(int depth) const CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
     ImageEncoder newEncoder() const CV_OVERRIDE;
 };
 
-}
+} // namespace cv
 
 #endif
 
-#endif/*_GRFMT_EXR_H_*/
+#endif /*_GRFMT_EXR_H_*/

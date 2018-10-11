@@ -55,31 +55,27 @@
 
 #ifdef HAVE_IMGCODEC_PXM
 
-#include "grfmt_base.hpp"
-#include "bitstrm.hpp"
+#    include "grfmt_base.hpp"
+#    include "bitstrm.hpp"
 
-namespace cv
-{
+namespace cv {
 
 class PAMDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
-
     PAMDecoder();
     virtual ~PAMDecoder() CV_OVERRIDE;
 
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
 
     size_t signatureLength() const CV_OVERRIDE;
-    bool checkSignature( const String& signature ) const CV_OVERRIDE;
+    bool checkSignature(const String& signature) const CV_OVERRIDE;
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
 protected:
-
-    RLByteStream    m_strm;
-    int m_maxval, m_channels, m_sampledepth, m_offset,
-        selected_fmt;
+    RLByteStream m_strm;
+    int m_maxval, m_channels, m_sampledepth, m_offset, selected_fmt;
     bool bit_mode;
 };
 
@@ -90,13 +86,13 @@ public:
     PAMEncoder();
     virtual ~PAMEncoder() CV_OVERRIDE;
 
-    bool  isFormatSupported( int depth ) const CV_OVERRIDE;
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool isFormatSupported(int depth) const CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
 
     ImageEncoder newEncoder() const CV_OVERRIDE;
 };
 
-}
+} // namespace cv
 
 #endif
 

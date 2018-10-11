@@ -46,8 +46,7 @@
 #include "utils.hpp"
 #include "bitstrm.hpp"
 
-namespace cv
-{
+namespace cv {
 
 class BaseImageDecoder;
 class BaseImageEncoder;
@@ -65,24 +64,24 @@ public:
     int height() const { return m_height; }
     virtual int type() const { return m_type; }
 
-    virtual bool setSource( const String& filename );
-    virtual bool setSource( const Mat& buf );
-    virtual int setScale( const int& scale_denom );
+    virtual bool setSource(const String& filename);
+    virtual bool setSource(const Mat& buf);
+    virtual int setScale(const int& scale_denom);
     virtual bool readHeader() = 0;
-    virtual bool readData( Mat& img ) = 0;
+    virtual bool readData(Mat& img) = 0;
 
     /// Called after readData to advance to the next page, if any.
     virtual bool nextPage() { return false; }
 
     virtual size_t signatureLength() const;
-    virtual bool checkSignature( const String& signature ) const;
+    virtual bool checkSignature(const String& signature) const;
     virtual ImageDecoder newDecoder() const;
 
 protected:
-    int  m_width;  // width  of the image ( filled by readHeader )
-    int  m_height; // height of the image ( filled by readHeader )
-    int  m_type;
-    int  m_scale_denom;
+    int m_width; // width  of the image ( filled by readHeader )
+    int m_height; // height of the image ( filled by readHeader )
+    int m_type;
+    int m_scale_denom;
     String m_filename;
     String m_signature;
     Mat m_buf;
@@ -96,11 +95,11 @@ class BaseImageEncoder
 public:
     BaseImageEncoder();
     virtual ~BaseImageEncoder() {}
-    virtual bool isFormatSupported( int depth ) const;
+    virtual bool isFormatSupported(int depth) const;
 
-    virtual bool setDestination( const String& filename );
-    virtual bool setDestination( std::vector<uchar>& buf );
-    virtual bool write( const Mat& img, const std::vector<int>& params ) = 0;
+    virtual bool setDestination(const String& filename);
+    virtual bool setDestination(std::vector<uchar>& buf);
+    virtual bool write(const Mat& img, const std::vector<int>& params) = 0;
     virtual bool writemulti(const std::vector<Mat>& img_vec, const std::vector<int>& params);
 
     virtual String getDescription() const;
@@ -118,6 +117,6 @@ protected:
     String m_last_error;
 };
 
-}
+} // namespace cv
 
-#endif/*_GRFMT_BASE_H_*/
+#endif /*_GRFMT_BASE_H_*/

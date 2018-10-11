@@ -47,8 +47,7 @@
 
 #ifdef HAVE_IMGCODEC_HDR
 
-namespace cv
-{
+namespace cv {
 
 enum HdrCompression
 {
@@ -63,13 +62,14 @@ public:
     HdrDecoder();
     ~HdrDecoder() CV_OVERRIDE;
     bool readHeader() CV_OVERRIDE;
-    bool readData( Mat& img ) CV_OVERRIDE;
-    bool checkSignature( const String& signature ) const CV_OVERRIDE;
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool checkSignature(const String& signature) const CV_OVERRIDE;
     ImageDecoder newDecoder() const CV_OVERRIDE;
     size_t signatureLength() const CV_OVERRIDE;
+
 protected:
     String m_signature_alt;
-    FILE *file;
+    FILE* file;
 };
 
 // ... writer
@@ -78,15 +78,15 @@ class HdrEncoder CV_FINAL : public BaseImageEncoder
 public:
     HdrEncoder();
     ~HdrEncoder() CV_OVERRIDE;
-    bool write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
     ImageEncoder newEncoder() const CV_OVERRIDE;
-    bool isFormatSupported( int depth ) const CV_OVERRIDE;
-protected:
+    bool isFormatSupported(int depth) const CV_OVERRIDE;
 
+protected:
 };
 
-}
+} // namespace cv
 
 #endif // HAVE_IMGCODEC_HDR
 
-#endif/*_GRFMT_HDR_H_*/
+#endif /*_GRFMT_HDR_H_*/

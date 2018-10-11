@@ -44,8 +44,7 @@
 #include "grfmt_base.hpp"
 #include "bitstrm.hpp"
 
-namespace cv
-{
+namespace cv {
 
 BaseImageDecoder::BaseImageDecoder()
 {
@@ -55,44 +54,38 @@ BaseImageDecoder::BaseImageDecoder()
     m_scale_denom = 1;
 }
 
-bool BaseImageDecoder::setSource( const String& filename )
+bool BaseImageDecoder::setSource(const String& filename)
 {
     m_filename = filename;
     m_buf.release();
     return true;
 }
 
-bool BaseImageDecoder::setSource( const Mat& buf )
+bool BaseImageDecoder::setSource(const Mat& buf)
 {
-    if( !m_buf_supported )
+    if (!m_buf_supported)
         return false;
     m_filename = String();
     m_buf = buf;
     return true;
 }
 
-size_t BaseImageDecoder::signatureLength() const
-{
-    return m_signature.size();
-}
+size_t BaseImageDecoder::signatureLength() const { return m_signature.size(); }
 
-bool BaseImageDecoder::checkSignature( const String& signature ) const
+bool BaseImageDecoder::checkSignature(const String& signature) const
 {
     size_t len = signatureLength();
-    return signature.size() >= len && memcmp( signature.c_str(), m_signature.c_str(), len ) == 0;
+    return signature.size() >= len && memcmp(signature.c_str(), m_signature.c_str(), len) == 0;
 }
 
-int BaseImageDecoder::setScale( const int& scale_denom )
+int BaseImageDecoder::setScale(const int& scale_denom)
 {
     int temp = m_scale_denom;
     m_scale_denom = scale_denom;
     return temp;
 }
 
-ImageDecoder BaseImageDecoder::newDecoder() const
-{
-    return ImageDecoder();
-}
+ImageDecoder BaseImageDecoder::newDecoder() const { return ImageDecoder(); }
 
 BaseImageEncoder::BaseImageEncoder()
 {
@@ -100,26 +93,20 @@ BaseImageEncoder::BaseImageEncoder()
     m_buf_supported = false;
 }
 
-bool  BaseImageEncoder::isFormatSupported( int depth ) const
-{
-    return depth == CV_8U;
-}
+bool BaseImageEncoder::isFormatSupported(int depth) const { return depth == CV_8U; }
 
-String BaseImageEncoder::getDescription() const
-{
-    return m_description;
-}
+String BaseImageEncoder::getDescription() const { return m_description; }
 
-bool BaseImageEncoder::setDestination( const String& filename )
+bool BaseImageEncoder::setDestination(const String& filename)
 {
     m_filename = filename;
     m_buf = 0;
     return true;
 }
 
-bool BaseImageEncoder::setDestination( std::vector<uchar>& buf )
+bool BaseImageEncoder::setDestination(std::vector<uchar>& buf)
 {
-    if( !m_buf_supported )
+    if (!m_buf_supported)
         return false;
     m_buf = &buf;
     m_buf->clear();
@@ -127,25 +114,19 @@ bool BaseImageEncoder::setDestination( std::vector<uchar>& buf )
     return true;
 }
 
-bool BaseImageEncoder::writemulti(const std::vector<Mat>&, const std::vector<int>& )
-{
-    return false;
-}
+bool BaseImageEncoder::writemulti(const std::vector<Mat>&, const std::vector<int>&) { return false; }
 
-ImageEncoder BaseImageEncoder::newEncoder() const
-{
-    return ImageEncoder();
-}
+ImageEncoder BaseImageEncoder::newEncoder() const { return ImageEncoder(); }
 
 void BaseImageEncoder::throwOnEror() const
 {
-    if(!m_last_error.empty())
+    if (!m_last_error.empty())
     {
         String msg = "Raw image encoder error: " + m_last_error;
-        CV_Error( CV_BadImageSize, msg.c_str() );
+        CV_Error(CV_BadImageSize, msg.c_str());
     }
 }
 
-}
+} // namespace cv
 
 /* End of file. */

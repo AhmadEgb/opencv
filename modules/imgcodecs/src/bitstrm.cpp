@@ -44,26 +44,19 @@
 #include "bitstrm.hpp"
 #include "utils.hpp"
 
-namespace cv
-{
+namespace cv {
 
-const int BS_DEF_BLOCK_SIZE = 1<<15;
+const int BS_DEF_BLOCK_SIZE = 1 << 15;
 
-bool  bsIsBigEndian( void )
-{
-    return (((const int*)"\0\x1\x2\x3\x4\x5\x6\x7")[0] & 255) != 0;
-}
+bool bsIsBigEndian(void) { return (((const int*)"\0\x1\x2\x3\x4\x5\x6\x7")[0] & 255) != 0; }
 
 /////////////////////////  RBaseStream ////////////////////////////
 
-bool  RBaseStream::isOpened()
-{
-    return m_is_opened;
-}
+bool RBaseStream::isOpened() { return m_is_opened; }
 
-void  RBaseStream::allocate()
+void RBaseStream::allocate()
 {
-    if( !m_allocated )
+    if (!m_allocated)
     {
         m_start = new uchar[m_block_size];
         m_end = m_start + m_block_size;
@@ -86,38 +79,38 @@ RBaseStream::RBaseStream()
 
 RBaseStream::~RBaseStream()
 {
-    close();    // Close files
-    release();  // free  buffers
+    close(); // Close files
+    release(); // free  buffers
 }
 
 
-void  RBaseStream::readBlock()
+void RBaseStream::readBlock()
 {
-    setPos( getPos() ); // normalize position
+    setPos(getPos()); // normalize position
 
-    if( m_file == 0 )
+    if (m_file == 0)
     {
-        if( m_block_pos == 0 && m_current < m_end )
+        if (m_block_pos == 0 && m_current < m_end)
             return;
-        CV_THROW (RBS_THROW_EOS);
+        CV_THROW(RBS_THROW_EOS);
     }
 
-    fseek( m_file, m_block_pos, SEEK_SET );
-    size_t readed = fread( m_start, 1, m_block_size, m_file );
+    fseek(m_file, m_block_pos, SEEK_SET);
+    size_t readed = fread(m_start, 1, m_block_size, m_file);
     m_end = m_start + readed;
 
-    if( readed == 0 || m_current >= m_end )
-        CV_THROW (RBS_THROW_EOS);
+    if (readed == 0 || m_current >= m_end)
+        CV_THROW(RBS_THROW_EOS);
 }
 
 
-bool  RBaseStream::open( const String& filename )
+bool RBaseStream::open(const String& filename)
 {
     close();
     allocate();
 
-    m_file = fopen( filename.c_str(), "rb" );
-    if( m_file )
+    m_file = fopen(filename.c_str(), "rb");
+    if (m_file)
     {
         m_is_opened = true;
         setPos(0);
@@ -126,14 +119,14 @@ bool  RBaseStream::open( const String& filename )
     return m_file != 0;
 }
 
-bool  RBaseStream::open( const Mat& buf )
+bool RBaseStream::open(const Mat& buf)
 {
     close();
-    if( buf.empty() )
+    if (buf.empty())
         return false;
     CV_Assert(buf.isContinuous());
     m_start = buf.data;
-    m_end = m_start + buf.cols*buf.rows*buf.elemSize();
+    m_end = m_start + buf.cols * buf.rows * buf.elemSize();
     m_allocated = false;
     m_is_opened = true;
     setPos(0);
@@ -141,33 +134,33 @@ bool  RBaseStream::open( const Mat& buf )
     return true;
 }
 
-void  RBaseStream::close()
+void RBaseStream::close()
 {
-    if( m_file )
+    if (m_file)
     {
-        fclose( m_file );
+        fclose(m_file);
         m_file = 0;
     }
     m_is_opened = false;
-    if( !m_allocated )
+    if (!m_allocated)
         m_start = m_end = m_current = 0;
 }
 
 
-void  RBaseStream::release()
+void RBaseStream::release()
 {
-    if( m_allocated )
+    if (m_allocated)
         delete[] m_start;
     m_start = m_end = m_current = 0;
     m_allocated = false;
 }
 
 
-void  RBaseStream::setPos( int pos )
+void RBaseStream::setPos(int pos)
 {
     CV_Assert(isOpened() && pos >= 0);
 
-    if( !m_file )
+    if (!m_file)
     {
         m_current = m_start + pos;
         m_block_pos = 0;
@@ -180,7 +173,7 @@ void  RBaseStream::setPos( int pos )
 }
 
 
-int  RBaseStream::getPos()
+int RBaseStream::getPos()
 {
     CV_Assert(isOpened());
     int pos = validateToInt((m_current - m_start) + m_block_pos);
@@ -189,26 +182,24 @@ int  RBaseStream::getPos()
     return pos;
 }
 
-void  RBaseStream::skip( int bytes )
+void RBaseStream::skip(int bytes)
 {
     CV_Assert(bytes >= 0);
     uchar* old = m_current;
     m_current += bytes;
-    CV_Assert(m_current >= old);  // overflow check
+    CV_Assert(m_current >= old); // overflow check
 }
 
 /////////////////////////  RLByteStream ////////////////////////////
 
-RLByteStream::~RLByteStream()
-{
-}
+RLByteStream::~RLByteStream() {}
 
-int  RLByteStream::getByte()
+int RLByteStream::getByte()
 {
-    uchar *current = m_current;
-    int   val;
+    uchar* current = m_current;
+    int val;
 
-    if( current >= m_end )
+    if (current >= m_end)
     {
         readBlock();
         current = m_current;
@@ -222,24 +213,26 @@ int  RLByteStream::getByte()
 }
 
 
-int RLByteStream::getBytes( void* buffer, int count )
+int RLByteStream::getBytes(void* buffer, int count)
 {
-    uchar*  data = (uchar*)buffer;
+    uchar* data = (uchar*)buffer;
     int readed = 0;
     CV_Assert(count >= 0);
 
-    while( count > 0 )
+    while (count > 0)
     {
         int l;
 
-        for(;;)
+        for (;;)
         {
             l = (int)(m_end - m_current);
-            if( l > count ) l = count;
-            if( l > 0 ) break;
+            if (l > count)
+                l = count;
+            if (l > 0)
+                break;
             readBlock();
         }
-        memcpy( data, m_current, l );
+        memcpy(data, m_current, l);
         m_current += l;
         data += l;
         count -= l;
@@ -251,17 +244,15 @@ int RLByteStream::getBytes( void* buffer, int count )
 
 ////////////  RLByteStream & RMByteStream <Get[d]word>s ////////////////
 
-RMByteStream::~RMByteStream()
+RMByteStream::~RMByteStream() {}
+
+
+int RLByteStream::getWord()
 {
-}
+    uchar* current = m_current;
+    int val;
 
-
-int  RLByteStream::getWord()
-{
-    uchar *current = m_current;
-    int   val;
-
-    if( current+1 < m_end )
+    if (current + 1 < m_end)
     {
         val = current[0] + (current[1] << 8);
         m_current = current + 2;
@@ -269,21 +260,20 @@ int  RLByteStream::getWord()
     else
     {
         val = getByte();
-        val|= getByte() << 8;
+        val |= getByte() << 8;
     }
     return val;
 }
 
 
-int  RLByteStream::getDWord()
+int RLByteStream::getDWord()
 {
-    uchar *current = m_current;
-    int   val;
+    uchar* current = m_current;
+    int val;
 
-    if( current+3 < m_end )
+    if (current + 3 < m_end)
     {
-        val = current[0] + (current[1] << 8) +
-              (current[2] << 16) + (current[3] << 24);
+        val = current[0] + (current[1] << 8) + (current[2] << 16) + (current[3] << 24);
         m_current = current + 4;
     }
     else
@@ -297,12 +287,12 @@ int  RLByteStream::getDWord()
 }
 
 
-int  RMByteStream::getWord()
+int RMByteStream::getWord()
 {
-    uchar *current = m_current;
-    int   val;
+    uchar* current = m_current;
+    int val;
 
-    if( current+1 < m_end )
+    if (current + 1 < m_end)
     {
         val = (current[0] << 8) + current[1];
         m_current = current + 2;
@@ -310,21 +300,20 @@ int  RMByteStream::getWord()
     else
     {
         val = getByte() << 8;
-        val|= getByte();
+        val |= getByte();
     }
     return val;
 }
 
 
-int  RMByteStream::getDWord()
+int RMByteStream::getDWord()
 {
-    uchar *current = m_current;
-    int   val;
+    uchar* current = m_current;
+    int val;
 
-    if( current+3 < m_end )
+    if (current + 3 < m_end)
     {
-        val = (current[0] << 24) + (current[1] << 16) +
-              (current[2] << 8) + current[3];
+        val = (current[0] << 24) + (current[1] << 16) + (current[2] << 8) + current[3];
         m_current = current + 4;
     }
     else
@@ -358,15 +347,12 @@ WBaseStream::~WBaseStream()
 }
 
 
-bool  WBaseStream::isOpened()
-{
-    return m_is_opened;
-}
+bool WBaseStream::isOpened() { return m_is_opened; }
 
 
-void  WBaseStream::allocate()
+void WBaseStream::allocate()
 {
-    if( !m_start )
+    if (!m_start)
         m_start = new uchar[m_block_size];
 
     m_end = m_start + m_block_size;
@@ -374,36 +360,36 @@ void  WBaseStream::allocate()
 }
 
 
-void  WBaseStream::writeBlock()
+void WBaseStream::writeBlock()
 {
     int size = (int)(m_current - m_start);
 
     CV_Assert(isOpened());
-    if( size == 0 )
+    if (size == 0)
         return;
 
-    if( m_buf )
+    if (m_buf)
     {
         size_t sz = m_buf->size();
-        m_buf->resize( sz + size );
-        memcpy( &(*m_buf)[sz], m_start, size );
+        m_buf->resize(sz + size);
+        memcpy(&(*m_buf)[sz], m_start, size);
     }
     else
     {
-        fwrite( m_start, 1, size, m_file );
+        fwrite(m_start, 1, size, m_file);
     }
     m_current = m_start;
     m_block_pos += size;
 }
 
 
-bool  WBaseStream::open( const String& filename )
+bool WBaseStream::open(const String& filename)
 {
     close();
     allocate();
 
-    m_file = fopen( filename.c_str(), "wb" );
-    if( m_file )
+    m_file = fopen(filename.c_str(), "wb");
+    if (m_file)
     {
         m_is_opened = true;
         m_block_pos = 0;
@@ -412,7 +398,7 @@ bool  WBaseStream::open( const String& filename )
     return m_file != 0;
 }
 
-bool  WBaseStream::open( std::vector<uchar>& buf )
+bool WBaseStream::open(std::vector<uchar>& buf)
 {
     close();
     allocate();
@@ -425,13 +411,13 @@ bool  WBaseStream::open( std::vector<uchar>& buf )
     return true;
 }
 
-void  WBaseStream::close()
+void WBaseStream::close()
 {
-    if( m_is_opened )
+    if (m_is_opened)
         writeBlock();
-    if( m_file )
+    if (m_file)
     {
-        fclose( m_file );
+        fclose(m_file);
         m_file = 0;
     }
     m_buf = 0;
@@ -439,15 +425,15 @@ void  WBaseStream::close()
 }
 
 
-void  WBaseStream::release()
+void WBaseStream::release()
 {
-    if( m_start )
+    if (m_start)
         delete[] m_start;
     m_start = m_end = m_current = 0;
 }
 
 
-int  WBaseStream::getPos()
+int WBaseStream::getPos()
 {
     CV_Assert(isOpened());
     return m_block_pos + (int)(m_current - m_start);
@@ -456,54 +442,52 @@ int  WBaseStream::getPos()
 
 ///////////////////////////// WLByteStream ///////////////////////////////////
 
-WLByteStream::~WLByteStream()
-{
-}
+WLByteStream::~WLByteStream() {}
 
-void WLByteStream::putByte( int val )
+void WLByteStream::putByte(int val)
 {
     *m_current++ = (uchar)val;
-    if( m_current >= m_end )
+    if (m_current >= m_end)
         writeBlock();
 }
 
 
-void WLByteStream::putBytes( const void* buffer, int count )
+void WLByteStream::putBytes(const void* buffer, int count)
 {
     uchar* data = (uchar*)buffer;
 
     CV_Assert(data && m_current && count >= 0);
 
-    while( count )
+    while (count)
     {
         int l = (int)(m_end - m_current);
 
-        if( l > count )
+        if (l > count)
             l = count;
 
-        if( l > 0 )
+        if (l > 0)
         {
-            memcpy( m_current, data, l );
+            memcpy(m_current, data, l);
             m_current += l;
             data += l;
             count -= l;
         }
-        if( m_current == m_end )
+        if (m_current == m_end)
             writeBlock();
     }
 }
 
 
-void WLByteStream::putWord( int val )
+void WLByteStream::putWord(int val)
 {
-    uchar *current = m_current;
+    uchar* current = m_current;
 
-    if( current+1 < m_end )
+    if (current + 1 < m_end)
     {
         current[0] = (uchar)val;
         current[1] = (uchar)(val >> 8);
         m_current = current + 2;
-        if( m_current == m_end )
+        if (m_current == m_end)
             writeBlock();
     }
     else
@@ -514,18 +498,18 @@ void WLByteStream::putWord( int val )
 }
 
 
-void WLByteStream::putDWord( int val )
+void WLByteStream::putDWord(int val)
 {
-    uchar *current = m_current;
+    uchar* current = m_current;
 
-    if( current+3 < m_end )
+    if (current + 3 < m_end)
     {
         current[0] = (uchar)val;
         current[1] = (uchar)(val >> 8);
         current[2] = (uchar)(val >> 16);
         current[3] = (uchar)(val >> 24);
         m_current = current + 4;
-        if( m_current == m_end )
+        if (m_current == m_end)
             writeBlock();
     }
     else
@@ -540,21 +524,19 @@ void WLByteStream::putDWord( int val )
 
 ///////////////////////////// WMByteStream ///////////////////////////////////
 
-WMByteStream::~WMByteStream()
+WMByteStream::~WMByteStream() {}
+
+
+void WMByteStream::putWord(int val)
 {
-}
+    uchar* current = m_current;
 
-
-void WMByteStream::putWord( int val )
-{
-    uchar *current = m_current;
-
-    if( current+1 < m_end )
+    if (current + 1 < m_end)
     {
         current[0] = (uchar)(val >> 8);
         current[1] = (uchar)val;
         m_current = current + 2;
-        if( m_current == m_end )
+        if (m_current == m_end)
             writeBlock();
     }
     else
@@ -565,18 +547,18 @@ void WMByteStream::putWord( int val )
 }
 
 
-void WMByteStream::putDWord( int val )
+void WMByteStream::putDWord(int val)
 {
-    uchar *current = m_current;
+    uchar* current = m_current;
 
-    if( current+3 < m_end )
+    if (current + 3 < m_end)
     {
         current[0] = (uchar)(val >> 24);
         current[1] = (uchar)(val >> 16);
         current[2] = (uchar)(val >> 8);
         current[3] = (uchar)val;
         m_current = current + 4;
-        if( m_current == m_end )
+        if (m_current == m_end)
             writeBlock();
     }
     else
@@ -588,4 +570,4 @@ void WMByteStream::putDWord( int val )
     }
 }
 
-}
+} // namespace cv

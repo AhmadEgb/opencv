@@ -47,23 +47,21 @@
 
 #ifdef HAVE_WEBP
 
-#include <fstream>
+#    include <fstream>
 
-namespace cv
-{
+namespace cv {
 
 class WebPDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
-
     WebPDecoder();
     ~WebPDecoder() CV_OVERRIDE;
 
-    bool readData( Mat& img ) CV_OVERRIDE;
+    bool readData(Mat& img) CV_OVERRIDE;
     bool readHeader() CV_OVERRIDE;
 
     size_t signatureLength() const CV_OVERRIDE;
-    bool checkSignature( const String& signature) const CV_OVERRIDE;
+    bool checkSignature(const String& signature) const CV_OVERRIDE;
 
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
@@ -85,7 +83,7 @@ public:
     ImageEncoder newEncoder() const CV_OVERRIDE;
 };
 
-}
+} // namespace cv
 
 #endif
 

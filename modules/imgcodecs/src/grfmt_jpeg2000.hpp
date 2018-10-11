@@ -45,31 +45,28 @@
 
 #ifdef HAVE_JASPER
 
-#include "grfmt_base.hpp"
+#    include "grfmt_base.hpp"
 
-namespace cv
-{
+namespace cv {
 
 class Jpeg2KDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
-
     Jpeg2KDecoder();
     virtual ~Jpeg2KDecoder();
 
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
-    void  close();
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
+    void close();
     ImageDecoder newDecoder() const CV_OVERRIDE;
 
 protected:
-    bool  readComponent8u( uchar *data, void *buffer, int step, int cmpt,
-                           int maxval, int offset, int ncmpts );
-    bool  readComponent16u( unsigned short *data, void *buffer, int step, int cmpt,
-                            int maxval, int offset, int ncmpts );
+    bool readComponent8u(uchar* data, void* buffer, int step, int cmpt, int maxval, int offset, int ncmpts);
+    bool readComponent16u(unsigned short* data, void* buffer, int step, int cmpt, int maxval, int offset,
+                          int ncmpts);
 
-    void *m_stream;
-    void *m_image;
+    void* m_stream;
+    void* m_image;
 };
 
 
@@ -79,17 +76,17 @@ public:
     Jpeg2KEncoder();
     virtual ~Jpeg2KEncoder();
 
-    bool  isFormatSupported( int depth ) const CV_OVERRIDE;
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool isFormatSupported(int depth) const CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
     ImageEncoder newEncoder() const CV_OVERRIDE;
 
 protected:
-    bool  writeComponent8u( void *img, const Mat& _img );
-    bool  writeComponent16u( void *img, const Mat& _img );
+    bool writeComponent8u(void* img, const Mat& _img);
+    bool writeComponent16u(void* img, const Mat& _img);
 };
 
-}
+} // namespace cv
 
 #endif
 
-#endif/*_GRFMT_JASPER_H_*/
+#endif /*_GRFMT_JASPER_H_*/

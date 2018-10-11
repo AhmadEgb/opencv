@@ -47,24 +47,23 @@
 
 #ifdef HAVE_GDCM
 
-#include "grfmt_base.hpp"
+#    include "grfmt_base.hpp"
 
-namespace cv
-{
+namespace cv {
 
 // DICOM image reader using GDCM
 class DICOMDecoder CV_FINAL : public BaseImageDecoder
 {
 public:
     DICOMDecoder();
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
     ImageDecoder newDecoder() const CV_OVERRIDE;
-    virtual bool checkSignature( const String& signature ) const CV_OVERRIDE;
+    virtual bool checkSignature(const String& signature) const CV_OVERRIDE;
 };
 
-}
+} // namespace cv
 
 #endif // HAVE_GDCM
 
-#endif/*_GDCM_DICOM_H_*/
+#endif /*_GDCM_DICOM_H_*/

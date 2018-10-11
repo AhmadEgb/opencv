@@ -9,8 +9,7 @@
 #include "bitstrm.hpp"
 
 #ifdef HAVE_IMGCODEC_PFM
-namespace cv
-{
+namespace cv {
 
 class PFMDecoder CV_FINAL : public BaseImageDecoder
 {
@@ -18,16 +17,13 @@ public:
     PFMDecoder();
     virtual ~PFMDecoder() CV_OVERRIDE;
 
-    bool  readData( Mat& img ) CV_OVERRIDE;
-    bool  readHeader() CV_OVERRIDE;
-    void  close();
+    bool readData(Mat& img) CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
+    void close();
 
     size_t signatureLength() const CV_OVERRIDE;
-    bool checkSignature( const String& signature ) const CV_OVERRIDE;
-    ImageDecoder newDecoder() const CV_OVERRIDE
-    {
-        return makePtr<PFMDecoder>();
-    }
+    bool checkSignature(const String& signature) const CV_OVERRIDE;
+    ImageDecoder newDecoder() const CV_OVERRIDE { return makePtr<PFMDecoder>(); }
 
 private:
     RLByteStream m_strm;
@@ -41,17 +37,14 @@ public:
     PFMEncoder();
     virtual ~PFMEncoder() CV_OVERRIDE;
 
-    bool  isFormatSupported( int depth ) const CV_OVERRIDE;
-    bool  write( const Mat& img, const std::vector<int>& params ) CV_OVERRIDE;
+    bool isFormatSupported(int depth) const CV_OVERRIDE;
+    bool write(const Mat& img, const std::vector<int>& params) CV_OVERRIDE;
 
-    ImageEncoder newEncoder() const CV_OVERRIDE
-    {
-        return makePtr<PFMEncoder>();
-    }
+    ImageEncoder newEncoder() const CV_OVERRIDE { return makePtr<PFMEncoder>(); }
 };
 
-}
+} // namespace cv
 
 #endif // HAVE_IMGCODEC_PXM
 
-#endif/*_GRFMT_PFM_H_*/
+#endif /*_GRFMT_PFM_H_*/

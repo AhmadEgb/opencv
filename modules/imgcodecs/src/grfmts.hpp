@@ -58,4 +58,4 @@
 #include "grfmt_gdcm.hpp"
 #include "grfmt_pam.hpp"
 
-#endif/*_GRFMTS_H_*/
+#endif /*_GRFMTS_H_*/

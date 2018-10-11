@@ -46,8 +46,7 @@
 
 #ifdef HAVE_IMGCODEC_HDR
 
-namespace cv
-{
+namespace cv {
 
 HdrDecoder::HdrDecoder()
 {
@@ -57,24 +56,23 @@ HdrDecoder::HdrDecoder()
     m_type = CV_32FC3;
 }
 
-HdrDecoder::~HdrDecoder()
-{
-}
+HdrDecoder::~HdrDecoder() {}
 
 size_t HdrDecoder::signatureLength() const
 {
-    return m_signature.size() > m_signature_alt.size() ?
-           m_signature.size() : m_signature_alt.size();
+    return m_signature.size() > m_signature_alt.size() ? m_signature.size() : m_signature_alt.size();
 }
 
-bool  HdrDecoder::readHeader()
+bool HdrDecoder::readHeader()
 {
     file = fopen(m_filename.c_str(), "rb");
-    if(!file) {
+    if (!file)
+    {
         return false;
     }
     RGBE_ReadHeader(file, &m_width, &m_height, NULL);
-    if(m_width <= 0 || m_height <= 0) {
+    if (m_width <= 0 || m_height <= 0)
+    {
         fclose(file);
         file = NULL;
         return false;
@@ -85,72 +83,76 @@ bool  HdrDecoder::readHeader()
 bool HdrDecoder::readData(Mat& _img)
 {
     Mat img(m_height, m_width, CV_32FC3);
-    if(!file) {
-        if(!readHeader()) {
+    if (!file)
+    {
+        if (!readHeader())
+        {
             return false;
         }
     }
     RGBE_ReadPixels_RLE(file, const_cast<float*>(img.ptr<float>()), img.cols, img.rows);
-    fclose(file); file = NULL;
+    fclose(file);
+    file = NULL;
 
-    if(_img.depth() == img.depth()) {
+    if (_img.depth() == img.depth())
+    {
         img.convertTo(_img, _img.type());
-    } else {
+    }
+    else
+    {
         img.convertTo(_img, _img.type(), 255);
     }
     return true;
 }
 
-bool HdrDecoder::checkSignature( const String& signature ) const
+bool HdrDecoder::checkSignature(const String& signature) const
 {
-    if (signature.size() >= m_signature.size() &&
-        0 == memcmp(signature.c_str(), m_signature.c_str(), m_signature.size())
-    )
+    if (signature.size() >= m_signature.size()
+        && 0 == memcmp(signature.c_str(), m_signature.c_str(), m_signature.size()))
         return true;
-    if (signature.size() >= m_signature_alt.size() &&
-        0 == memcmp(signature.c_str(), m_signature_alt.c_str(), m_signature_alt.size())
-    )
+    if (signature.size() >= m_signature_alt.size()
+        && 0 == memcmp(signature.c_str(), m_signature_alt.c_str(), m_signature_alt.size()))
         return true;
     return false;
 }
 
-ImageDecoder HdrDecoder::newDecoder() const
-{
-    return makePtr<HdrDecoder>();
-}
+ImageDecoder HdrDecoder::newDecoder() const { return makePtr<HdrDecoder>(); }
 
-HdrEncoder::HdrEncoder()
-{
-    m_description = "Radiance HDR (*.hdr;*.pic)";
-}
+HdrEncoder::HdrEncoder() { m_description = "Radiance HDR (*.hdr;*.pic)"; }
 
-HdrEncoder::~HdrEncoder()
-{
-}
+HdrEncoder::~HdrEncoder() {}
 
-bool HdrEncoder::write( const Mat& input_img, const std::vector<int>& params )
+bool HdrEncoder::write(const Mat& input_img, const std::vector<int>& params)
 {
     Mat img;
     CV_Assert(input_img.channels() == 3 || input_img.channels() == 1);
-    if(input_img.channels() == 1) {
-         std::vector<Mat> splitted(3, input_img);
-         merge(splitted, img);
-    } else {
+    if (input_img.channels() == 1)
+    {
+        std::vector<Mat> splitted(3, input_img);
+        merge(splitted, img);
+    }
+    else
+    {
         input_img.copyTo(img);
     }
-    if(img.depth() != CV_32F) {
-        img.convertTo(img, CV_32FC3, 1/255.0f);
+    if (img.depth() != CV_32F)
+    {
+        img.convertTo(img, CV_32FC3, 1 / 255.0f);
     }
     CV_Assert(params.empty() || params[0] == HDR_NONE || params[0] == HDR_RLE);
-    FILE *fout = fopen(m_filename.c_str(), "wb");
-    if(!fout) {
+    FILE* fout = fopen(m_filename.c_str(), "wb");
+    if (!fout)
+    {
         return false;
     }
 
     RGBE_WriteHeader(fout, img.cols, img.rows, NULL);
-    if(params.empty() || params[0] == HDR_RLE) {
+    if (params.empty() || params[0] == HDR_RLE)
+    {
         RGBE_WritePixels_RLE(fout, const_cast<float*>(img.ptr<float>()), img.cols, img.rows);
-    } else {
+    }
+    else
+    {
         RGBE_WritePixels(fout, const_cast<float*>(img.ptr<float>()), img.cols * img.rows);
     }
 
@@ -158,15 +160,10 @@ bool HdrEncoder::write( const Mat& input_img, const std::vector<int>& params )
     return true;
 }
 
-ImageEncoder HdrEncoder::newEncoder() const
-{
-    return makePtr<HdrEncoder>();
-}
+ImageEncoder HdrEncoder::newEncoder() const { return makePtr<HdrEncoder>(); }
 
-bool HdrEncoder::isFormatSupported( int depth ) const {
-    return depth != CV_64F;
-}
+bool HdrEncoder::isFormatSupported(int depth) const { return depth != CV_64F; }
 
-}
+} // namespace cv
 
 #endif // HAVE_IMGCODEC_HDR

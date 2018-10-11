@@ -49,12 +49,12 @@
 #ifdef HAVE_GDAL
 
 /// C++ Libraries
-#include <iostream>
+#    include <iostream>
 
 /// Geospatial Data Abstraction Library
-#include <cpl_conv.h>
-#include <gdal_priv.h>
-#include <gdal.h>
+#    include <cpl_conv.h>
+#    include <gdal_priv.h>
+#    include <gdal.h>
 
 
 /// Start of CV Namespace
@@ -63,104 +63,90 @@ namespace cv {
 /**
  * Convert GDAL Pixel Range to OpenCV Pixel Range
 */
-double range_cast( const GDALDataType& gdalType,
-                   const int& cvDepth,
-                   const double& value );
+double range_cast(const GDALDataType& gdalType, const int& cvDepth, const double& value);
 
 /**
  * Convert GDAL Palette Interpretation to OpenCV Pixel Type
 */
-int gdalPaletteInterpretation2OpenCV( GDALPaletteInterp const& paletteInterp,
-                                      GDALDataType const& gdalType );
+int gdalPaletteInterpretation2OpenCV(GDALPaletteInterp const& paletteInterp, GDALDataType const& gdalType);
 
 /**
  * Convert a GDAL Raster Type to OpenCV Type
 */
-int gdal2opencv( const GDALDataType& gdalType, const int& channels );
+int gdal2opencv(const GDALDataType& gdalType, const int& channels);
 
 /**
  * Write an image to pixel
 */
-void write_pixel( const double& pixelValue,
-                  GDALDataType const& gdalType,
-                  const int& gdalChannels,
-                  Mat& image,
-                  const int& row,
-                  const int& col,
-                  const int& channel );
+void write_pixel(const double& pixelValue, GDALDataType const& gdalType, const int& gdalChannels, Mat& image,
+                 const int& row, const int& col, const int& channel);
 
 /**
  * Write a color table pixel to the image
 */
-void write_ctable_pixel( const double& pixelValue,
-                         const GDALDataType& gdalType,
-                         const GDALColorTable* gdalColorTable,
-                         Mat& image,
-                         const int& y,
-                         const int& x,
-                         const int& c );
+void write_ctable_pixel(const double& pixelValue, const GDALDataType& gdalType,
+                        const GDALColorTable* gdalColorTable, Mat& image, const int& y, const int& x, const int& c);
 
 /**
  * Loader for GDAL
 */
-class GdalDecoder CV_FINAL : public BaseImageDecoder{
+class GdalDecoder CV_FINAL : public BaseImageDecoder
+{
 
-    public:
-
-        /**
+public:
+    /**
          * Default Constructor
         */
-        GdalDecoder();
+    GdalDecoder();
 
-        /**
+    /**
          * Destructor
         */
-        ~GdalDecoder() CV_OVERRIDE;
+    ~GdalDecoder() CV_OVERRIDE;
 
-        /**
+    /**
          * Read image data
         */
-        bool readData( Mat& img ) CV_OVERRIDE;
+    bool readData(Mat& img) CV_OVERRIDE;
 
-        /**
+    /**
          * Read the image header
         */
-        bool readHeader() CV_OVERRIDE;
+    bool readHeader() CV_OVERRIDE;
 
-        /**
+    /**
          * Close the module
         */
-        void close();
+    void close();
 
-        /**
+    /**
          * Create a new decoder
         */
-        ImageDecoder newDecoder() const CV_OVERRIDE;
+    ImageDecoder newDecoder() const CV_OVERRIDE;
 
-        /**
+    /**
          * Test the file signature
          *
          * In general, this should be avoided as the user should specifically request GDAL.
          * The reason is that GDAL tends to overlap with other image formats and it is probably
          * safer to use other formats first.
         */
-        virtual bool checkSignature( const String& signature ) const CV_OVERRIDE;
+    virtual bool checkSignature(const String& signature) const CV_OVERRIDE;
 
-    protected:
+protected:
+    /// GDAL Dataset
+    GDALDataset* m_dataset;
 
-        /// GDAL Dataset
-        GDALDataset* m_dataset;
+    /// GDAL Driver
+    GDALDriver* m_driver;
 
-        /// GDAL Driver
-        GDALDriver* m_driver;
-
-        /// Check if we are reading from a color table
-        bool hasColorTable;
+    /// Check if we are reading from a color table
+    bool hasColorTable;
 
 }; /// End of GdalDecoder Class
 
-} /// End of Namespace cv
+} // namespace cv
 
-#endif/*HAVE_GDAL*/
+#endif /*HAVE_GDAL*/
 
-#endif/*__GRFMT_GDAL_HPP__*/
+#endif /*__GRFMT_GDAL_HPP__*/
