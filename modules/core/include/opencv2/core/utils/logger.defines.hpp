@@ -9,13 +9,14 @@
 //! @{
 
 // Supported logging levels and their semantic
-#define CV_LOG_LEVEL_SILENT 0          //!< for using in setLogLevel() call
-#define CV_LOG_LEVEL_FATAL 1           //!< Fatal (critical) error (unrecoverable internal error)
-#define CV_LOG_LEVEL_ERROR 2           //!< Error message
-#define CV_LOG_LEVEL_WARN 3            //!< Warning message
-#define CV_LOG_LEVEL_INFO 4            //!< Info message
-#define CV_LOG_LEVEL_DEBUG 5           //!< Debug message. Disabled in the "Release" build.
-#define CV_LOG_LEVEL_VERBOSE 6         //!< Verbose (trace) messages. Requires verbosity level. Disabled in the "Release" build.
+#define CV_LOG_LEVEL_SILENT 0 //!< for using in setLogLevel() call
+#define CV_LOG_LEVEL_FATAL 1 //!< Fatal (critical) error (unrecoverable internal error)
+#define CV_LOG_LEVEL_ERROR 2 //!< Error message
+#define CV_LOG_LEVEL_WARN 3 //!< Warning message
+#define CV_LOG_LEVEL_INFO 4 //!< Info message
+#define CV_LOG_LEVEL_DEBUG 5 //!< Debug message. Disabled in the "Release" build.
+#define CV_LOG_LEVEL_VERBOSE \
+    6 //!< Verbose (trace) messages. Requires verbosity level. Disabled in the "Release" build.
 
 //! @}
 

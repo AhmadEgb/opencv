@@ -4,8 +4,7 @@
 #include "precomp.hpp"
 #include <sstream>
 
-namespace cv
-{
+namespace cv {
 
 namespace {
 static const char* noneValue = "<none>";
@@ -13,13 +12,13 @@ static const char* noneValue = "<none>";
 static String cat_string(const String& str)
 {
     int left = 0, right = (int)str.length();
-    while( left < right && str[left] == ' ' )
+    while (left < right && str[left] == ' ')
         left++;
-    while( right > left && str[right-1] == ' ' )
+    while (right > left && str[right - 1] == ' ')
         right--;
-    return left >= right ? String("") : str.substr(left, right-left);
+    return left >= right ? String("") : str.substr(left, right - left);
 }
-}
+} // namespace
 
 struct CommandLineParserParams
 {
@@ -55,19 +54,19 @@ struct CommandLineParser::Impl
 
 static const char* get_type_name(Param type)
 {
-    if( type == Param::INT )
+    if (type == Param::INT)
         return "int";
-    if( type == Param::BOOLEAN )
+    if (type == Param::BOOLEAN)
         return "bool";
-    if( type == Param::UNSIGNED_INT )
+    if (type == Param::UNSIGNED_INT)
         return "unsigned";
-    if( type == Param::UINT64 )
+    if (type == Param::UINT64)
         return "unsigned long long";
-    if( type == Param::FLOAT )
+    if (type == Param::FLOAT)
         return "float";
-    if( type == Param::REAL )
+    if (type == Param::REAL)
         return "double";
-    if( type == Param::STRING )
+    if (type == Param::STRING)
         return "string";
     return "unknown";
 }
@@ -84,25 +83,25 @@ static bool parse_bool(std::string str)
 static void from_str(const String& str, Param type, void* dst)
 {
     std::stringstream ss(str.c_str());
-    if( type == Param::INT )
+    if (type == Param::INT)
         ss >> *(int*)dst;
-    else if( type == Param::BOOLEAN )
+    else if (type == Param::BOOLEAN)
     {
         std::string temp;
         ss >> temp;
-        *(bool*) dst = parse_bool(temp);
+        *(bool*)dst = parse_bool(temp);
     }
-    else if( type == Param::UNSIGNED_INT )
+    else if (type == Param::UNSIGNED_INT)
         ss >> *(unsigned*)dst;
-    else if( type == Param::UINT64 )
+    else if (type == Param::UINT64)
         ss >> *(uint64*)dst;
-    else if( type == Param::FLOAT )
+    else if (type == Param::FLOAT)
         ss >> *(float*)dst;
-    else if( type == Param::REAL )
+    else if (type == Param::REAL)
         ss >> *(double*)dst;
-    else if( type == Param::STRING )
+    else if (type == Param::STRING)
         *(String*)dst = str;
-    else if( type == Param::SCALAR)
+    else if (type == Param::SCALAR)
     {
         Scalar& scalar = *(Scalar*)dst;
         for (int i = 0; i < 4 && !ss.eof(); ++i)
@@ -132,7 +131,8 @@ void CommandLineParser::getByName(const String& name, bool space_delete, Param t
                         v = cat_string(v);
 
                     // the key was neither specified nor has a default value
-                    if((v.empty() && type != Param::STRING) || v == noneValue) {
+                    if ((v.empty() && type != Param::STRING) || v == noneValue)
+                    {
                         impl->error = true;
                         impl->error_message = impl->error_message + "Missing parameter: '" + name + "'\n";
                         return;
@@ -144,10 +144,10 @@ void CommandLineParser::getByName(const String& name, bool space_delete, Param t
             }
         }
     }
-    CV_CATCH (Exception, e)
+    CV_CATCH(Exception, e)
     {
         impl->error = true;
-        impl->error_message = impl->error_message + "Parameter '"+ name + "': " + e.err + "\n";
+        impl->error_message = impl->error_message + "Parameter '" + name + "': " + e.err + "\n";
         return;
     }
     CV_Error_(Error::StsBadArg, ("undeclared key '%s' requested", name.c_str()));
@@ -163,10 +163,12 @@ void CommandLineParser::getByIndex(int index, bool space_delete, Param type, voi
             if (impl->data[i].number == index)
             {
                 String v = impl->data[i].def_value;
-                if (space_delete == true) v = cat_string(v);
+                if (space_delete == true)
+                    v = cat_string(v);
 
                 // the key was neither specified nor has a default value
-                if((v.empty() && type != Param::STRING) || v == noneValue) {
+                if ((v.empty() && type != Param::STRING) || v == noneValue)
+                {
                     impl->error = true;
                     impl->error_message = impl->error_message + format("Missing parameter #%d\n", index);
                     return;
@@ -185,7 +187,7 @@ void CommandLineParser::getByIndex(int index, bool space_delete, Param type, voi
     CV_Error_(Error::StsBadArg, ("undeclared position %d requested", index));
 }
 
-static bool cmp_params(const CommandLineParserParams & p1, const CommandLineParserParams & p2)
+static bool cmp_params(const CommandLineParserParams& p1, const CommandLineParserParams& p2)
 {
     if (p1.number < p2.number)
         return true;
@@ -260,7 +262,8 @@ CommandLineParser::CommandLineParser(int argc, const char* const argv[], const S
             String value = "true";
             size_t equalsPos = key.find('=');
 
-            if(equalsPos != String::npos) {
+            if (equalsPos != String::npos)
+            {
                 value = key.substr(equalsPos + 1);
                 key = key.substr(0, equalsPos);
             }
@@ -288,22 +291,19 @@ CommandLineParser::CommandLineParser(const CommandLineParser& parser)
     CV_XADD(&impl->refcount, 1);
 }
 
-CommandLineParser& CommandLineParser::operator = (const CommandLineParser& parser)
+CommandLineParser& CommandLineParser::operator=(const CommandLineParser& parser)
 {
-    if( this != &parser )
+    if (this != &parser)
     {
         CV_XADD(&parser.impl->refcount, 1);
-        if(CV_XADD(&impl->refcount, -1) == 1)
+        if (CV_XADD(&impl->refcount, -1) == 1)
             delete impl;
         impl = parser.impl;
     }
     return *this;
 }
 
-void CommandLineParser::about(const String& message)
-{
-    impl->about_message = message;
-}
+void CommandLineParser::about(const String& message) { impl->about_message = message; }
 
 void CommandLineParser::Impl::apply_params(const String& key, const String& value)
 {
@@ -339,13 +339,10 @@ void CommandLineParser::Impl::sort_params()
         std::sort(data[i].keys.begin(), data[i].keys.end());
     }
 
-    std::sort (data.begin(), data.end(), cmp_params);
+    std::sort(data.begin(), data.end(), cmp_params);
 }
 
-String CommandLineParser::getPathToApplication() const
-{
-    return impl->path_to_app;
-}
+String CommandLineParser::getPathToApplication() const { return impl->path_to_app; }
 
 bool CommandLineParser::has(const String& name) const
 {
@@ -364,10 +361,7 @@ bool CommandLineParser::has(const String& name) const
     CV_Error_(Error::StsBadArg, ("undeclared key '%s' requested", name.c_str()));
 }
 
-bool CommandLineParser::check() const
-{
-    return impl->error == false;
-}
+bool CommandLineParser::check() const { return impl->error == false; }
 
 void CommandLineParser::printErrors() const
 {
@@ -461,16 +455,10 @@ std::vector<String> CommandLineParser::Impl::split_range_string(const String& _s
         {
             if (begin == true)
             {
-                CV_THROW (cv::Exception(CV_StsParseError,
-                         String("error in split_range_string(")
-                         + str
-                         + String(", ")
-                         + String(1, fs)
-                         + String(", ")
-                         + String(1, ss)
-                         + String(")"),
-                         "", __FILE__, __LINE__
-                         ));
+                CV_THROW(cv::Exception(CV_StsParseError,
+                                       String("error in split_range_string(") + str + String(", ") + String(1, fs)
+                                           + String(", ") + String(1, ss) + String(")"),
+                                       "", __FILE__, __LINE__));
             }
             begin = true;
             word = "";
@@ -481,16 +469,10 @@ std::vector<String> CommandLineParser::Impl::split_range_string(const String& _s
         {
             if (begin == false)
             {
-                CV_THROW (cv::Exception(CV_StsParseError,
-                         String("error in split_range_string(")
-                         + str
-                         + String(", ")
-                         + String(1, fs)
-                         + String(", ")
-                         + String(1, ss)
-                         + String(")"),
-                         "", __FILE__, __LINE__
-                         ));
+                CV_THROW(cv::Exception(CV_StsParseError,
+                                       String("error in split_range_string(") + str + String(", ") + String(1, fs)
+                                           + String(", ") + String(1, ss) + String(")"),
+                                       "", __FILE__, __LINE__));
             }
             begin = false;
             vec.push_back(word);
@@ -505,16 +487,10 @@ std::vector<String> CommandLineParser::Impl::split_range_string(const String& _s
 
     if (begin == true)
     {
-        CV_THROW (cv::Exception(CV_StsParseError,
-                 String("error in split_range_string(")
-                 + str
-                 + String(", ")
-                 + String(1, fs)
-                 + String(", ")
-                 + String(1, ss)
-                 + String(")"),
-                 "", __FILE__, __LINE__
-                ));
+        CV_THROW(cv::Exception(CV_StsParseError,
+                               String("error in split_range_string(") + str + String(", ") + String(1, fs)
+                                   + String(", ") + String(1, ss) + String(")"),
+                               "", __FILE__, __LINE__));
     }
     return vec;
 }
@@ -550,4 +526,4 @@ std::vector<String> CommandLineParser::Impl::split_string(const String& _str, ch
     return vec;
 }
 
-}
+} // namespace cv

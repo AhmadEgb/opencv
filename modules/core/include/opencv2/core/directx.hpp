@@ -104,7 +104,7 @@ CV_EXPORTS Context& initializeContextFromDirect3DDevice9(IDirect3DDevice9* pDire
 
 //! @}
 
-} // namespace cv::directx::ocl
+} // namespace ocl
 
 //! @addtogroup core_directx
 //! @{
@@ -155,7 +155,8 @@ CV_EXPORTS void convertFromD3D10Texture2D(ID3D10Texture2D* pD3D10Texture2D, Outp
 //! @param src                 - source InputArray
 //! @param pDirect3DSurface9   - destination D3D10 texture
 //! @param surfaceSharedHandle - shared handle
-CV_EXPORTS void convertToDirect3DSurface9(InputArray src, IDirect3DSurface9* pDirect3DSurface9, void* surfaceSharedHandle = NULL);
+CV_EXPORTS void convertToDirect3DSurface9(InputArray src, IDirect3DSurface9* pDirect3DSurface9,
+                                          void* surfaceSharedHandle = NULL);
 
 //! @brief Converts IDirect3DSurface9 to OutputArray
 //
@@ -165,7 +166,8 @@ CV_EXPORTS void convertToDirect3DSurface9(InputArray src, IDirect3DSurface9* pDi
 //! @param pDirect3DSurface9   - source D3D10 texture
 //! @param dst                 - destination OutputArray
 //! @param surfaceSharedHandle - shared handle
-CV_EXPORTS void convertFromDirect3DSurface9(IDirect3DSurface9* pDirect3DSurface9, OutputArray dst, void* surfaceSharedHandle = NULL);
+CV_EXPORTS void convertFromDirect3DSurface9(IDirect3DSurface9* pDirect3DSurface9, OutputArray dst,
+                                            void* surfaceSharedHandle = NULL);
 
 //! @brief Get OpenCV type from DirectX type
 //! @param iDXGI_FORMAT - enum DXGI_FORMAT for D3D10/D3D11
@@ -179,6 +181,6 @@ CV_EXPORTS int getTypeFromD3DFORMAT(const int iD3DFORMAT); // enum D3DTYPE for D
 
 //! @}
 
-} } // namespace cv::directx
+}} // namespace cv::directx
 
 #endif // OPENCV_CORE_DIRECTX_HPP

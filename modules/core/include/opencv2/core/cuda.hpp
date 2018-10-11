@@ -45,7 +45,7 @@
 #define OPENCV_CORE_CUDA_HPP
 
 #ifndef __cplusplus
-#  error cuda.hpp header must be compiled as C++
+#    error cuda.hpp header must be compiled as C++
 #endif
 
 #include "opencv2/core.hpp"
@@ -127,7 +127,8 @@ public:
     CV_WRAP GpuMat(Size size, int type, GpuMat::Allocator* allocator = GpuMat::defaultAllocator());
 
     //! constucts GpuMat and fills it with the specified value _s
-    CV_WRAP GpuMat(int rows, int cols, int type, Scalar s, GpuMat::Allocator* allocator = GpuMat::defaultAllocator());
+    CV_WRAP GpuMat(int rows, int cols, int type, Scalar s,
+                   GpuMat::Allocator* allocator = GpuMat::defaultAllocator());
     CV_WRAP GpuMat(Size size, int type, Scalar s, GpuMat::Allocator* allocator = GpuMat::defaultAllocator());
 
     //! copy constructor
@@ -148,7 +149,7 @@ public:
     ~GpuMat();
 
     //! assignment operators
-    GpuMat& operator =(const GpuMat& m);
+    GpuMat& operator=(const GpuMat& m);
 
     //! allocates new GpuMat data unless the GpuMat already has specified size and type
     CV_WRAP void create(int rows, int cols, int type);
@@ -243,11 +244,15 @@ public:
     const uchar* ptr(int y = 0) const;
 
     //! template version of the above method
-    template<typename _Tp> _Tp* ptr(int y = 0);
-    template<typename _Tp> const _Tp* ptr(int y = 0) const;
+    template<typename _Tp>
+    _Tp* ptr(int y = 0);
+    template<typename _Tp>
+    const _Tp* ptr(int y = 0) const;
 
-    template <typename _Tp> operator PtrStepSz<_Tp>() const;
-    template <typename _Tp> operator PtrStep<_Tp>() const;
+    template<typename _Tp>
+    operator PtrStepSz<_Tp>() const;
+    template<typename _Tp>
+    operator PtrStep<_Tp>() const;
 
     //! returns a new GpuMat header for the specified row
     CV_WRAP GpuMat row(int y) const;
@@ -264,8 +269,8 @@ public:
     CV_WRAP GpuMat colRange(Range r) const;
 
     //! extracts a rectangular sub-GpuMat (this is a generalized form of row, rowRange etc.)
-    GpuMat operator ()(Range rowRange, Range colRange) const;
-    GpuMat operator ()(Rect roi) const;
+    GpuMat operator()(Range rowRange, Range colRange) const;
+    GpuMat operator()(Rect roi) const;
 
     //! creates alternative GpuMat header for the same data, with different
     //! number of channels and/or different number of rows
@@ -481,7 +486,6 @@ and the corresponding memory is automatically returned to the pool for later usa
 class CV_EXPORTS_W BufferPool
 {
 public:
-
     //! Gets the BufferPool for the given stream.
     explicit BufferPool(Stream& stream);
 
@@ -524,7 +528,12 @@ Pinned Memory APIs* document or *CUDA C Programming Guide*.
 class CV_EXPORTS_W HostMem
 {
 public:
-    enum AllocType { PAGE_LOCKED = 1, SHARED = 2, WRITE_COMBINED = 4 };
+    enum AllocType
+    {
+        PAGE_LOCKED = 1,
+        SHARED = 2,
+        WRITE_COMBINED = 4
+    };
 
     static MatAllocator* getAllocator(HostMem::AllocType alloc_type = HostMem::AllocType::PAGE_LOCKED);
 
@@ -540,7 +549,7 @@ public:
 
     ~HostMem();
 
-    HostMem& operator =(const HostMem& m);
+    HostMem& operator=(const HostMem& m);
 
     //! swaps with other smart pointer
     CV_WRAP void swap(HostMem& b);
@@ -697,10 +706,10 @@ class CV_EXPORTS_W Event
 public:
     enum CreateFlags
     {
-        DEFAULT        = 0x00,  /**< Default event flag */
-        BLOCKING_SYNC  = 0x01,  /**< Event uses blocking synchronization */
-        DISABLE_TIMING = 0x02,  /**< Event will not record timing data */
-        INTERPROCESS   = 0x04   /**< Event is suitable for interprocess use. DisableTiming must be set */
+        DEFAULT = 0x00, /**< Default event flag */
+        BLOCKING_SYNC = 0x01, /**< Event uses blocking synchronization */
+        DISABLE_TIMING = 0x02, /**< Event will not record timing data */
+        INTERPROCESS = 0x04 /**< Event is suitable for interprocess use. DisableTiming must be set */
     };
 
     CV_WRAP explicit Event(Event::CreateFlags flags = Event::CreateFlags::DEFAULT);
@@ -898,9 +907,9 @@ public:
 
     enum ComputeMode
     {
-        ComputeModeDefault,         /**< default compute mode (Multiple threads can use cudaSetDevice with this device) */
-        ComputeModeExclusive,       /**< compute-exclusive-thread mode (Only one thread in one process will be able to use cudaSetDevice with this device) */
-        ComputeModeProhibited,      /**< compute-prohibited mode (No threads can use cudaSetDevice with this device) */
+        ComputeModeDefault, /**< default compute mode (Multiple threads can use cudaSetDevice with this device) */
+        ComputeModeExclusive, /**< compute-exclusive-thread mode (Only one thread in one process will be able to use cudaSetDevice with this device) */
+        ComputeModeProhibited, /**< compute-prohibited mode (No threads can use cudaSetDevice with this device) */
         ComputeModeExclusiveProcess /**< compute-exclusive-process mode (Many threads in one process will be able to use cudaSetDevice with this device) */
     };
 
@@ -1041,7 +1050,7 @@ CV_EXPORTS void convertFp16(InputArray _src, OutputArray _dst, Stream& stream = 
 
 //! @} cudacore_init
 
-}} // namespace cv { namespace cuda {
+}} // namespace cv::cuda
 
 
 #include "opencv2/core/cuda.inl.hpp"

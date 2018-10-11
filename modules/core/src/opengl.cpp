@@ -43,25 +43,27 @@
 #include "precomp.hpp"
 
 #ifdef HAVE_OPENGL
-#  include "gl_core_3_1.hpp"
-#  ifdef HAVE_CUDA
-#    include <cuda_gl_interop.h>
-#  endif
+#    include "gl_core_3_1.hpp"
+#    ifdef HAVE_CUDA
+#        include <cuda_gl_interop.h>
+#    endif
 #else // HAVE_OPENGL
-#  define NO_OPENGL_SUPPORT_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenGL support")
+#    define NO_OPENGL_SUPPORT_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenGL support")
 #endif // HAVE_OPENGL
 
 using namespace cv;
 using namespace cv::cuda;
 
 #if defined(_MSC_VER)
-#pragma warning(disable : 4702)  // unreachable code
+#    pragma warning(disable : 4702) // unreachable code
 #endif
 
-namespace
-{
+namespace {
 #ifndef HAVE_OPENGL
-inline static CV_NORETURN void throw_no_ogl() { CV_Error(cv::Error::OpenGlNotSupported, "The library is compiled without OpenGL support"); }
+inline static CV_NORETURN void throw_no_ogl()
+{
+    CV_Error(cv::Error::OpenGlNotSupported, "The library is compiled without OpenGL support");
+}
 #elif defined _DEBUG
 inline static bool checkError(const char* file, const int line, const char* func = 0)
 {
@@ -93,12 +95,12 @@ inline static bool checkError(const char* file, const int line, const char* func
 #endif // HAVE_OPENGL
 } // namespace
 
-#define CV_CheckGlError() CV_DbgAssert( (checkError(__FILE__, __LINE__, CV_Func)) )
+#define CV_CheckGlError() CV_DbgAssert((checkError(__FILE__, __LINE__, CV_Func)))
 
 #ifdef HAVE_OPENGL
-namespace
-{
-    const GLenum gl_types[] = { gl::UNSIGNED_BYTE, gl::BYTE, gl::UNSIGNED_SHORT, gl::SHORT, gl::INT, gl::FLOAT, gl::DOUBLE };
+namespace {
+const GLenum gl_types[] = {gl::UNSIGNED_BYTE, gl::BYTE,  gl::UNSIGNED_SHORT, gl::SHORT,
+                           gl::INT,           gl::FLOAT, gl::DOUBLE};
 }
 #endif
 
@@ -111,12 +113,12 @@ void cv::cuda::setGlDevice(int device)
     CV_UNUSED(device);
     throw_no_ogl();
 #else
-    #ifndef HAVE_CUDA
-        CV_UNUSED(device);
-        throw_no_cuda();
-    #else
-        cudaSafeCall( cudaGLSetGLDevice(device) );
-    #endif
+#    ifndef HAVE_CUDA
+    CV_UNUSED(device);
+    throw_no_cuda();
+#    else
+    cudaSafeCall(cudaGLSetGLDevice(device));
+#    endif
 #endif
 }
 
@@ -125,154 +127,146 @@ void cv::cuda::setGlDevice(int device)
 
 #if defined(HAVE_OPENGL) && defined(HAVE_CUDA)
 
-namespace
+namespace {
+class CudaResource
 {
-    class CudaResource
-    {
-    public:
-        CudaResource();
-        ~CudaResource();
+public:
+    CudaResource();
+    ~CudaResource();
 
-        void registerBuffer(GLuint buffer);
-        void release();
+    void registerBuffer(GLuint buffer);
+    void release();
 
-        void copyFrom(const void* src, size_t spitch, size_t width, size_t height, cudaStream_t stream = 0);
-        void copyTo(void* dst, size_t dpitch, size_t width, size_t height, cudaStream_t stream = 0);
+    void copyFrom(const void* src, size_t spitch, size_t width, size_t height, cudaStream_t stream = 0);
+    void copyTo(void* dst, size_t dpitch, size_t width, size_t height, cudaStream_t stream = 0);
 
-        void* map(cudaStream_t stream = 0);
-        void unmap(cudaStream_t stream = 0);
+    void* map(cudaStream_t stream = 0);
+    void unmap(cudaStream_t stream = 0);
 
-    private:
-        cudaGraphicsResource_t resource_;
-        GLuint buffer_;
+private:
+    cudaGraphicsResource_t resource_;
+    GLuint buffer_;
 
-        class GraphicsMapHolder;
-    };
+    class GraphicsMapHolder;
+};
 
-    CudaResource::CudaResource() : resource_(0), buffer_(0)
-    {
-    }
+CudaResource::CudaResource() : resource_(0), buffer_(0) {}
 
-    CudaResource::~CudaResource()
-    {
-        release();
-    }
+CudaResource::~CudaResource() { release(); }
 
-    void CudaResource::registerBuffer(GLuint buffer)
-    {
-        CV_DbgAssert( buffer != 0 );
+void CudaResource::registerBuffer(GLuint buffer)
+{
+    CV_DbgAssert(buffer != 0);
 
-        if (buffer_ == buffer)
-            return;
+    if (buffer_ == buffer)
+        return;
 
-        cudaGraphicsResource_t resource;
-        cudaSafeCall( cudaGraphicsGLRegisterBuffer(&resource, buffer, cudaGraphicsMapFlagsNone) );
+    cudaGraphicsResource_t resource;
+    cudaSafeCall(cudaGraphicsGLRegisterBuffer(&resource, buffer, cudaGraphicsMapFlagsNone));
 
-        release();
+    release();
 
-        resource_ = resource;
-        buffer_ = buffer;
-    }
-
-    void CudaResource::release()
-    {
-        if (resource_)
-            cudaGraphicsUnregisterResource(resource_);
-
-        resource_ = 0;
-        buffer_ = 0;
-    }
-
-    class CudaResource::GraphicsMapHolder
-    {
-    public:
-        GraphicsMapHolder(cudaGraphicsResource_t* resource, cudaStream_t stream);
-        ~GraphicsMapHolder();
-
-        void reset();
-
-    private:
-        cudaGraphicsResource_t* resource_;
-        cudaStream_t stream_;
-    };
-
-    CudaResource::GraphicsMapHolder::GraphicsMapHolder(cudaGraphicsResource_t* resource, cudaStream_t stream) : resource_(resource), stream_(stream)
-    {
-        if (resource_)
-            cudaSafeCall( cudaGraphicsMapResources(1, resource_, stream_) );
-    }
-
-    CudaResource::GraphicsMapHolder::~GraphicsMapHolder()
-    {
-        if (resource_)
-            cudaGraphicsUnmapResources(1, resource_, stream_);
-    }
-
-    void CudaResource::GraphicsMapHolder::reset()
-    {
-        resource_ = 0;
-    }
-
-    void CudaResource::copyFrom(const void* src, size_t spitch, size_t width, size_t height, cudaStream_t stream)
-    {
-        CV_DbgAssert( resource_ != 0 );
-
-        GraphicsMapHolder h(&resource_, stream);
-        CV_UNUSED(h);
-
-        void* dst;
-        size_t size;
-        cudaSafeCall( cudaGraphicsResourceGetMappedPointer(&dst, &size, resource_) );
-
-        CV_DbgAssert( width * height == size );
-
-        if (stream == 0)
-            cudaSafeCall( cudaMemcpy2D(dst, width, src, spitch, width, height, cudaMemcpyDeviceToDevice) );
-        else
-            cudaSafeCall( cudaMemcpy2DAsync(dst, width, src, spitch, width, height, cudaMemcpyDeviceToDevice, stream) );
-    }
-
-    void CudaResource::copyTo(void* dst, size_t dpitch, size_t width, size_t height, cudaStream_t stream)
-    {
-        CV_DbgAssert( resource_ != 0 );
-
-        GraphicsMapHolder h(&resource_, stream);
-        CV_UNUSED(h);
-
-        void* src;
-        size_t size;
-        cudaSafeCall( cudaGraphicsResourceGetMappedPointer(&src, &size, resource_) );
-
-        CV_DbgAssert( width * height == size );
-
-        if (stream == 0)
-            cudaSafeCall( cudaMemcpy2D(dst, dpitch, src, width, width, height, cudaMemcpyDeviceToDevice) );
-        else
-            cudaSafeCall( cudaMemcpy2DAsync(dst, dpitch, src, width, width, height, cudaMemcpyDeviceToDevice, stream) );
-    }
-
-    void* CudaResource::map(cudaStream_t stream)
-    {
-        CV_DbgAssert( resource_ != 0 );
-
-        GraphicsMapHolder h(&resource_, stream);
-
-        void* ptr;
-        size_t size;
-        cudaSafeCall( cudaGraphicsResourceGetMappedPointer(&ptr, &size, resource_) );
-
-        h.reset();
-
-        return ptr;
-    }
-
-    void CudaResource::unmap(cudaStream_t stream)
-    {
-        CV_Assert( resource_ != 0 );
-
-        cudaGraphicsUnmapResources(1, &resource_, stream);
-    }
+    resource_ = resource;
+    buffer_ = buffer;
 }
+
+void CudaResource::release()
+{
+    if (resource_)
+        cudaGraphicsUnregisterResource(resource_);
+
+    resource_ = 0;
+    buffer_ = 0;
+}
+
+class CudaResource::GraphicsMapHolder
+{
+public:
+    GraphicsMapHolder(cudaGraphicsResource_t* resource, cudaStream_t stream);
+    ~GraphicsMapHolder();
+
+    void reset();
+
+private:
+    cudaGraphicsResource_t* resource_;
+    cudaStream_t stream_;
+};
+
+CudaResource::GraphicsMapHolder::GraphicsMapHolder(cudaGraphicsResource_t* resource, cudaStream_t stream)
+    : resource_(resource), stream_(stream)
+{
+    if (resource_)
+        cudaSafeCall(cudaGraphicsMapResources(1, resource_, stream_));
+}
+
+CudaResource::GraphicsMapHolder::~GraphicsMapHolder()
+{
+    if (resource_)
+        cudaGraphicsUnmapResources(1, resource_, stream_);
+}
+
+void CudaResource::GraphicsMapHolder::reset() { resource_ = 0; }
+
+void CudaResource::copyFrom(const void* src, size_t spitch, size_t width, size_t height, cudaStream_t stream)
+{
+    CV_DbgAssert(resource_ != 0);
+
+    GraphicsMapHolder h(&resource_, stream);
+    CV_UNUSED(h);
+
+    void* dst;
+    size_t size;
+    cudaSafeCall(cudaGraphicsResourceGetMappedPointer(&dst, &size, resource_));
+
+    CV_DbgAssert(width * height == size);
+
+    if (stream == 0)
+        cudaSafeCall(cudaMemcpy2D(dst, width, src, spitch, width, height, cudaMemcpyDeviceToDevice));
+    else
+        cudaSafeCall(cudaMemcpy2DAsync(dst, width, src, spitch, width, height, cudaMemcpyDeviceToDevice, stream));
+}
+
+void CudaResource::copyTo(void* dst, size_t dpitch, size_t width, size_t height, cudaStream_t stream)
+{
+    CV_DbgAssert(resource_ != 0);
+
+    GraphicsMapHolder h(&resource_, stream);
+    CV_UNUSED(h);
+
+    void* src;
+    size_t size;
+    cudaSafeCall(cudaGraphicsResourceGetMappedPointer(&src, &size, resource_));
+
+    CV_DbgAssert(width * height == size);
+
+    if (stream == 0)
+        cudaSafeCall(cudaMemcpy2D(dst, dpitch, src, width, width, height, cudaMemcpyDeviceToDevice));
+    else
+        cudaSafeCall(cudaMemcpy2DAsync(dst, dpitch, src, width, width, height, cudaMemcpyDeviceToDevice, stream));
+}
+
+void* CudaResource::map(cudaStream_t stream)
+{
+    CV_DbgAssert(resource_ != 0);
+
+    GraphicsMapHolder h(&resource_, stream);
+
+    void* ptr;
+    size_t size;
+    cudaSafeCall(cudaGraphicsResourceGetMappedPointer(&ptr, &size, resource_));
+
+    h.reset();
+
+    return ptr;
+}
+
+void CudaResource::unmap(cudaStream_t stream)
+{
+    CV_Assert(resource_ != 0);
+
+    cudaGraphicsUnmapResources(1, &resource_, stream);
+}
+} // namespace
 
 #endif
 
@@ -306,13 +300,13 @@ public:
     void* mapHost(GLenum access);
     void unmapHost();
 
-#ifdef HAVE_CUDA
+#    ifdef HAVE_CUDA
     void copyFrom(const void* src, size_t spitch, size_t width, size_t height, cudaStream_t stream = 0);
     void copyTo(void* dst, size_t dpitch, size_t width, size_t height, cudaStream_t stream = 0) const;
 
     void* mapDevice(cudaStream_t stream = 0);
     void unmapDevice(cudaStream_t stream = 0);
-#endif
+#    endif
 
     void setAutoRelease(bool flag) { autoRelease_ = flag; }
 
@@ -324,9 +318,9 @@ private:
     GLuint bufId_;
     bool autoRelease_;
 
-#ifdef HAVE_CUDA
+#    ifdef HAVE_CUDA
     mutable CudaResource cudaResource_;
-#endif
+#    endif
 };
 
 const Ptr<cv::ogl::Buffer::Impl>& cv::ogl::Buffer::Impl::empty()
@@ -335,21 +329,20 @@ const Ptr<cv::ogl::Buffer::Impl>& cv::ogl::Buffer::Impl::empty()
     return p;
 }
 
-cv::ogl::Buffer::Impl::Impl() : bufId_(0), autoRelease_(false)
-{
-}
+cv::ogl::Buffer::Impl::Impl() : bufId_(0), autoRelease_(false) {}
 
 cv::ogl::Buffer::Impl::Impl(GLuint abufId, bool autoRelease) : bufId_(abufId), autoRelease_(autoRelease)
 {
-    CV_Assert( gl::IsBuffer(abufId) == gl::TRUE_ );
+    CV_Assert(gl::IsBuffer(abufId) == gl::TRUE_);
 }
 
-cv::ogl::Buffer::Impl::Impl(GLsizeiptr size, const GLvoid* data, GLenum target, bool autoRelease) : bufId_(0), autoRelease_(autoRelease)
+cv::ogl::Buffer::Impl::Impl(GLsizeiptr size, const GLvoid* data, GLenum target, bool autoRelease)
+    : bufId_(0), autoRelease_(autoRelease)
 {
     gl::GenBuffers(1, &bufId_);
     CV_CheckGlError();
 
-    CV_Assert( bufId_ != 0 );
+    CV_Assert(bufId_ != 0);
 
     gl::BindBuffer(target, bufId_);
     CV_CheckGlError();
@@ -414,12 +407,9 @@ void* cv::ogl::Buffer::Impl::mapHost(GLenum access)
     return data;
 }
 
-void cv::ogl::Buffer::Impl::unmapHost()
-{
-    gl::UnmapBuffer(gl::COPY_READ_BUFFER);
-}
+void cv::ogl::Buffer::Impl::unmapHost() { gl::UnmapBuffer(gl::COPY_READ_BUFFER); }
 
-#ifdef HAVE_CUDA
+#    ifdef HAVE_CUDA
 
 void cv::ogl::Buffer::Impl::copyFrom(const void* src, size_t spitch, size_t width, size_t height, cudaStream_t stream)
 {
@@ -439,12 +429,9 @@ void* cv::ogl::Buffer::Impl::mapDevice(cudaStream_t stream)
     return cudaResource_.map(stream);
 }
 
-void cv::ogl::Buffer::Impl::unmapDevice(cudaStream_t stream)
-{
-    cudaResource_.unmap(stream);
-}
+void cv::ogl::Buffer::Impl::unmapDevice(cudaStream_t stream) { cudaResource_.unmap(stream); }
 
-#endif // HAVE_CUDA
+#    endif // HAVE_CUDA
 
 #endif // HAVE_OPENGL
 
@@ -457,7 +444,8 @@ cv::ogl::Buffer::Buffer() : rows_(0), cols_(0), type_(0)
 #endif
 }
 
-cv::ogl::Buffer::Buffer(int arows, int acols, int atype, unsigned int abufId, bool autoRelease) : rows_(0), cols_(0), type_(0)
+cv::ogl::Buffer::Buffer(int arows, int acols, int atype, unsigned int abufId, bool autoRelease)
+    : rows_(0), cols_(0), type_(0)
 {
 #ifndef HAVE_OPENGL
     CV_UNUSED(arows);
@@ -474,7 +462,8 @@ cv::ogl::Buffer::Buffer(int arows, int acols, int atype, unsigned int abufId, bo
 #endif
 }
 
-cv::ogl::Buffer::Buffer(Size asize, int atype, unsigned int abufId, bool autoRelease) : rows_(0), cols_(0), type_(0)
+cv::ogl::Buffer::Buffer(Size asize, int atype, unsigned int abufId, bool autoRelease)
+    : rows_(0), cols_(0), type_(0)
 {
 #ifndef HAVE_OPENGL
     CV_UNUSED(asize);
@@ -508,16 +497,16 @@ cv::ogl::Buffer::Buffer(InputArray arr, Target target, bool autoRelease) : rows_
         break;
 
     default:
-        {
-            Mat mat = arr.getMat();
-            CV_Assert( mat.isContinuous() );
-            const GLsizeiptr asize = mat.rows * mat.cols * mat.elemSize();
-            impl_.reset(new Impl(asize, mat.data, target, autoRelease));
-            rows_ = mat.rows;
-            cols_ = mat.cols;
-            type_ = mat.type();
-            break;
-        }
+    {
+        Mat mat = arr.getMat();
+        CV_Assert(mat.isContinuous());
+        const GLsizeiptr asize = mat.rows * mat.cols * mat.elemSize();
+        impl_.reset(new Impl(asize, mat.data, target, autoRelease));
+        rows_ = mat.rows;
+        cols_ = mat.cols;
+        type_ = mat.type();
+        break;
+    }
     }
 #endif
 }
@@ -582,30 +571,30 @@ void cv::ogl::Buffer::copyFrom(InputArray arr, Target target, bool autoRelease)
     switch (kind)
     {
     case _InputArray::OPENGL_BUFFER:
-        {
-            ogl::Buffer buf = arr.getOGlBuffer();
-            impl_->copyFrom(buf.bufId(), asize.area() * CV_ELEM_SIZE(atype));
-            break;
-        }
+    {
+        ogl::Buffer buf = arr.getOGlBuffer();
+        impl_->copyFrom(buf.bufId(), asize.area() * CV_ELEM_SIZE(atype));
+        break;
+    }
 
     case _InputArray::CUDA_GPU_MAT:
-        {
-            #ifndef HAVE_CUDA
-                throw_no_cuda();
-            #else
-                GpuMat dmat = arr.getGpuMat();
-                impl_->copyFrom(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows);
-            #endif
+    {
+#    ifndef HAVE_CUDA
+        throw_no_cuda();
+#    else
+        GpuMat dmat = arr.getGpuMat();
+        impl_->copyFrom(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows);
+#    endif
 
-            break;
-        }
+        break;
+    }
 
     default:
-        {
-            Mat mat = arr.getMat();
-            CV_Assert( mat.isContinuous() );
-            impl_->copyFrom(asize.area() * CV_ELEM_SIZE(atype), mat.data);
-        }
+    {
+        Mat mat = arr.getMat();
+        CV_Assert(mat.isContinuous());
+        impl_->copyFrom(asize.area() * CV_ELEM_SIZE(atype), mat.data);
+    }
     }
 #endif
 }
@@ -619,19 +608,20 @@ void cv::ogl::Buffer::copyFrom(InputArray arr, cuda::Stream& stream, Target targ
     CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
-    #ifndef HAVE_CUDA
-        CV_UNUSED(arr);
-        CV_UNUSED(stream);
-        CV_UNUSED(target);
-        CV_UNUSED(autoRelease);
-        throw_no_cuda();
-    #else
-        GpuMat dmat = arr.getGpuMat();
+#    ifndef HAVE_CUDA
+    CV_UNUSED(arr);
+    CV_UNUSED(stream);
+    CV_UNUSED(target);
+    CV_UNUSED(autoRelease);
+    throw_no_cuda();
+#    else
+    GpuMat dmat = arr.getGpuMat();
 
-        create(dmat.size(), dmat.type(), target, autoRelease);
+    create(dmat.size(), dmat.type(), target, autoRelease);
 
-        impl_->copyFrom(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows, cuda::StreamAccessor::getStream(stream));
-    #endif
+    impl_->copyFrom(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows,
+                    cuda::StreamAccessor::getStream(stream));
+#    endif
 #endif
 }
 
@@ -646,31 +636,31 @@ void cv::ogl::Buffer::copyTo(OutputArray arr) const
     switch (kind)
     {
     case _InputArray::OPENGL_BUFFER:
-        {
-            arr.getOGlBufferRef().copyFrom(*this);
-            break;
-        }
+    {
+        arr.getOGlBufferRef().copyFrom(*this);
+        break;
+    }
 
     case _InputArray::CUDA_GPU_MAT:
-        {
-            #ifndef HAVE_CUDA
-                throw_no_cuda();
-            #else
-                GpuMat& dmat = arr.getGpuMatRef();
-                dmat.create(rows_, cols_, type_);
-                impl_->copyTo(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows);
-            #endif
+    {
+#    ifndef HAVE_CUDA
+        throw_no_cuda();
+#    else
+        GpuMat& dmat = arr.getGpuMatRef();
+        dmat.create(rows_, cols_, type_);
+        impl_->copyTo(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows);
+#    endif
 
-            break;
-        }
+        break;
+    }
 
     default:
-        {
-            arr.create(rows_, cols_, type_);
-            Mat mat = arr.getMat();
-            CV_Assert( mat.isContinuous() );
-            impl_->copyTo(mat.rows * mat.cols * mat.elemSize(), mat.data);
-        }
+    {
+        arr.create(rows_, cols_, type_);
+        Mat mat = arr.getMat();
+        CV_Assert(mat.isContinuous());
+        impl_->copyTo(mat.rows * mat.cols * mat.elemSize(), mat.data);
+    }
     }
 #endif
 }
@@ -682,15 +672,16 @@ void cv::ogl::Buffer::copyTo(OutputArray arr, cuda::Stream& stream) const
     CV_UNUSED(stream);
     throw_no_ogl();
 #else
-    #ifndef HAVE_CUDA
-        CV_UNUSED(arr);
-        CV_UNUSED(stream);
-        throw_no_cuda();
-    #else
-        arr.create(rows_, cols_, type_);
-        GpuMat dmat = arr.getGpuMat();
-        impl_->copyTo(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows, cuda::StreamAccessor::getStream(stream));
-    #endif
+#    ifndef HAVE_CUDA
+    CV_UNUSED(arr);
+    CV_UNUSED(stream);
+    throw_no_cuda();
+#    else
+    arr.create(rows_, cols_, type_);
+    GpuMat dmat = arr.getGpuMat();
+    impl_->copyTo(dmat.data, dmat.step, dmat.cols * dmat.elemSize(), dmat.rows,
+                  cuda::StreamAccessor::getStream(stream));
+#    endif
 #endif
 }
 
@@ -752,11 +743,11 @@ GpuMat cv::ogl::Buffer::mapDevice()
 #ifndef HAVE_OPENGL
     throw_no_ogl();
 #else
-    #ifndef HAVE_CUDA
-        throw_no_cuda();
-    #else
-        return GpuMat(rows_, cols_, type_, impl_->mapDevice());
-    #endif
+#    ifndef HAVE_CUDA
+    throw_no_cuda();
+#    else
+    return GpuMat(rows_, cols_, type_, impl_->mapDevice());
+#    endif
 #endif
 }
 
@@ -765,11 +756,11 @@ void cv::ogl::Buffer::unmapDevice()
 #ifndef HAVE_OPENGL
     throw_no_ogl();
 #else
-    #ifndef HAVE_CUDA
-        throw_no_cuda();
-    #else
-        impl_->unmapDevice();
-    #endif
+#    ifndef HAVE_CUDA
+    throw_no_cuda();
+#    else
+    impl_->unmapDevice();
+#    endif
 #endif
 }
 
@@ -779,12 +770,12 @@ cuda::GpuMat cv::ogl::Buffer::mapDevice(cuda::Stream& stream)
     CV_UNUSED(stream);
     throw_no_ogl();
 #else
-    #ifndef HAVE_CUDA
-        CV_UNUSED(stream);
-        throw_no_cuda();
-    #else
-        return GpuMat(rows_, cols_, type_, impl_->mapDevice(cuda::StreamAccessor::getStream(stream)));
-    #endif
+#    ifndef HAVE_CUDA
+    CV_UNUSED(stream);
+    throw_no_cuda();
+#    else
+    return GpuMat(rows_, cols_, type_, impl_->mapDevice(cuda::StreamAccessor::getStream(stream)));
+#    endif
 #endif
 }
 
@@ -794,12 +785,12 @@ void cv::ogl::Buffer::unmapDevice(cuda::Stream& stream)
     CV_UNUSED(stream);
     throw_no_ogl();
 #else
-    #ifndef HAVE_CUDA
-        CV_UNUSED(stream);
-        throw_no_cuda();
-    #else
-        impl_->unmapDevice(cuda::StreamAccessor::getStream(stream));
-    #endif
+#    ifndef HAVE_CUDA
+    CV_UNUSED(stream);
+    throw_no_cuda();
+#    else
+    impl_->unmapDevice(cuda::StreamAccessor::getStream(stream));
+#    endif
 #endif
 }
 
@@ -830,10 +821,11 @@ public:
     static const Ptr<Impl> empty();
 
     Impl(GLuint texId, bool autoRelease);
-    Impl(GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, bool autoRelease);
+    Impl(GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels,
+         bool autoRelease);
     ~Impl();
 
-    void copyFrom(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
+    void copyFrom(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels);
     void copyTo(GLenum format, GLenum type, GLvoid* pixels) const;
 
     void bind() const;
@@ -855,16 +847,16 @@ const Ptr<cv::ogl::Texture2D::Impl> cv::ogl::Texture2D::Impl::empty()
     return p;
 }
 
-cv::ogl::Texture2D::Impl::Impl() : texId_(0), autoRelease_(false)
-{
-}
+cv::ogl::Texture2D::Impl::Impl() : texId_(0), autoRelease_(false) {}
 
 cv::ogl::Texture2D::Impl::Impl(GLuint atexId, bool autoRelease) : texId_(atexId), autoRelease_(autoRelease)
 {
-    CV_Assert( gl::IsTexture(atexId) == gl::TRUE_ );
+    CV_Assert(gl::IsTexture(atexId) == gl::TRUE_);
 }
 
-cv::ogl::Texture2D::Impl::Impl(GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels, bool autoRelease) : texId_(0), autoRelease_(autoRelease)
+cv::ogl::Texture2D::Impl::Impl(GLint internalFormat, GLsizei width, GLsizei height, GLenum format, GLenum type,
+                               const GLvoid* pixels, bool autoRelease)
+    : texId_(0), autoRelease_(autoRelease)
 {
     gl::GenTextures(1, &texId_);
     CV_CheckGlError();
@@ -890,7 +882,8 @@ cv::ogl::Texture2D::Impl::~Impl()
         gl::DeleteTextures(1, &texId_);
 }
 
-void cv::ogl::Texture2D::Impl::copyFrom(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
+void cv::ogl::Texture2D::Impl::copyFrom(GLsizei width, GLsizei height, GLenum format, GLenum type,
+                                        const GLvoid* pixels)
 {
     gl::BindTexture(gl::TEXTURE_2D, texId_);
     CV_CheckGlError();
@@ -934,7 +927,8 @@ cv::ogl::Texture2D::Texture2D() : rows_(0), cols_(0), format_(NONE)
 #endif
 }
 
-cv::ogl::Texture2D::Texture2D(int arows, int acols, Format aformat, unsigned int atexId, bool autoRelease) : rows_(0), cols_(0), format_(NONE)
+cv::ogl::Texture2D::Texture2D(int arows, int acols, Format aformat, unsigned int atexId, bool autoRelease)
+    : rows_(0), cols_(0), format_(NONE)
 {
 #ifndef HAVE_OPENGL
     CV_UNUSED(arows);
@@ -951,7 +945,8 @@ cv::ogl::Texture2D::Texture2D(int arows, int acols, Format aformat, unsigned int
 #endif
 }
 
-cv::ogl::Texture2D::Texture2D(Size asize, Format aformat, unsigned int atexId, bool autoRelease) : rows_(0), cols_(0), format_(NONE)
+cv::ogl::Texture2D::Texture2D(Size asize, Format aformat, unsigned int atexId, bool autoRelease)
+    : rows_(0), cols_(0), format_(NONE)
 {
 #ifndef HAVE_OPENGL
     CV_UNUSED(asize);
@@ -982,53 +977,50 @@ cv::ogl::Texture2D::Texture2D(InputArray arr, bool autoRelease) : rows_(0), cols
     const int depth = CV_MAT_DEPTH(atype);
     const int cn = CV_MAT_CN(atype);
 
-    CV_Assert( depth <= CV_32F );
-    CV_Assert( cn == 1 || cn == 3 || cn == 4 );
+    CV_Assert(depth <= CV_32F);
+    CV_Assert(cn == 1 || cn == 3 || cn == 4);
 
-    const Format internalFormats[] =
-    {
-        NONE, DEPTH_COMPONENT, NONE, RGB, RGBA
-    };
-    const GLenum srcFormats[] =
-    {
-        0, gl::DEPTH_COMPONENT, 0, gl::BGR, gl::BGRA
-    };
+    const Format internalFormats[] = {NONE, DEPTH_COMPONENT, NONE, RGB, RGBA};
+    const GLenum srcFormats[] = {0, gl::DEPTH_COMPONENT, 0, gl::BGR, gl::BGRA};
 
     switch (kind)
     {
     case _InputArray::OPENGL_BUFFER:
-        {
-            ogl::Buffer buf = arr.getOGlBuffer();
-            buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            impl_.reset(new Impl(internalFormats[cn], asize.width, asize.height, srcFormats[cn], gl_types[depth], 0, autoRelease));
-            ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            break;
-        }
+    {
+        ogl::Buffer buf = arr.getOGlBuffer();
+        buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        impl_.reset(new Impl(internalFormats[cn], asize.width, asize.height, srcFormats[cn], gl_types[depth], 0,
+                             autoRelease));
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        break;
+    }
 
     case _InputArray::CUDA_GPU_MAT:
-        {
-            #ifndef HAVE_CUDA
-                throw_no_cuda();
-            #else
-                GpuMat dmat = arr.getGpuMat();
-                ogl::Buffer buf(dmat, ogl::Buffer::PIXEL_UNPACK_BUFFER);
-                buf.setAutoRelease(true);
-                buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-                impl_.reset(new Impl(internalFormats[cn], asize.width, asize.height, srcFormats[cn], gl_types[depth], 0, autoRelease));
-                ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            #endif
+    {
+#    ifndef HAVE_CUDA
+        throw_no_cuda();
+#    else
+        GpuMat dmat = arr.getGpuMat();
+        ogl::Buffer buf(dmat, ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        buf.setAutoRelease(true);
+        buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        impl_.reset(new Impl(internalFormats[cn], asize.width, asize.height, srcFormats[cn], gl_types[depth], 0,
+                             autoRelease));
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+#    endif
 
-            break;
-        }
+        break;
+    }
 
     default:
-        {
-            Mat mat = arr.getMat();
-            CV_Assert( mat.isContinuous() );
-            ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            impl_.reset(new Impl(internalFormats[cn], asize.width, asize.height, srcFormats[cn], gl_types[depth], mat.data, autoRelease));
-            break;
-        }
+    {
+        Mat mat = arr.getMat();
+        CV_Assert(mat.isContinuous());
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        impl_.reset(new Impl(internalFormats[cn], asize.width, asize.height, srcFormats[cn], gl_types[depth],
+                             mat.data, autoRelease));
+        break;
+    }
     }
 
     rows_ = asize.height;
@@ -1094,54 +1086,48 @@ void cv::ogl::Texture2D::copyFrom(InputArray arr, bool autoRelease)
     const int depth = CV_MAT_DEPTH(atype);
     const int cn = CV_MAT_CN(atype);
 
-    CV_Assert( depth <= CV_32F );
-    CV_Assert( cn == 1 || cn == 3 || cn == 4 );
+    CV_Assert(depth <= CV_32F);
+    CV_Assert(cn == 1 || cn == 3 || cn == 4);
 
-    const Format internalFormats[] =
-    {
-        NONE, DEPTH_COMPONENT, NONE, RGB, RGBA
-    };
-    const GLenum srcFormats[] =
-    {
-        0, gl::DEPTH_COMPONENT, 0, gl::BGR, gl::BGRA
-    };
+    const Format internalFormats[] = {NONE, DEPTH_COMPONENT, NONE, RGB, RGBA};
+    const GLenum srcFormats[] = {0, gl::DEPTH_COMPONENT, 0, gl::BGR, gl::BGRA};
 
     create(asize, internalFormats[cn], autoRelease);
 
-    switch(kind)
+    switch (kind)
     {
     case _InputArray::OPENGL_BUFFER:
-        {
-            ogl::Buffer buf = arr.getOGlBuffer();
-            buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            impl_->copyFrom(asize.width, asize.height, srcFormats[cn], gl_types[depth], 0);
-            ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            break;
-        }
+    {
+        ogl::Buffer buf = arr.getOGlBuffer();
+        buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        impl_->copyFrom(asize.width, asize.height, srcFormats[cn], gl_types[depth], 0);
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        break;
+    }
 
     case _InputArray::CUDA_GPU_MAT:
-        {
-            #ifndef HAVE_CUDA
-                throw_no_cuda();
-            #else
-                GpuMat dmat = arr.getGpuMat();
-                ogl::Buffer buf(dmat, ogl::Buffer::PIXEL_UNPACK_BUFFER);
-                buf.setAutoRelease(true);
-                buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-                impl_->copyFrom(asize.width, asize.height, srcFormats[cn], gl_types[depth], 0);
-                ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            #endif
+    {
+#    ifndef HAVE_CUDA
+        throw_no_cuda();
+#    else
+        GpuMat dmat = arr.getGpuMat();
+        ogl::Buffer buf(dmat, ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        buf.setAutoRelease(true);
+        buf.bind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        impl_->copyFrom(asize.width, asize.height, srcFormats[cn], gl_types[depth], 0);
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+#    endif
 
-            break;
-        }
+        break;
+    }
 
     default:
-        {
-            Mat mat = arr.getMat();
-            CV_Assert( mat.isContinuous() );
-            ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
-            impl_->copyFrom(asize.width, asize.height, srcFormats[cn], gl_types[depth], mat.data);
-        }
+    {
+        Mat mat = arr.getMat();
+        CV_Assert(mat.isContinuous());
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_UNPACK_BUFFER);
+        impl_->copyFrom(asize.width, asize.height, srcFormats[cn], gl_types[depth], mat.data);
+    }
     }
 #endif
 }
@@ -1156,45 +1142,45 @@ void cv::ogl::Texture2D::copyTo(OutputArray arr, int ddepth, bool autoRelease) c
 #else
     const int kind = arr.kind();
 
-    const int cn = format_ == DEPTH_COMPONENT ? 1: format_ == RGB ? 3 : 4;
+    const int cn = format_ == DEPTH_COMPONENT ? 1 : format_ == RGB ? 3 : 4;
     const GLenum dstFormat = format_ == DEPTH_COMPONENT ? gl::DEPTH_COMPONENT : format_ == RGB ? gl::BGR : gl::BGRA;
 
-    switch(kind)
+    switch (kind)
     {
     case _InputArray::OPENGL_BUFFER:
-        {
-            ogl::Buffer& buf = arr.getOGlBufferRef();
-            buf.create(rows_, cols_, CV_MAKE_TYPE(ddepth, cn), ogl::Buffer::PIXEL_PACK_BUFFER, autoRelease);
-            buf.bind(ogl::Buffer::PIXEL_PACK_BUFFER);
-            impl_->copyTo(dstFormat, gl_types[ddepth], 0);
-            ogl::Buffer::unbind(ogl::Buffer::PIXEL_PACK_BUFFER);
-            break;
-        }
+    {
+        ogl::Buffer& buf = arr.getOGlBufferRef();
+        buf.create(rows_, cols_, CV_MAKE_TYPE(ddepth, cn), ogl::Buffer::PIXEL_PACK_BUFFER, autoRelease);
+        buf.bind(ogl::Buffer::PIXEL_PACK_BUFFER);
+        impl_->copyTo(dstFormat, gl_types[ddepth], 0);
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_PACK_BUFFER);
+        break;
+    }
 
     case _InputArray::CUDA_GPU_MAT:
-        {
-            #ifndef HAVE_CUDA
-                throw_no_cuda();
-            #else
-                ogl::Buffer buf(rows_, cols_, CV_MAKE_TYPE(ddepth, cn), ogl::Buffer::PIXEL_PACK_BUFFER);
-                buf.setAutoRelease(true);
-                buf.bind(ogl::Buffer::PIXEL_PACK_BUFFER);
-                impl_->copyTo(dstFormat, gl_types[ddepth], 0);
-                ogl::Buffer::unbind(ogl::Buffer::PIXEL_PACK_BUFFER);
-                buf.copyTo(arr);
-            #endif
+    {
+#    ifndef HAVE_CUDA
+        throw_no_cuda();
+#    else
+        ogl::Buffer buf(rows_, cols_, CV_MAKE_TYPE(ddepth, cn), ogl::Buffer::PIXEL_PACK_BUFFER);
+        buf.setAutoRelease(true);
+        buf.bind(ogl::Buffer::PIXEL_PACK_BUFFER);
+        impl_->copyTo(dstFormat, gl_types[ddepth], 0);
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_PACK_BUFFER);
+        buf.copyTo(arr);
+#    endif
 
-            break;
-        }
+        break;
+    }
 
     default:
-        {
-            arr.create(rows_, cols_, CV_MAKE_TYPE(ddepth, cn));
-            Mat mat = arr.getMat();
-            CV_Assert( mat.isContinuous() );
-            ogl::Buffer::unbind(ogl::Buffer::PIXEL_PACK_BUFFER);
-            impl_->copyTo(dstFormat, gl_types[ddepth], mat.data);
-        }
+    {
+        arr.create(rows_, cols_, CV_MAKE_TYPE(ddepth, cn));
+        Mat mat = arr.getMat();
+        CV_Assert(mat.isContinuous());
+        ogl::Buffer::unbind(ogl::Buffer::PIXEL_PACK_BUFFER);
+        impl_->copyTo(dstFormat, gl_types[ddepth], mat.data);
+    }
     }
 #endif
 }
@@ -1226,8 +1212,8 @@ void cv::ogl::Arrays::setVertexArray(InputArray vertex)
     const int cn = vertex.channels();
     const int depth = vertex.depth();
 
-    CV_Assert( cn == 2 || cn == 3 || cn == 4 );
-    CV_Assert( depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F );
+    CV_Assert(cn == 2 || cn == 3 || cn == 4);
+    CV_Assert(depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F);
 
     if (vertex.kind() == _InputArray::OPENGL_BUFFER)
         vertex_ = vertex.getOGlBuffer();
@@ -1247,7 +1233,7 @@ void cv::ogl::Arrays::setColorArray(InputArray color)
 {
     const int cn = color.channels();
 
-    CV_Assert( cn == 3 || cn == 4 );
+    CV_Assert(cn == 3 || cn == 4);
 
     if (color.kind() == _InputArray::OPENGL_BUFFER)
         color_ = color.getOGlBuffer();
@@ -1255,18 +1241,15 @@ void cv::ogl::Arrays::setColorArray(InputArray color)
         color_.copyFrom(color);
 }
 
-void cv::ogl::Arrays::resetColorArray()
-{
-    color_.release();
-}
+void cv::ogl::Arrays::resetColorArray() { color_.release(); }
 
 void cv::ogl::Arrays::setNormalArray(InputArray normal)
 {
     const int cn = normal.channels();
     const int depth = normal.depth();
 
-    CV_Assert( cn == 3 );
-    CV_Assert( depth == CV_8S || depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F );
+    CV_Assert(cn == 3);
+    CV_Assert(depth == CV_8S || depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F);
 
     if (normal.kind() == _InputArray::OPENGL_BUFFER)
         normal_ = normal.getOGlBuffer();
@@ -1274,18 +1257,15 @@ void cv::ogl::Arrays::setNormalArray(InputArray normal)
         normal_.copyFrom(normal);
 }
 
-void cv::ogl::Arrays::resetNormalArray()
-{
-    normal_.release();
-}
+void cv::ogl::Arrays::resetNormalArray() { normal_.release(); }
 
 void cv::ogl::Arrays::setTexCoordArray(InputArray texCoord)
 {
     const int cn = texCoord.channels();
     const int depth = texCoord.depth();
 
-    CV_Assert( cn >= 1 && cn <= 4 );
-    CV_Assert( depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F );
+    CV_Assert(cn >= 1 && cn <= 4);
+    CV_Assert(depth == CV_16S || depth == CV_32S || depth == CV_32F || depth == CV_64F);
 
     if (texCoord.kind() == _InputArray::OPENGL_BUFFER)
         texCoord_ = texCoord.getOGlBuffer();
@@ -1293,10 +1273,7 @@ void cv::ogl::Arrays::setTexCoordArray(InputArray texCoord)
         texCoord_.copyFrom(texCoord);
 }
 
-void cv::ogl::Arrays::resetTexCoordArray()
-{
-    texCoord_.release();
-}
+void cv::ogl::Arrays::resetTexCoordArray() { texCoord_.release(); }
 
 void cv::ogl::Arrays::release()
 {
@@ -1324,9 +1301,9 @@ void cv::ogl::Arrays::bind() const
 #ifndef HAVE_OPENGL
     throw_no_ogl();
 #else
-    CV_Assert( texCoord_.empty() || texCoord_.size().area() == size_ );
-    CV_Assert( normal_.empty() || normal_.size().area() == size_ );
-    CV_Assert( color_.empty() || color_.size().area() == size_ );
+    CV_Assert(texCoord_.empty() || texCoord_.size().area() == size_);
+    CV_Assert(normal_.empty() || normal_.size().area() == size_);
+    CV_Assert(color_.empty() || color_.size().area() == size_);
 
     if (texCoord_.empty())
     {
@@ -1434,20 +1411,26 @@ void cv::ogl::render(const ogl::Texture2D& tex, Rect_<double> wndRect, Rect_<dou
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
         CV_CheckGlError();
 
-        const double vertex[] =
-        {
-            wndRect.x, wndRect.y, 0.0,
-            wndRect.x, (wndRect.y + wndRect.height), 0.0,
-            wndRect.x + wndRect.width, (wndRect.y + wndRect.height), 0.0,
-            wndRect.x + wndRect.width, wndRect.y, 0.0
-        };
-        const double texCoords[] =
-        {
-            texRect.x, texRect.y,
-            texRect.x, texRect.y + texRect.height,
-            texRect.x + texRect.width, texRect.y + texRect.height,
-            texRect.x + texRect.width, texRect.y
-        };
+        const double vertex[] = {wndRect.x,
+                                 wndRect.y,
+                                 0.0,
+                                 wndRect.x,
+                                 (wndRect.y + wndRect.height),
+                                 0.0,
+                                 wndRect.x + wndRect.width,
+                                 (wndRect.y + wndRect.height),
+                                 0.0,
+                                 wndRect.x + wndRect.width,
+                                 wndRect.y,
+                                 0.0};
+        const double texCoords[] = {texRect.x,
+                                    texRect.y,
+                                    texRect.x,
+                                    texRect.y + texRect.height,
+                                    texRect.x + texRect.width,
+                                    texRect.y + texRect.height,
+                                    texRect.x + texRect.width,
+                                    texRect.y};
 
         ogl::Buffer::unbind(ogl::Buffer::ARRAY_BUFFER);
 
@@ -1511,54 +1494,54 @@ void cv::ogl::render(const ogl::Arrays& arr, InputArray indices, int mode, Scala
 
         switch (kind)
         {
-        case _InputArray::OPENGL_BUFFER :
-            {
-                ogl::Buffer buf = indices.getOGlBuffer();
+        case _InputArray::OPENGL_BUFFER:
+        {
+            ogl::Buffer buf = indices.getOGlBuffer();
 
-                const int depth = buf.depth();
+            const int depth = buf.depth();
 
-                CV_Assert( buf.channels() == 1 );
-                CV_Assert( depth <= CV_32S );
+            CV_Assert(buf.channels() == 1);
+            CV_Assert(depth <= CV_32S);
 
-                GLenum type;
-                if (depth < CV_16U)
-                    type = gl::UNSIGNED_BYTE;
-                else if (depth < CV_32S)
-                    type = gl::UNSIGNED_SHORT;
-                else
-                    type = gl::UNSIGNED_INT;
+            GLenum type;
+            if (depth < CV_16U)
+                type = gl::UNSIGNED_BYTE;
+            else if (depth < CV_32S)
+                type = gl::UNSIGNED_SHORT;
+            else
+                type = gl::UNSIGNED_INT;
 
-                buf.bind(ogl::Buffer::ELEMENT_ARRAY_BUFFER);
+            buf.bind(ogl::Buffer::ELEMENT_ARRAY_BUFFER);
 
-                gl::DrawElements(mode, buf.size().area(), type, 0);
+            gl::DrawElements(mode, buf.size().area(), type, 0);
 
-                ogl::Buffer::unbind(ogl::Buffer::ELEMENT_ARRAY_BUFFER);
+            ogl::Buffer::unbind(ogl::Buffer::ELEMENT_ARRAY_BUFFER);
 
-                break;
-            }
+            break;
+        }
 
         default:
-            {
-                Mat mat = indices.getMat();
+        {
+            Mat mat = indices.getMat();
 
-                const int depth = mat.depth();
+            const int depth = mat.depth();
 
-                CV_Assert( mat.channels() == 1 );
-                CV_Assert( depth <= CV_32S );
-                CV_Assert( mat.isContinuous() );
+            CV_Assert(mat.channels() == 1);
+            CV_Assert(depth <= CV_32S);
+            CV_Assert(mat.isContinuous());
 
-                GLenum type;
-                if (depth < CV_16U)
-                    type = gl::UNSIGNED_BYTE;
-                else if (depth < CV_32S)
-                    type = gl::UNSIGNED_SHORT;
-                else
-                    type = gl::UNSIGNED_INT;
+            GLenum type;
+            if (depth < CV_16U)
+                type = gl::UNSIGNED_BYTE;
+            else if (depth < CV_32S)
+                type = gl::UNSIGNED_SHORT;
+            else
+                type = gl::UNSIGNED_INT;
 
-                ogl::Buffer::unbind(ogl::Buffer::ELEMENT_ARRAY_BUFFER);
+            ogl::Buffer::unbind(ogl::Buffer::ELEMENT_ARRAY_BUFFER);
 
-                gl::DrawElements(mode, mat.size().area(), type, mat.data);
-            }
+            gl::DrawElements(mode, mat.size().area(), type, mat.data);
+        }
         }
     }
 #endif
@@ -1568,22 +1551,23 @@ void cv::ogl::render(const ogl::Arrays& arr, InputArray indices, int mode, Scala
 // CL-GL Interoperability
 
 #ifdef HAVE_OPENCL
-#  include "opencv2/core/opencl/runtime/opencl_gl.hpp"
-#  ifdef cl_khr_gl_sharing
-#    define HAVE_OPENCL_OPENGL_SHARING
-#  else
-#    define NO_OPENCL_SHARING_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenCL/OpenGL sharing support")
-#  endif
+#    include "opencv2/core/opencl/runtime/opencl_gl.hpp"
+#    ifdef cl_khr_gl_sharing
+#        define HAVE_OPENCL_OPENGL_SHARING
+#    else
+#        define NO_OPENCL_SHARING_ERROR \
+            CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenCL/OpenGL sharing support")
+#    endif
 #else // HAVE_OPENCL
-#  define NO_OPENCL_SUPPORT_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenCL support")
+#    define NO_OPENCL_SUPPORT_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenCL support")
 #endif // HAVE_OPENCL
 
 #if defined(HAVE_OPENGL)
-#  if defined(__ANDROID__)
-#    include <EGL/egl.h>
-#  elif defined(__linux__)
-#    include <GL/glx.h>
-#  endif
+#    if defined(__ANDROID__)
+#        include <EGL/egl.h>
+#    elif defined(__linux__)
+#        include <GL/glx.h>
+#    endif
 #endif // HAVE_OPENGL
 
 namespace cv { namespace ogl {
@@ -1627,8 +1611,9 @@ Context& initializeContextFromGL()
             status = clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS, 0, NULL, &extensionSize);
             if (status == CL_SUCCESS)
             {
-                extensionStr.allocate(extensionSize+1);
-                status = clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS, extensionSize, (char*)extensionStr.data(), NULL);
+                extensionStr.allocate(extensionSize + 1);
+                status = clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS, extensionSize,
+                                           (char*)extensionStr.data(), NULL);
             }
             if (status != CL_SUCCESS)
                 CV_Error(cv::Error::OpenCLInitError, "OpenCL: Can't get platform extension string");
@@ -1638,31 +1623,40 @@ Context& initializeContextFromGL()
         }
 
         clGetGLContextInfoKHR_fn clGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)
-                clGetExtensionFunctionAddressForPlatform(platforms[i], "clGetGLContextInfoKHR");
+            clGetExtensionFunctionAddressForPlatform(platforms[i], "clGetGLContextInfoKHR");
         if (!clGetGLContextInfoKHR)
             continue;
 
-        cl_context_properties properties[] =
-        {
-#if defined(_WIN32)
-            CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
-            CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
-            CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
-#elif defined(__ANDROID__)
-            CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
-            CL_GL_CONTEXT_KHR, (cl_context_properties)eglGetCurrentContext(),
-            CL_EGL_DISPLAY_KHR, (cl_context_properties)eglGetCurrentDisplay(),
-#elif defined(__linux__)
-            CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
-            CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
-            CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
-#endif
+        cl_context_properties properties[] = {
+#    if defined(_WIN32)
+            CL_CONTEXT_PLATFORM,
+            (cl_context_properties)platforms[i],
+            CL_GL_CONTEXT_KHR,
+            (cl_context_properties)wglGetCurrentContext(),
+            CL_WGL_HDC_KHR,
+            (cl_context_properties)wglGetCurrentDC(),
+#    elif defined(__ANDROID__)
+            CL_CONTEXT_PLATFORM,
+            (cl_context_properties)platforms[i],
+            CL_GL_CONTEXT_KHR,
+            (cl_context_properties)eglGetCurrentContext(),
+            CL_EGL_DISPLAY_KHR,
+            (cl_context_properties)eglGetCurrentDisplay(),
+#    elif defined(__linux__)
+            CL_CONTEXT_PLATFORM,
+            (cl_context_properties)platforms[i],
+            CL_GL_CONTEXT_KHR,
+            (cl_context_properties)glXGetCurrentContext(),
+            CL_GLX_DISPLAY_KHR,
+            (cl_context_properties)glXGetCurrentDisplay(),
+#    endif
             0
         };
 
         // query device
         device = NULL;
-        status = clGetGLContextInfoKHR(properties, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(cl_device_id), (void*)&device, NULL);
+        status = clGetGLContextInfoKHR(properties, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(cl_device_id),
+                                       (void*)&device, NULL);
         if (status != CL_SUCCESS)
             continue;
 
@@ -1688,11 +1682,12 @@ Context& initializeContextFromGL()
 #endif
 }
 
-} // namespace cv::ogl::ocl
+} // namespace ocl
 
 void convertToGLTexture2D(InputArray src, Texture2D& texture)
 {
-    CV_UNUSED(src); CV_UNUSED(texture);
+    CV_UNUSED(src);
+    CV_UNUSED(texture);
 #if !defined(HAVE_OPENGL)
     NO_OPENGL_SUPPORT_ERROR;
 #elif !defined(HAVE_OPENCL)
@@ -1746,7 +1741,8 @@ void convertToGLTexture2D(InputArray src, Texture2D& texture)
 
 void convertFromGLTexture2D(const Texture2D& texture, OutputArray dst)
 {
-    CV_UNUSED(texture); CV_UNUSED(dst);
+    CV_UNUSED(texture);
+    CV_UNUSED(dst);
 #if !defined(HAVE_OPENGL)
     NO_OPENGL_SUPPORT_ERROR;
 #elif !defined(HAVE_OPENCL)
@@ -1807,7 +1803,8 @@ void convertFromGLTexture2D(const Texture2D& texture, OutputArray dst)
 //void mapGLBuffer(const Buffer& buffer, UMat& dst, AccessFlag accessFlags)
 UMat mapGLBuffer(const Buffer& buffer, AccessFlag accessFlags)
 {
-    CV_UNUSED(buffer); CV_UNUSED(accessFlags);
+    CV_UNUSED(buffer);
+    CV_UNUSED(accessFlags);
 #if !defined(HAVE_OPENGL)
     NO_OPENGL_SUPPORT_ERROR;
 #elif !defined(HAVE_OPENCL)
@@ -1821,10 +1818,10 @@ UMat mapGLBuffer(const Buffer& buffer, AccessFlag accessFlags)
     cl_command_queue clQueue = (cl_command_queue)Queue::getDefault().ptr();
 
     int clAccessFlags = 0;
-    switch (accessFlags & (ACCESS_READ|ACCESS_WRITE))
+    switch (accessFlags & (ACCESS_READ | ACCESS_WRITE))
     {
     default:
-    case ACCESS_READ+ACCESS_WRITE:
+    case ACCESS_READ + ACCESS_WRITE:
         clAccessFlags = CL_MEM_READ_WRITE;
         break;
     case ACCESS_READ:

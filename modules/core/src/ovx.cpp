@@ -11,11 +11,9 @@
 #include "opencv2/core/ovx.hpp"
 #include "opencv2/core/openvx/ovx_defs.hpp"
 
-namespace cv
-{
+namespace cv {
 
-namespace ovx
-{
+namespace ovx {
 #ifdef HAVE_OPENVX
 
 // Simple TLSData<ivx::Context> doesn't work, because default constructor doesn't create any OpenVX context.
@@ -36,36 +34,37 @@ struct OpenVXCleanupFunctor
 };
 static OpenVXCleanupFunctor g_openvx_cleanup_functor;
 
-ivx::Context& getOpenVXContext()
-{
-    return getOpenVXTLSData().get()->ctx;
-}
+ivx::Context& getOpenVXContext() { return getOpenVXTLSData().get()->ctx; }
 
 #endif
 
-} // namespace
+} // namespace ovx
 
 
 bool haveOpenVX()
 {
 #ifdef HAVE_OPENVX
     static int g_haveOpenVX = -1;
-    if(g_haveOpenVX < 0)
+    if (g_haveOpenVX < 0)
     {
         try
         {
-        ivx::Context context = ovx::getOpenVXContext();
-        vx_uint16 vComp = ivx::compiledWithVersion();
-        vx_uint16 vCurr = context.version();
-        g_haveOpenVX =
-                VX_VERSION_MAJOR(vComp) == VX_VERSION_MAJOR(vCurr) &&
-                VX_VERSION_MINOR(vComp) == VX_VERSION_MINOR(vCurr)
-                ? 1 : 0;
+            ivx::Context context = ovx::getOpenVXContext();
+            vx_uint16 vComp = ivx::compiledWithVersion();
+            vx_uint16 vCurr = context.version();
+            g_haveOpenVX = VX_VERSION_MAJOR(vComp) == VX_VERSION_MAJOR(vCurr)
+                                   && VX_VERSION_MINOR(vComp) == VX_VERSION_MINOR(vCurr)
+                               ? 1
+                               : 0;
         }
-        catch(const ivx::WrapperError&)
-        { g_haveOpenVX = 0; }
-        catch(const ivx::RuntimeError&)
-        { g_haveOpenVX = 0; }
+        catch (const ivx::WrapperError&)
+        {
+            g_haveOpenVX = 0;
+        }
+        catch (const ivx::RuntimeError&)
+        {
+            g_haveOpenVX = 0;
+        }
     }
     return g_haveOpenVX == 1;
 #else
@@ -77,7 +76,7 @@ bool useOpenVX()
 {
 #ifdef HAVE_OPENVX
     CoreTLSData* data = getCoreTlsData().get();
-    if( data->useOpenVX < 0 )
+    if (data->useOpenVX < 0)
     {
         // enabled (if available) by default
         data->useOpenVX = haveOpenVX() ? 1 : 0;
@@ -91,7 +90,7 @@ bool useOpenVX()
 void setUseOpenVX(bool flag)
 {
 #ifdef HAVE_OPENVX
-    if( haveOpenVX() )
+    if (haveOpenVX())
     {
         CoreTLSData* data = getCoreTlsData().get();
         data->useOpenVX = flag ? 1 : 0;

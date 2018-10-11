@@ -9,12 +9,11 @@
 
 #pragma once
 #ifndef OPENCV_OVX_HPP
-#define OPENCV_OVX_HPP
+#    define OPENCV_OVX_HPP
 
-#include "cvdef.h"
+#    include "cvdef.h"
 
-namespace cv
-{
+namespace cv {
 /// Check if use of OpenVX is possible
 CV_EXPORTS_W bool haveOpenVX();
 

@@ -42,23 +42,16 @@
 
 #include "precomp.hpp"
 
-namespace cv
-{
+namespace cv {
 
-Algorithm::Algorithm()
-{
-    CV_TRACE_FUNCTION();
-}
+Algorithm::Algorithm() { CV_TRACE_FUNCTION(); }
 
-Algorithm::~Algorithm()
-{
-    CV_TRACE_FUNCTION();
-}
+Algorithm::~Algorithm() { CV_TRACE_FUNCTION(); }
 
 void Algorithm::write(const Ptr<FileStorage>& fs, const String& name) const
 {
     CV_TRACE_FUNCTION();
-    if(name.empty())
+    if (name.empty())
     {
         write(*fs);
         return;
@@ -89,6 +82,6 @@ void Algorithm::writeFormat(FileStorage& fs) const
     fs << "format" << (int)3;
 }
 
-}
+} // namespace cv
 
 /* End of file. */

@@ -45,95 +45,93 @@
 #include "opencv2/core/utils/filesystem.hpp"
 
 #if defined _WIN32 || defined WINCE
-# include <windows.h>
+#    include <windows.h>
 const char dir_separators[] = "/\\";
 
-namespace
+namespace {
+struct dirent
 {
-    struct dirent
-    {
-        const char* d_name;
-    };
+    const char* d_name;
+};
 
-    struct DIR
+struct DIR
+{
+#    ifdef WINRT
+    WIN32_FIND_DATAW data;
+#    else
+    WIN32_FIND_DATA data;
+#    endif
+    HANDLE handle;
+    dirent ent;
+#    ifdef WINRT
+    DIR() {}
+    ~DIR()
     {
-#ifdef WINRT
-        WIN32_FIND_DATAW data;
-#else
-        WIN32_FIND_DATA data;
-#endif
-        HANDLE handle;
-        dirent ent;
-#ifdef WINRT
-        DIR() { }
-        ~DIR()
-        {
-            if (ent.d_name)
-                delete[] ent.d_name;
-        }
-#endif
-    };
-
-    DIR* opendir(const char* path)
-    {
-        DIR* dir = new DIR;
-        dir->ent.d_name = 0;
-#ifdef WINRT
-        cv::String full_path = cv::String(path) + "\\*";
-        wchar_t wfull_path[MAX_PATH];
-        size_t copied = mbstowcs(wfull_path, full_path.c_str(), MAX_PATH);
-        CV_Assert((copied != MAX_PATH) && (copied != (size_t)-1));
-        dir->handle = ::FindFirstFileExW(wfull_path, FindExInfoStandard,
-                        &dir->data, FindExSearchNameMatch, NULL, 0);
-#else
-        dir->handle = ::FindFirstFileExA((cv::String(path) + "\\*").c_str(),
-            FindExInfoStandard, &dir->data, FindExSearchNameMatch, NULL, 0);
-#endif
-        if(dir->handle == INVALID_HANDLE_VALUE)
-        {
-            /*closedir will do all cleanup*/
-            delete dir;
-            return 0;
-        }
-        return dir;
+        if (ent.d_name)
+            delete[] ent.d_name;
     }
+#    endif
+};
 
-    dirent* readdir(DIR* dir)
+DIR* opendir(const char* path)
+{
+    DIR* dir = new DIR;
+    dir->ent.d_name = 0;
+#    ifdef WINRT
+    cv::String full_path = cv::String(path) + "\\*";
+    wchar_t wfull_path[MAX_PATH];
+    size_t copied = mbstowcs(wfull_path, full_path.c_str(), MAX_PATH);
+    CV_Assert((copied != MAX_PATH) && (copied != (size_t)-1));
+    dir->handle = ::FindFirstFileExW(wfull_path, FindExInfoStandard, &dir->data, FindExSearchNameMatch, NULL, 0);
+#    else
+    dir->handle = ::FindFirstFileExA((cv::String(path) + "\\*").c_str(), FindExInfoStandard, &dir->data,
+                                     FindExSearchNameMatch, NULL, 0);
+#    endif
+    if (dir->handle == INVALID_HANDLE_VALUE)
     {
-#ifdef WINRT
-        if (dir->ent.d_name != 0)
-        {
-            if (::FindNextFileW(dir->handle, &dir->data) != TRUE)
-                return 0;
-        }
-        size_t asize = wcstombs(NULL, dir->data.cFileName, 0);
-        CV_Assert((asize != 0) && (asize != (size_t)-1));
-        char* aname = new char[asize+1];
-        aname[asize] = 0;
-        wcstombs(aname, dir->data.cFileName, asize);
-        dir->ent.d_name = aname;
-#else
-        if (dir->ent.d_name != 0)
-        {
-            if (::FindNextFileA(dir->handle, &dir->data) != TRUE)
-                return 0;
-        }
-        dir->ent.d_name = dir->data.cFileName;
-#endif
-        return &dir->ent;
-    }
-
-    void closedir(DIR* dir)
-    {
-        ::FindClose(dir->handle);
+        /*closedir will do all cleanup*/
         delete dir;
+        return 0;
     }
-
-
+    return dir;
 }
+
+dirent* readdir(DIR* dir)
+{
+#    ifdef WINRT
+    if (dir->ent.d_name != 0)
+    {
+        if (::FindNextFileW(dir->handle, &dir->data) != TRUE)
+            return 0;
+    }
+    size_t asize = wcstombs(NULL, dir->data.cFileName, 0);
+    CV_Assert((asize != 0) && (asize != (size_t)-1));
+    char* aname = new char[asize + 1];
+    aname[asize] = 0;
+    wcstombs(aname, dir->data.cFileName, asize);
+    dir->ent.d_name = aname;
+#    else
+    if (dir->ent.d_name != 0)
+    {
+        if (::FindNextFileA(dir->handle, &dir->data) != TRUE)
+            return 0;
+    }
+    dir->ent.d_name = dir->data.cFileName;
+#    endif
+    return &dir->ent;
+}
+
+void closedir(DIR* dir)
+{
+    ::FindClose(dir->handle);
+    delete dir;
+}
+
+
+} // namespace
 #else
-# include <dirent.h>
-# include <sys/stat.h>
+#    include <dirent.h>
+#    include <sys/stat.h>
 const char dir_separators[] = "/";
 #endif
 
@@ -147,14 +145,14 @@ static bool isDir(const cv::String& path, DIR* dir)
     else
     {
         WIN32_FILE_ATTRIBUTE_DATA all_attrs;
-#ifdef WINRT
+#    ifdef WINRT
         wchar_t wpath[MAX_PATH];
         size_t copied = mbstowcs(wpath, path.c_str(), MAX_PATH);
         CV_Assert((copied != MAX_PATH) && (copied != (size_t)-1));
         status = ::GetFileAttributesExW(wpath, GetFileExInfoStandard, &all_attrs);
-#else
+#    else
         status = ::GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &all_attrs);
-#endif
+#    endif
         attributes = all_attrs.dwFileAttributes;
     }
 
@@ -162,9 +160,9 @@ static bool isDir(const cv::String& path, DIR* dir)
 #else
     CV_UNUSED(dir);
     struct stat stat_buf;
-    if (0 != stat( path.c_str(), &stat_buf))
+    if (0 != stat(path.c_str(), &stat_buf))
         return false;
-    int is_dir = S_ISDIR( stat_buf.st_mode);
+    int is_dir = S_ISDIR(stat_buf.st_mode);
     return is_dir != 0;
 #endif
 }
@@ -175,7 +173,7 @@ bool cv::utils::fs::isDirectory(const cv::String& path)
     return isDir(path, NULL);
 }
 
-static bool wildcmp(const char *string, const char *wild)
+static bool wildcmp(const char* string, const char* wild)
 {
     // Based on wildcmp written by Jack Handy - <A href="mailto:jakkhandy@hotmail.com">jakkhandy@hotmail.com</A>
     const char *cp = 0, *mp = 0;
@@ -224,20 +222,21 @@ static bool wildcmp(const char *string, const char *wild)
 }
 
 static void glob_rec(const cv::String& directory, const cv::String& wildchart, std::vector<cv::String>& result,
-        bool recursive, bool includeDirectories, const cv::String& pathPrefix)
+                     bool recursive, bool includeDirectories, const cv::String& pathPrefix)
 {
-    DIR *dir;
+    DIR* dir;
 
-    if ((dir = opendir (directory.c_str())) != 0)
+    if ((dir = opendir(directory.c_str())) != 0)
     {
         /* find all the files and directories within directory */
         CV_TRY
         {
-            struct dirent *ent;
-            while ((ent = readdir (dir)) != 0)
+            struct dirent* ent;
+            while ((ent = readdir(dir)) != 0)
             {
                 const char* name = ent->d_name;
-                if((name[0] == 0) || (name[0] == '.' && name[1] == 0) || (name[0] == '.' && name[1] == '.' && name[2] == 0))
+                if ((name[0] == 0) || (name[0] == '.' && name[1] == 0)
+                    || (name[0] == '.' && name[1] == '.' && name[2] == 0))
                     continue;
 
                 cv::String path = cv::utils::fs::join(directory, name);
@@ -277,7 +276,7 @@ void cv::glob(String pattern, std::vector<String>& result, bool recursive)
 
     if (isDir(pattern, 0))
     {
-        if(strchr(dir_separators, pattern[pattern.size() - 1]) != 0)
+        if (strchr(dir_separators, pattern[pattern.size() - 1]) != 0)
         {
             path = pattern.substr(0, pattern.size() - 1);
         }
@@ -305,17 +304,15 @@ void cv::glob(String pattern, std::vector<String>& result, bool recursive)
     std::sort(result.begin(), result.end());
 }
 
-void cv::utils::fs::glob(const cv::String& directory, const cv::String& pattern,
-        std::vector<cv::String>& result,
-        bool recursive, bool includeDirectories)
+void cv::utils::fs::glob(const cv::String& directory, const cv::String& pattern, std::vector<cv::String>& result,
+                         bool recursive, bool includeDirectories)
 {
     glob_rec(directory, pattern, result, recursive, includeDirectories, directory);
     std::sort(result.begin(), result.end());
 }
 
 void cv::utils::fs::glob_relative(const cv::String& directory, const cv::String& pattern,
-        std::vector<cv::String>& result,
-        bool recursive, bool includeDirectories)
+                                  std::vector<cv::String>& result, bool recursive, bool includeDirectories)
 {
     glob_rec(directory, pattern, result, recursive, includeDirectories, cv::String());
     std::sort(result.begin(), result.end());

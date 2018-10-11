@@ -18,6 +18,6 @@ CV_EXPORTS_W String dumpInputOutputArray(InputOutputArray argument);
 CV_EXPORTS_W String dumpInputOutputArrayOfArrays(InputOutputArrayOfArrays argument);
 
 //! @}
-}} // namespace
+}} // namespace cv::utils
 
 #endif // OPENCV_CORE_BINDINGS_UTILS_HPP

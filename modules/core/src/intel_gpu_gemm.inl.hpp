@@ -24,25 +24,20 @@
 
 #ifdef HAVE_OPENCL
 
-#include <sstream>
-#include "precomp.hpp"
-#include "opencl_kernels_core.hpp"
-#include "opencv2/core/opencl/runtime/opencl_clamdblas.hpp"
-#include "opencv2/core/opencl/runtime/opencl_core.hpp"
+#    include <sstream>
+#    include "precomp.hpp"
+#    include "opencl_kernels_core.hpp"
+#    include "opencv2/core/opencl/runtime/opencl_clamdblas.hpp"
+#    include "opencv2/core/opencl/runtime/opencl_core.hpp"
 
-namespace cv
-{
+namespace cv {
 
-static bool intel_gpu_gemm(
-    UMat A, Size sizeA,
-    UMat B, Size sizeB,
-    UMat D, Size sizeD,
-    double alpha, double beta,
-    bool atrans, bool btrans)
+static bool intel_gpu_gemm(UMat A, Size sizeA, UMat B, Size sizeB, UMat D, Size sizeD, double alpha, double beta,
+                           bool atrans, bool btrans)
 {
     CV_UNUSED(sizeB);
 
-    int M = sizeD.height, N = sizeD.width, K = ((atrans)? sizeA.height : sizeA.width);
+    int M = sizeD.height, N = sizeD.width, K = ((atrans) ? sizeA.height : sizeA.width);
 
     std::string kernelName;
     bool ret = true;
@@ -50,7 +45,7 @@ static bool intel_gpu_gemm(
     size_t lx = 8, ly = 4;
     size_t dx = 4, dy = 8;
 
-    if(!atrans && !btrans)
+    if (!atrans && !btrans)
     {
 
         if (M % 32 == 0 && N % 32 == 0 && K % 16 == 0)
@@ -62,11 +57,11 @@ static bool intel_gpu_gemm(
             kernelName = "intelblas_gemm_buffer_NN";
         }
     }
-    else if(atrans && !btrans)
+    else if (atrans && !btrans)
     {
         kernelName = "intelblas_gemm_buffer_TN";
     }
-    else if(!atrans && btrans)
+    else if (!atrans && btrans)
     {
         kernelName = "intelblas_gemm_buffer_NT";
         ly = 16;
@@ -89,7 +84,7 @@ static bool intel_gpu_gemm(
     String errmsg;
     const ocl::Program program = ocl::Context::getDefault().getProg(ocl::core::intel_gemm_oclsrc, "", errmsg);
 
-    if(!atrans && btrans)
+    if (!atrans && btrans)
     {
         ocl::Kernel k(kernelName.c_str(), program);
         if (k.empty())
@@ -97,44 +92,28 @@ static bool intel_gpu_gemm(
             return false;
         }
 
-        k.args(ocl::KernelArg::PtrReadOnly(A),
-               (int) (A.offset / sizeof(float)),
-               ocl::KernelArg::PtrReadOnly(B),
-               (int) (B.offset / sizeof(float)),
-               ocl::KernelArg::PtrWriteOnly(D),
-               (int) (D.offset / sizeof(float)),
-               M, N, K,
-               (float)alpha,
-               (float)beta,
-               (int)(A.step / sizeof(float)),
-               (int)(B.step / sizeof(float)),
-               (int)(D.step / sizeof(float))
-        );
+        k.args(ocl::KernelArg::PtrReadOnly(A), (int)(A.offset / sizeof(float)), ocl::KernelArg::PtrReadOnly(B),
+               (int)(B.offset / sizeof(float)), ocl::KernelArg::PtrWriteOnly(D), (int)(D.offset / sizeof(float)),
+               M, N, K, (float)alpha, (float)beta, (int)(A.step / sizeof(float)), (int)(B.step / sizeof(float)),
+               (int)(D.step / sizeof(float)));
 
         ret = k.run(2, global, local, false, q);
     }
     else
     {
-        for(int start_index = 0; start_index < K; start_index += stride)
+        for (int start_index = 0; start_index < K; start_index += stride)
         {
-             ocl::Kernel k(kernelName.c_str(), program);
-             k.args(ocl::KernelArg::PtrReadOnly(A),
-                    (int) (A.offset / sizeof(float)),
-                    ocl::KernelArg::PtrReadOnly(B),
-                    (int) (B.offset / sizeof(float)),
-                    ocl::KernelArg::PtrWriteOnly(D),
-                    (int) (D.offset / sizeof(float)),
-                    M, N, K,
-                    (float)alpha,
-                    (float)beta,
-                    (int)(A.step / sizeof(float)),
-                    (int)(B.step / sizeof(float)),
-                    (int)(D.step / sizeof(float)),
-                    (int) start_index,                          // 14 start_index
-                    stride);
+            ocl::Kernel k(kernelName.c_str(), program);
+            k.args(ocl::KernelArg::PtrReadOnly(A), (int)(A.offset / sizeof(float)), ocl::KernelArg::PtrReadOnly(B),
+                   (int)(B.offset / sizeof(float)), ocl::KernelArg::PtrWriteOnly(D),
+                   (int)(D.offset / sizeof(float)), M, N, K, (float)alpha, (float)beta,
+                   (int)(A.step / sizeof(float)), (int)(B.step / sizeof(float)), (int)(D.step / sizeof(float)),
+                   (int)start_index, // 14 start_index
+                   stride);
 
             ret = k.run(2, global, local, false, q);
-            if (!ret) return ret;
+            if (!ret)
+                return ret;
         }
     }
 

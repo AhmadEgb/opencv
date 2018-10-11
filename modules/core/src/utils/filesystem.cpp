@@ -14,33 +14,33 @@
 //#define DEBUG_FS_UTILS
 
 #ifdef DEBUG_FS_UTILS
-#include <iostream>
-#define DBG(...) __VA_ARGS__
+#    include <iostream>
+#    define DBG(...) __VA_ARGS__
 #else
-#define DBG(...)
+#    define DBG(...)
 #endif
 
 
 #if OPENCV_HAVE_FILESYSTEM_SUPPORT
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#undef NOMINMAX
-#define NOMINMAX
-#include <windows.h>
-#include <direct.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <errno.h>
-#include <io.h>
-#include <stdio.h>
-#elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <errno.h>
-#endif
+#    ifdef _WIN32
+#        define WIN32_LEAN_AND_MEAN
+#        undef NOMINMAX
+#        define NOMINMAX
+#        include <windows.h>
+#        include <direct.h>
+#        include <sys/types.h>
+#        include <sys/stat.h>
+#        include <errno.h>
+#        include <io.h>
+#        include <stdio.h>
+#    elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
+#        include <sys/types.h>
+#        include <sys/stat.h>
+#        include <fcntl.h>
+#        include <unistd.h>
+#        include <errno.h>
+#    endif
 
 #endif // OPENCV_HAVE_FILESYSTEM_SUPPORT
 
@@ -52,11 +52,7 @@ static const char native_separator = '\\';
 static const char native_separator = '/';
 #endif
 
-static inline
-bool isPathSeparator(char c)
-{
-    return c == '/' || c == '\\';
-}
+static inline bool isPathSeparator(char c) { return c == '/' || c == '\\'; }
 
 cv::String join(const cv::String& base, const cv::String& path)
 {
@@ -89,25 +85,25 @@ bool exists(const cv::String& path)
 {
     CV_INSTRUMENT_REGION();
 
-#if defined _WIN32 || defined WINCE
+#    if defined _WIN32 || defined WINCE
     BOOL status = TRUE;
     {
         WIN32_FILE_ATTRIBUTE_DATA all_attrs;
-#ifdef WINRT
+#        ifdef WINRT
         wchar_t wpath[MAX_PATH];
         size_t copied = mbstowcs(wpath, path.c_str(), MAX_PATH);
         CV_Assert((copied != MAX_PATH) && (copied != (size_t)-1));
         status = ::GetFileAttributesExW(wpath, GetFileExInfoStandard, &all_attrs);
-#else
+#        else
         status = ::GetFileAttributesExA(path.c_str(), GetFileExInfoStandard, &all_attrs);
-#endif
+#        endif
     }
 
     return !!status;
-#else
+#    else
     struct stat stat_buf;
     return (0 == stat(path.c_str(), &stat_buf));
-#endif
+#    endif
 }
 
 CV_EXPORTS void remove_all(const cv::String& path)
@@ -123,11 +119,11 @@ CV_EXPORTS void remove_all(const cv::String& path)
             const String& e = entries[i];
             remove_all(e);
         }
-#ifdef _MSC_VER
+#    ifdef _MSC_VER
         bool result = _rmdir(path.c_str()) == 0;
-#else
+#    else
         bool result = rmdir(path.c_str()) == 0;
-#endif
+#    endif
         if (!result)
         {
             CV_LOG_ERROR(NULL, "Can't remove directory: " << path);
@@ -135,11 +131,11 @@ CV_EXPORTS void remove_all(const cv::String& path)
     }
     else
     {
-#ifdef _MSC_VER
+#    ifdef _MSC_VER
         bool result = _unlink(path.c_str()) == 0;
-#else
+#    else
         bool result = unlink(path.c_str()) == 0;
-#endif
+#    endif
         if (!result)
         {
             CV_LOG_ERROR(NULL, "Can't remove file: " << path);
@@ -152,17 +148,17 @@ cv::String getcwd()
 {
     CV_INSTRUMENT_REGION();
     cv::AutoBuffer<char, 4096> buf;
-#if defined WIN32 || defined _WIN32 || defined WINCE
-#ifdef WINRT
+#    if defined WIN32 || defined _WIN32 || defined WINCE
+#        ifdef WINRT
     return cv::String();
-#else
+#        else
     DWORD sz = GetCurrentDirectoryA(0, NULL);
     buf.allocate((size_t)sz);
     sz = GetCurrentDirectoryA((DWORD)buf.size(), buf.data());
     return cv::String(buf.data(), (size_t)sz);
-#endif
-#elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
-    for(;;)
+#        endif
+#    elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
+    for (;;)
     {
         char* p = ::getcwd(buf.data(), buf.size());
         if (p == NULL)
@@ -177,29 +173,29 @@ cv::String getcwd()
         break;
     }
     return cv::String(buf.data(), (size_t)strlen(buf.data()));
-#else
+#    else
     return cv::String();
-#endif
+#    endif
 }
 
 
 bool createDirectory(const cv::String& path)
 {
     CV_INSTRUMENT_REGION();
-#if defined WIN32 || defined _WIN32 || defined WINCE
-#ifdef WINRT
+#    if defined WIN32 || defined _WIN32 || defined WINCE
+#        ifdef WINRT
     wchar_t wpath[MAX_PATH];
     size_t copied = mbstowcs(wpath, path.c_str(), MAX_PATH);
     CV_Assert((copied != MAX_PATH) && (copied != (size_t)-1));
     int result = CreateDirectoryA(wpath, NULL) ? 0 : -1;
-#else
+#        else
     int result = _mkdir(path.c_str());
-#endif
-#elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
+#        endif
+#    elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
     int result = mkdir(path.c_str(), 0777);
-#else
+#    else
     int result = -1;
-#endif
+#    endif
 
     if (result == -1)
     {
@@ -243,7 +239,7 @@ bool createDirectories(const cv::String& path_)
     return createDirectory(path);
 }
 
-#ifdef _WIN32
+#    ifdef _WIN32
 
 struct FileLock::Impl
 {
@@ -253,8 +249,8 @@ struct FileLock::Impl
         int numRetries = 5;
         do
         {
-            handle = ::CreateFileA(fname, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
-                                OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            handle = ::CreateFileA(fname, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                                   FILE_ATTRIBUTE_NORMAL, NULL);
             if (INVALID_HANDLE_VALUE == handle)
             {
                 if (ERROR_SHARING_VIOLATION == GetLastError())
@@ -298,10 +294,7 @@ struct FileLock::Impl
         std::memset(&overlapped, 0, sizeof(overlapped));
         return !!::LockFileEx(handle, 0, 0, MAXDWORD, MAXDWORD, &overlapped);
     }
-    bool unlock_shared()
-    {
-        return unlock();
-    }
+    bool unlock_shared() { return unlock(); }
 
     HANDLE handle;
 
@@ -310,7 +303,7 @@ private:
     Impl& operator=(const Impl&); // disabled
 };
 
-#elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
+#    elif defined __linux__ || defined __APPLE__ || defined __HAIKU__
 
 struct FileLock::Impl
 {
@@ -362,10 +355,7 @@ struct FileLock::Impl
         bool res = -1 != ::fcntl(handle, F_SETLKW, &l);
         return res;
     }
-    bool unlock_shared()
-    {
-        return unlock();
-    }
+    bool unlock_shared() { return unlock(); }
 
     int handle;
 
@@ -374,10 +364,9 @@ private:
     Impl& operator=(const Impl&); // disabled
 };
 
-#endif
+#    endif
 
-FileLock::FileLock(const char* fname)
-    : pImpl(new Impl(fname))
+FileLock::FileLock(const char* fname) : pImpl(new Impl(fname))
 {
     // nothing
 }
@@ -393,7 +382,6 @@ void FileLock::lock_shared() { CV_Assert(pImpl->lock_shared()); }
 void FileLock::unlock_shared() { CV_Assert(pImpl->unlock_shared()); }
 
 
-
 cv::String getCacheDirectory(const char* sub_directory_name, const char* configuration_name)
 {
     String cache_path;
@@ -404,16 +392,16 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
     if (cache_path.empty())
     {
         cv::String default_cache_path;
-#ifdef _WIN32
-        char tmp_path_buf[MAX_PATH+1] = {0};
+#    ifdef _WIN32
+        char tmp_path_buf[MAX_PATH + 1] = {0};
         DWORD res = GetTempPath(MAX_PATH, tmp_path_buf);
         if (res > 0 && res <= MAX_PATH)
         {
             default_cache_path = tmp_path_buf;
         }
-#elif defined __ANDROID__
+#    elif defined __ANDROID__
         // no defaults
-#elif defined __APPLE__
+#    elif defined __APPLE__
         const char* tmpdir_env = getenv("TMPDIR");
         if (tmpdir_env && utils::fs::isDirectory(tmpdir_env))
         {
@@ -422,9 +410,10 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
         else
         {
             default_cache_path = "/tmp/";
-            CV_LOG_WARNING(NULL, "Using world accessible cache directory. This may be not secure: " << default_cache_path);
+            CV_LOG_WARNING(NULL, "Using world accessible cache directory. This may be not secure: "
+                                     << default_cache_path);
         }
-#elif defined __linux__ || defined __HAIKU__
+#    elif defined __linux__ || defined __HAIKU__
         // https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
         if (default_cache_path.empty())
         {
@@ -453,17 +442,19 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
             if (utils::fs::isDirectory(temp_path))
             {
                 default_cache_path = temp_path;
-                CV_LOG_WARNING(NULL, "Using world accessible cache directory. This may be not secure: " << default_cache_path);
+                CV_LOG_WARNING(NULL, "Using world accessible cache directory. This may be not secure: "
+                                         << default_cache_path);
             }
         }
         if (default_cache_path.empty())
         {
             default_cache_path = "/tmp/";
-            CV_LOG_WARNING(NULL, "Using world accessible cache directory. This may be not secure: " << default_cache_path);
+            CV_LOG_WARNING(NULL, "Using world accessible cache directory. This may be not secure: "
+                                     << default_cache_path);
         }
-#else
+#    else
         // no defaults
-#endif
+#    endif
         CV_LOG_VERBOSE(NULL, 0, "default_cache_path = " << default_cache_path);
         if (!default_cache_path.empty())
         {
@@ -486,7 +477,9 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
                     if (!existedCacheDirs.empty())
                     {
                         CV_LOG_WARNING(NULL, "Creating new OpenCV cache directory: " << default_cache_path);
-                        CV_LOG_WARNING(NULL, "There are several neighbour directories, probably created by old OpenCV versions.");
+                        CV_LOG_WARNING(
+                            NULL,
+                            "There are several neighbour directories, probably created by old OpenCV versions.");
                         CV_LOG_WARNING(NULL, "Feel free to cleanup these unused directories:");
                         for (size_t i = 0; i < existedCacheDirs.size(); i++)
                         {
@@ -496,7 +489,8 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
                     }
                 }
                 if (sub_directory_name && sub_directory_name[0] != '\0')
-                    default_cache_path = utils::fs::join(default_cache_path, cv::String(sub_directory_name) + native_separator);
+                    default_cache_path = utils::fs::join(default_cache_path,
+                                                         cv::String(sub_directory_name) + native_separator);
                 if (!utils::fs::createDirectories(default_cache_path))
                 {
                     CV_LOG_DEBUG(NULL, "Can't create OpenCV cache sub-directory: " << default_cache_path);
@@ -513,7 +507,8 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
         }
         else
         {
-            CV_LOG_DEBUG(NULL, "OpenCV has no support to discover default cache directory on the current platform");
+            CV_LOG_DEBUG(NULL,
+                         "OpenCV has no support to discover default cache directory on the current platform");
         }
     }
     else
@@ -522,7 +517,9 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
             return cache_path;
         if (!isDirectory(cache_path))
         {
-            CV_LOG_WARNING(NULL, "Specified non-existed directory, creating OpenCV sub-directory for caching purposes: " << cache_path);
+            CV_LOG_WARNING(NULL,
+                           "Specified non-existed directory, creating OpenCV sub-directory for caching purposes: "
+                               << cache_path);
             if (!createDirectories(cache_path))
             {
                 CV_LOG_ERROR(NULL, "Can't create OpenCV cache sub-directory: " << cache_path);
@@ -542,13 +539,16 @@ cv::String getCacheDirectory(const char* sub_directory_name, const char* configu
 }
 
 #else
-#define NOT_IMPLEMENTED CV_Error(Error::StsNotImplemented, "");
-CV_EXPORTS bool exists(const cv::String& /*path*/) { NOT_IMPLEMENTED }
-CV_EXPORTS void remove_all(const cv::String& /*path*/) { NOT_IMPLEMENTED }
-CV_EXPORTS bool createDirectory(const cv::String& /*path*/) { NOT_IMPLEMENTED }
-CV_EXPORTS bool createDirectories(const cv::String& /*path*/) { NOT_IMPLEMENTED }
-CV_EXPORTS cv::String getCacheDirectory(const char* /*sub_directory_name*/, const char* /*configuration_name = NULL*/) { NOT_IMPLEMENTED }
-#undef NOT_IMPLEMENTED
+#    define NOT_IMPLEMENTED CV_Error(Error::StsNotImplemented, "");
+CV_EXPORTS bool exists(const cv::String& /*path*/){NOT_IMPLEMENTED} CV_EXPORTS
+    void remove_all(const cv::String& /*path*/){NOT_IMPLEMENTED} CV_EXPORTS
+    bool createDirectory(const cv::String& /*path*/){NOT_IMPLEMENTED} CV_EXPORTS
+    bool createDirectories(const cv::String& /*path*/){NOT_IMPLEMENTED} CV_EXPORTS cv::String
+    getCacheDirectory(const char* /*sub_directory_name*/, const char* /*configuration_name = NULL*/)
+{
+    NOT_IMPLEMENTED
+}
+#    undef NOT_IMPLEMENTED
 #endif // OPENCV_HAVE_FILESYSTEM_SUPPORT
 
-}}} // namespace
+}}} // namespace cv::utils::fs

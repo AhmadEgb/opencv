@@ -8,11 +8,15 @@
 #include <opencv2/core/ocl.hpp>
 
 #ifndef DUMP_CONFIG_PROPERTY
-#define DUMP_CONFIG_PROPERTY(...)
+#    define DUMP_CONFIG_PROPERTY(...)
 #endif
 
 #ifndef DUMP_MESSAGE_STDOUT
-#define DUMP_MESSAGE_STDOUT(...) do { std::cout << __VA_ARGS__ << std::endl; } while (false)
+#    define DUMP_MESSAGE_STDOUT(...) \
+        do \
+        { \
+            std::cout << __VA_ARGS__ << std::endl; \
+        } while (false)
 #endif
 
 namespace cv {
@@ -76,11 +80,16 @@ static void dumpOpenCLInformation()
                 {
                     platform->getDevice(current_device, j);
                     const char* deviceTypeStr = current_device.type() == Device::TYPE_CPU
-                        ? ("CPU") : (current_device.type() == Device::TYPE_GPU ? current_device.hostUnifiedMemory() ? "iGPU" : "dGPU" : "unknown");
-                    DUMP_MESSAGE_STDOUT( "        " << deviceTypeStr << ": " << current_device.name().c_str() << " (" << current_device.version().c_str() << ")");
-                    DUMP_CONFIG_PROPERTY( cv::format("cv_ocl_platform_%d_device_%d", (int)i, (int)j ),
-                        cv::format("(Platform=%s)(Type=%s)(Name=%s)(Version=%s)",
-                        platform->name().c_str(), deviceTypeStr, current_device.name().c_str(), current_device.version().c_str()) );
+                                                    ? ("CPU")
+                                                    : (current_device.type() == Device::TYPE_GPU
+                                                           ? current_device.hostUnifiedMemory() ? "iGPU" : "dGPU"
+                                                           : "unknown");
+                    DUMP_MESSAGE_STDOUT("        " << deviceTypeStr << ": " << current_device.name().c_str()
+                                                   << " (" << current_device.version().c_str() << ")");
+                    DUMP_CONFIG_PROPERTY(
+                        cv::format("cv_ocl_platform_%d_device_%d", (int)i, (int)j),
+                        cv::format("(Platform=%s)(Type=%s)(Name=%s)(Version=%s)", platform->name().c_str(),
+                                   deviceTypeStr, current_device.name().c_str(), current_device.version().c_str()));
                 }
             }
         }
@@ -102,8 +111,10 @@ static void dumpOpenCLInformation()
         DUMP_CONFIG_PROPERTY("cv_ocl_current_platformName", device.getPlatform().name());
 #endif
 
-        const char* deviceTypeStr = device.type() == Device::TYPE_CPU
-            ? ("CPU") : (device.type() == Device::TYPE_GPU ? device.hostUnifiedMemory() ? "iGPU" : "dGPU" : "unknown");
+        const char* deviceTypeStr =
+            device.type() == Device::TYPE_CPU
+                ? ("CPU")
+                : (device.type() == Device::TYPE_GPU ? device.hostUnifiedMemory() ? "iGPU" : "dGPU" : "unknown");
         DUMP_MESSAGE_STDOUT("    Type = " << deviceTypeStr);
         DUMP_CONFIG_PROPERTY("cv_ocl_current_deviceType", deviceTypeStr);
 
@@ -195,4 +206,4 @@ static void dumpOpenCLInformation()
 #undef DUMP_MESSAGE_STDOUT
 #undef DUMP_CONFIG_PROPERTY
 
-} // namespace
+} // namespace cv

@@ -11,24 +11,21 @@ namespace base64 {
 typedef uchar uint8_t;
 
 #if CHAR_BIT != 8
-#error "`char` should be 8 bit."
+#    error "`char` should be 8 bit."
 #endif
 
-uint8_t const base64_mapping[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789+/";
+uint8_t const base64_mapping[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                 "abcdefghijklmnopqrstuvwxyz"
+                                 "0123456789+/";
 
 uint8_t const base64_padding = '=';
 
 uint8_t const base64_demapping[] = {
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0, 62,  0,  0,  0, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,  0,  0,
-    0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,  0,  0,  0,  0,  0,  0, 26, 27, 28,
-    29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48,
-    49, 50, 51,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 0,  0,  0,  63, 52, 53, 54, 55,
+    56, 57, 58, 59, 60, 61, 0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
+    13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0,  0,  0,  0,  0,  0,  26, 27, 28, 29, 30, 31, 32,
+    33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 0,  0,  0,  0,
 };
 
 /*    `base64_demapping` above is generated in this way:
@@ -42,40 +39,44 @@ uint8_t const base64_demapping[] = {
  *    `````````````````````````````````````````````````````````````````````
  */
 
-size_t base64_encode(uint8_t const * src, uint8_t * dst, size_t off, size_t cnt)
+size_t base64_encode(uint8_t const* src, uint8_t* dst, size_t off, size_t cnt)
 {
     if (!src || !dst || !cnt)
         return 0;
 
     /* initialize beginning and end */
-    uint8_t       * dst_beg = dst;
-    uint8_t       * dst_cur = dst_beg;
+    uint8_t* dst_beg = dst;
+    uint8_t* dst_cur = dst_beg;
 
-    uint8_t const * src_beg = src + off;
-    uint8_t const * src_cur = src_beg;
-    uint8_t const * src_end = src_cur + cnt / 3U * 3U;
+    uint8_t const* src_beg = src + off;
+    uint8_t const* src_cur = src_beg;
+    uint8_t const* src_end = src_cur + cnt / 3U * 3U;
 
     /* integer multiples part */
-    while (src_cur < src_end) {
+    while (src_cur < src_end)
+    {
         uint8_t _2 = *src_cur++;
         uint8_t _1 = *src_cur++;
         uint8_t _0 = *src_cur++;
-        *dst_cur++ = base64_mapping[ _2          >> 2U];
+        *dst_cur++ = base64_mapping[_2 >> 2U];
         *dst_cur++ = base64_mapping[(_1 & 0xF0U) >> 4U | (_2 & 0x03U) << 4U];
         *dst_cur++ = base64_mapping[(_0 & 0xC0U) >> 6U | (_1 & 0x0FU) << 2U];
-        *dst_cur++ = base64_mapping[ _0 & 0x3FU];
+        *dst_cur++ = base64_mapping[_0 & 0x3FU];
     }
 
     /* remainder part */
     size_t rst = src_beg + cnt - src_cur;
-    if (rst == 1U) {
+    if (rst == 1U)
+    {
         uint8_t _2 = *src_cur++;
-        *dst_cur++ = base64_mapping[ _2          >> 2U];
+        *dst_cur++ = base64_mapping[_2 >> 2U];
         *dst_cur++ = base64_mapping[(_2 & 0x03U) << 4U];
-    } else if (rst == 2U) {
+    }
+    else if (rst == 2U)
+    {
         uint8_t _2 = *src_cur++;
         uint8_t _1 = *src_cur++;
-        *dst_cur++ = base64_mapping[ _2          >> 2U];
+        *dst_cur++ = base64_mapping[_2 >> 2U];
         *dst_cur++ = base64_mapping[(_2 & 0x03U) << 4U | (_1 & 0xF0U) >> 4U];
         *dst_cur++ = base64_mapping[(_1 & 0x0FU) << 2U];
     }
@@ -83,32 +84,29 @@ size_t base64_encode(uint8_t const * src, uint8_t * dst, size_t off, size_t cnt)
     /* padding */
     switch (rst)
     {
-    case 1U: *dst_cur++ = base64_padding;
+    case 1U:
+        *dst_cur++ = base64_padding;
         /* fallthrough */
-    case 2U: *dst_cur++ = base64_padding;
+    case 2U:
+        *dst_cur++ = base64_padding;
         /* fallthrough */
-    default: *dst_cur   = 0;
+    default:
+        *dst_cur = 0;
         break;
     }
 
     return static_cast<size_t>(dst_cur - dst_beg);
 }
 
-size_t base64_encode(char const * src, char * dst, size_t off, size_t cnt)
+size_t base64_encode(char const* src, char* dst, size_t off, size_t cnt)
 {
     if (cnt == 0U)
         cnt = std::strlen(src);
 
-    return base64_encode
-    (
-        reinterpret_cast<uint8_t const *>(src),
-        reinterpret_cast<uint8_t       *>(dst),
-        off,
-        cnt
-    );
+    return base64_encode(reinterpret_cast<uint8_t const*>(src), reinterpret_cast<uint8_t*>(dst), off, cnt);
 }
 
-size_t base64_decode(uint8_t const * src, uint8_t * dst, size_t off, size_t cnt)
+size_t base64_decode(uint8_t const* src, uint8_t* dst, size_t off, size_t cnt)
 {
     /* check parameters */
     if (!src || !dst || !cnt)
@@ -117,15 +115,16 @@ size_t base64_decode(uint8_t const * src, uint8_t * dst, size_t off, size_t cnt)
         return 0U;
 
     /* initialize beginning and end */
-    uint8_t       * dst_beg = dst;
-    uint8_t       * dst_cur = dst_beg;
+    uint8_t* dst_beg = dst;
+    uint8_t* dst_cur = dst_beg;
 
-    uint8_t const * src_beg = src + off;
-    uint8_t const * src_cur = src_beg;
-    uint8_t const * src_end = src_cur + cnt;
+    uint8_t const* src_beg = src + off;
+    uint8_t const* src_cur = src_beg;
+    uint8_t const* src_end = src_cur + cnt;
 
     /* start decoding */
-    while (src_cur < src_end) {
+    while (src_cur < src_end)
+    {
         uint8_t d50 = base64_demapping[*src_cur++];
         uint8_t c50 = base64_demapping[*src_cur++];
         uint8_t b50 = base64_demapping[*src_cur++];
@@ -145,57 +144,52 @@ size_t base64_decode(uint8_t const * src, uint8_t * dst, size_t off, size_t cnt)
     return size_t(dst_cur - dst_beg);
 }
 
-size_t base64_decode(char const * src, char * dst, size_t off, size_t cnt)
+size_t base64_decode(char const* src, char* dst, size_t off, size_t cnt)
 {
     if (cnt == 0U)
         cnt = std::strlen(src);
 
-    return base64_decode
-    (
-        reinterpret_cast<uint8_t const *>(src),
-        reinterpret_cast<uint8_t       *>(dst),
-        off,
-        cnt
-    );
+    return base64_decode(reinterpret_cast<uint8_t const*>(src), reinterpret_cast<uint8_t*>(dst), off, cnt);
 }
 
-bool base64_valid(uint8_t const * src, size_t off, size_t cnt)
+bool base64_valid(uint8_t const* src, size_t off, size_t cnt)
 {
     /* check parameters */
     if (src == 0 || src + off == 0)
         return false;
     if (cnt == 0U)
-        cnt = std::strlen(reinterpret_cast<char const *>(src));
+        cnt = std::strlen(reinterpret_cast<char const*>(src));
     if (cnt == 0U)
         return false;
     if (cnt & 0x3U)
         return false;
 
     /* initialize beginning and end */
-    uint8_t const * beg = src + off;
-    uint8_t const * end = beg + cnt;
+    uint8_t const* beg = src + off;
+    uint8_t const* end = beg + cnt;
 
     /* skip padding */
-    if (*(end - 1U) == base64_padding) {
+    if (*(end - 1U) == base64_padding)
+    {
         end--;
         if (*(end - 1U) == base64_padding)
             end--;
     }
 
     /* find illegal characters */
-    for (uint8_t const * iter = beg; iter < end; iter++)
+    for (uint8_t const* iter = beg; iter < end; iter++)
         if (*iter > 126U || (!base64_demapping[(uint8_t)*iter] && *iter != base64_mapping[0]))
             return false;
 
     return true;
 }
 
-bool base64_valid(char const * src, size_t off, size_t cnt)
+bool base64_valid(char const* src, size_t off, size_t cnt)
 {
     if (cnt == 0U)
         cnt = std::strlen(src);
 
-    return base64_valid(reinterpret_cast<uint8_t const *>(src), off, cnt);
+    return base64_valid(reinterpret_cast<uint8_t const*>(src), off, cnt);
 }
 
 size_t base64_encode_buffer_size(size_t cnt, bool is_end_with_zero)
@@ -210,16 +204,16 @@ size_t base64_decode_buffer_size(size_t cnt, bool is_end_with_zero)
     return cnt / 4U * 3U + additional;
 }
 
-size_t base64_decode_buffer_size(size_t cnt, char  const * src, bool is_end_with_zero)
+size_t base64_decode_buffer_size(size_t cnt, char const* src, bool is_end_with_zero)
 {
-    return base64_decode_buffer_size(cnt, reinterpret_cast<uchar const *>(src), is_end_with_zero);
+    return base64_decode_buffer_size(cnt, reinterpret_cast<uchar const*>(src), is_end_with_zero);
 }
 
-size_t base64_decode_buffer_size(size_t cnt, uchar const * src, bool is_end_with_zero)
+size_t base64_decode_buffer_size(size_t cnt, uchar const* src, bool is_end_with_zero)
 {
     size_t padding_cnt = 0U;
-    for (uchar const * ptr = src + cnt - 1U; *ptr == base64_padding; ptr--)
-        padding_cnt ++;
+    for (uchar const* ptr = src + cnt - 1U; *ptr == base64_padding; ptr--)
+        padding_cnt++;
     return base64_decode_buffer_size(cnt, is_end_with_zero) - padding_cnt;
 }
 
@@ -227,41 +221,44 @@ size_t base64_decode_buffer_size(size_t cnt, uchar const * src, bool is_end_with
  * to_binary && binary_to
  ***************************************************************************/
 
-template<typename _uint_t> inline size_t
-to_binary(_uint_t val, uchar * cur)
+template<typename _uint_t>
+inline size_t to_binary(_uint_t val, uchar* cur)
 {
     size_t delta = CHAR_BIT;
     size_t cnt = sizeof(_uint_t);
-    while (cnt --> static_cast<size_t>(0U)) {
+    while (cnt-- > static_cast<size_t>(0U))
+    {
         *cur++ = static_cast<uchar>(val);
         val >>= delta;
     }
     return sizeof(_uint_t);
 }
 
-template<> inline size_t to_binary(double val, uchar * cur)
+template<>
+inline size_t to_binary(double val, uchar* cur)
 {
     Cv64suf bit64;
     bit64.f = val;
     return to_binary(bit64.u, cur);
 }
 
-template<> inline size_t to_binary(float val, uchar * cur)
+template<>
+inline size_t to_binary(float val, uchar* cur)
 {
     Cv32suf bit32;
     bit32.f = val;
     return to_binary(bit32.u, cur);
 }
 
-template<typename _primitive_t> inline size_t
-to_binary(uchar const * val, uchar * cur)
+template<typename _primitive_t>
+inline size_t to_binary(uchar const* val, uchar* cur)
 {
-    return to_binary<_primitive_t>(*reinterpret_cast<_primitive_t const *>(val), cur);
+    return to_binary<_primitive_t>(*reinterpret_cast<_primitive_t const*>(val), cur);
 }
 
 
-template<typename _uint_t> inline size_t
-binary_to(uchar const * cur, _uint_t & val)
+template<typename _uint_t>
+inline size_t binary_to(uchar const* cur, _uint_t& val)
 {
     val = static_cast<_uint_t>(0);
     for (size_t i = static_cast<size_t>(0U); i < sizeof(_uint_t); i++)
@@ -269,7 +266,8 @@ binary_to(uchar const * cur, _uint_t & val)
     return sizeof(_uint_t);
 }
 
-template<> inline size_t binary_to(uchar const * cur, double & val)
+template<>
+inline size_t binary_to(uchar const* cur, double& val)
 {
     Cv64suf bit64;
     binary_to(cur, bit64.u);
@@ -277,7 +275,8 @@ template<> inline size_t binary_to(uchar const * cur, double & val)
     return sizeof(val);
 }
 
-template<> inline size_t binary_to(uchar const * cur, float & val)
+template<>
+inline size_t binary_to(uchar const* cur, float& val)
 {
     Cv32suf bit32;
     binary_to(cur, bit32.u);
@@ -285,20 +284,20 @@ template<> inline size_t binary_to(uchar const * cur, float & val)
     return sizeof(val);
 }
 
-template<typename _primitive_t> inline size_t
-binary_to(uchar const * cur, uchar * val)
+template<typename _primitive_t>
+inline size_t binary_to(uchar const* cur, uchar* val)
 {
-    return binary_to<_primitive_t>(cur, *reinterpret_cast<_primitive_t *>(val));
+    return binary_to<_primitive_t>(cur, *reinterpret_cast<_primitive_t*>(val));
 }
 
 /****************************************************************************
  * others
  ***************************************************************************/
 
-std::string make_base64_header(const char * dt)
+std::string make_base64_header(const char* dt)
 {
     std::ostringstream oss;
-    oss << dt   << ' ';
+    oss << dt << ' ';
     std::string buffer(oss.str());
     CV_Assert(buffer.size() < HEADER_SIZE);
 
@@ -309,24 +308,19 @@ std::string make_base64_header(const char * dt)
     return buffer;
 }
 
-bool read_base64_header(std::vector<char> const & header, std::string & dt)
+bool read_base64_header(std::vector<char> const& header, std::string& dt)
 {
     std::istringstream iss(header.data());
-    return !!(iss >> dt);//the "std::basic_ios::operator bool" differs between C++98 and C++11. The "double not" syntax is portable and covers both cases with equivalent meaning
+    return !!(iss >> dt); //the "std::basic_ios::operator bool" differs between C++98 and C++11. The "double not" syntax is portable and covers both cases with equivalent meaning
 }
 
 /****************************************************************************
  * Parser
  ***************************************************************************/
 
-Base64ContextParser::Base64ContextParser(uchar * buffer, size_t size)
-    : dst_cur(buffer)
-    , dst_end(buffer + size)
-    , base64_buffer(BUFFER_LEN)
-    , src_beg(0)
-    , src_cur(0)
-    , src_end(0)
-    , binary_buffer(base64_encode_buffer_size(BUFFER_LEN))
+Base64ContextParser::Base64ContextParser(uchar* buffer, size_t size)
+    : dst_cur(buffer), dst_end(buffer + size), base64_buffer(BUFFER_LEN), src_beg(0), src_cur(0), src_end(0),
+      binary_buffer(base64_encode_buffer_size(BUFFER_LEN))
 {
     src_beg = binary_buffer.data();
     src_cur = src_beg;
@@ -340,23 +334,25 @@ Base64ContextParser::~Base64ContextParser()
         flush();
 }
 
-Base64ContextParser & Base64ContextParser::read(const uchar * beg, const uchar * end)
+Base64ContextParser& Base64ContextParser::read(const uchar* beg, const uchar* end)
 {
     if (beg >= end)
         return *this;
 
-    while (beg < end) {
+    while (beg < end)
+    {
         /* collect binary data and copy to binary buffer */
         size_t len = std::min(end - beg, src_end - src_cur);
         std::memcpy(src_cur, beg, len);
-        beg     += len;
+        beg += len;
         src_cur += len;
 
-        if (src_cur >= src_end) {
+        if (src_cur >= src_end)
+        {
             /* binary buffer is full. */
             /* decode it send result to dst */
 
-            CV_Assert(flush());    /* check for base64_valid */
+            CV_Assert(flush()); /* check for base64_valid */
         }
     }
 
@@ -365,13 +361,13 @@ Base64ContextParser & Base64ContextParser::read(const uchar * beg, const uchar *
 
 bool Base64ContextParser::flush()
 {
-    if ( !base64_valid(src_beg, 0U, src_cur - src_beg) )
+    if (!base64_valid(src_beg, 0U, src_cur - src_beg))
         return false;
 
-    if ( src_cur == src_beg )
+    if (src_cur == src_beg)
         return true;
 
-    uchar * buffer = binary_buffer.data();
+    uchar* buffer = binary_buffer.data();
     size_t len = base64_decode(src_beg, buffer, 0U, src_cur - src_beg);
     src_cur = src_beg;
 
@@ -381,7 +377,8 @@ bool Base64ContextParser::flush()
     /* buffer is full */
     CV_Assert(dst_cur + len < dst_end);
 
-    if (dst_cur + len < dst_end) {
+    if (dst_cur + len < dst_end)
+    {
         /* send data to dst */
         std::memcpy(dst_cur, buffer, len);
         dst_cur += len;
@@ -402,13 +399,9 @@ bool Base64ContextParser::flush()
 class Base64ContextEmitter
 {
 public:
-    explicit Base64ContextEmitter(CvFileStorage * fs)
-        : file_storage(fs)
-        , binary_buffer(BUFFER_LEN)
-        , base64_buffer(base64_encode_buffer_size(BUFFER_LEN))
-        , src_beg(0)
-        , src_cur(0)
-        , src_end(0)
+    explicit Base64ContextEmitter(CvFileStorage* fs)
+        : file_storage(fs), binary_buffer(BUFFER_LEN), base64_buffer(base64_encode_buffer_size(BUFFER_LEN)),
+          src_beg(0), src_cur(0), src_end(0)
     {
         src_beg = binary_buffer.data();
         src_end = src_beg + BUFFER_LEN;
@@ -416,14 +409,14 @@ public:
 
         CV_CHECK_OUTPUT_FILE_STORAGE(fs);
 
-        if ( fs->fmt == CV_STORAGE_FORMAT_JSON )
+        if (fs->fmt == CV_STORAGE_FORMAT_JSON)
         {
             /* clean and break buffer */
             *fs->buffer++ = '\0';
-            ::icvPuts( fs, fs->buffer_start );
+            ::icvPuts(fs, fs->buffer_start);
             fs->buffer = fs->buffer_start;
-            memset( file_storage->buffer_start, 0, static_cast<int>(file_storage->space) );
-            ::icvPuts( fs, "\"$base64$" );
+            memset(file_storage->buffer_start, 0, static_cast<int>(file_storage->space));
+            ::icvPuts(fs, "\"$base64$");
         }
         else
         {
@@ -435,32 +428,34 @@ public:
     {
         /* cleaning */
         if (src_cur != src_beg)
-            flush();    /* encode the rest binary data to base64 buffer */
+            flush(); /* encode the rest binary data to base64 buffer */
 
-        if ( file_storage->fmt == CV_STORAGE_FORMAT_JSON )
+        if (file_storage->fmt == CV_STORAGE_FORMAT_JSON)
         {
             /* clean and break buffer  */
             ::icvPuts(file_storage, "\"");
             file_storage->buffer = file_storage->buffer_start;
-            ::icvFSFlush( file_storage );
-            memset( file_storage->buffer_start, 0, static_cast<int>(file_storage->space) );
+            ::icvFSFlush(file_storage);
+            memset(file_storage->buffer_start, 0, static_cast<int>(file_storage->space));
             file_storage->buffer = file_storage->buffer_start;
         }
     }
 
-    Base64ContextEmitter & write(const uchar * beg, const uchar * end)
+    Base64ContextEmitter& write(const uchar* beg, const uchar* end)
     {
         if (beg >= end)
             return *this;
 
-        while (beg < end) {
+        while (beg < end)
+        {
             /* collect binary data and copy to binary buffer */
             size_t len = std::min(end - beg, src_end - src_cur);
-           std::memcpy(src_cur, beg, len);
-            beg     += len;
+            std::memcpy(src_cur, beg, len);
+            beg += len;
             src_cur += len;
 
-            if (src_cur >= src_end) {
+            if (src_cur >= src_end)
+            {
                 /* binary buffer is full. */
                 /* encode it to base64 and send result to fs */
                 flush();
@@ -475,16 +470,17 @@ public:
      * - `operator >> (uchar * & dst)` for writing current binary data to `dst` and moving to next data.
      * - `operator bool` for checking if current loaction is valid and not the end.
      */
-    template<typename _to_binary_convertor_t> inline
-    Base64ContextEmitter & write(_to_binary_convertor_t & convertor)
+    template<typename _to_binary_convertor_t>
+    inline Base64ContextEmitter& write(_to_binary_convertor_t& convertor)
     {
         static const size_t BUFFER_MAX_LEN = 1024U;
 
         std::vector<uchar> buffer(BUFFER_MAX_LEN);
-        uchar * beg = buffer.data();
-        uchar * end = beg;
+        uchar* beg = buffer.data();
+        uchar* end = beg;
 
-        while (convertor) {
+        while (convertor)
+        {
             convertor >> end;
             write(beg, end);
             end = beg;
@@ -502,7 +498,7 @@ public:
 
         src_cur = src_beg;
         {
-            if ( file_storage->fmt == CV_STORAGE_FORMAT_JSON )
+            if (file_storage->fmt == CV_STORAGE_FORMAT_JSON)
             {
                 ::icvPuts(file_storage, (const char*)base64_buffer.data());
             }
@@ -519,7 +515,6 @@ public:
                 ::icvPuts(file_storage, newline);
                 ::icvFSFlush(file_storage);
             }
-
         }
 
         return true;
@@ -531,24 +526,21 @@ private:
     // static_assert(BUFFER_LEN % 3 == 0, "BUFFER_LEN is invalid");
 
 private:
-    CvFileStorage * file_storage;
+    CvFileStorage* file_storage;
 
     std::vector<uchar> binary_buffer;
     std::vector<uchar> base64_buffer;
-    uchar * src_beg;
-    uchar * src_cur;
-    uchar * src_end;
+    uchar* src_beg;
+    uchar* src_cur;
+    uchar* src_end;
 };
 
 
 class RawDataToBinaryConvertor
 {
 public:
-
-    RawDataToBinaryConvertor(const void* src, int len, const std::string & dt)
-        : beg(reinterpret_cast<const uchar *>(src))
-        , cur(0)
-        , end(0)
+    RawDataToBinaryConvertor(const void* src, int len, const std::string& dt)
+        : beg(reinterpret_cast<const uchar*>(src)), cur(0), end(0)
     {
         CV_Assert(src);
         CV_Assert(!dt.empty());
@@ -564,12 +556,13 @@ public:
         end = beg + step * static_cast<size_t>(len);
     }
 
-    inline RawDataToBinaryConvertor & operator >>(uchar * & dst)
+    inline RawDataToBinaryConvertor& operator>>(uchar*& dst)
     {
         CV_DbgAssert(*this);
 
-        for (size_t i = 0U, n = to_binary_funcs.size(); i < n; i++) {
-            elem_to_binary_t & pack = to_binary_funcs[i];
+        for (size_t i = 0U, n = to_binary_funcs.size(); i < n; i++)
+        {
+            elem_to_binary_t& pack = to_binary_funcs[i];
             pack.func(cur + pack.offset, dst + pack.offset);
         }
         cur += step;
@@ -578,29 +571,28 @@ public:
         return *this;
     }
 
-    inline operator bool() const
-    {
-        return cur < end;
-    }
+    inline operator bool() const { return cur < end; }
 
 private:
-    typedef size_t(*to_binary_t)(const uchar *, uchar *);
+    typedef size_t (*to_binary_t)(const uchar*, uchar*);
     struct elem_to_binary_t
     {
-        size_t      offset;
+        size_t offset;
         to_binary_t func;
     };
 
 private:
-    void make_to_binary_funcs(const std::string &dt)
+    void make_to_binary_funcs(const std::string& dt)
     {
         size_t cnt = 0;
         size_t offset = 0;
         char type = '\0';
 
         std::istringstream iss(dt);
-        while (!iss.eof()) {
-            if (!(iss >> cnt)) {
+        while (!iss.eof())
+        {
+            if (!(iss >> cnt))
+            {
                 iss.clear();
                 cnt = 1;
             }
@@ -654,9 +646,9 @@ private:
     }
 
 private:
-    const uchar * beg;
-    const uchar * cur;
-    const uchar * end;
+    const uchar* beg;
+    const uchar* cur;
+    const uchar* end;
 
     size_t step;
     std::vector<elem_to_binary_t> to_binary_funcs;
@@ -666,9 +658,8 @@ class BinaryToCvSeqConvertor
 {
 public:
     BinaryToCvSeqConvertor(const void* src, int len, const char* dt)
-        : cur(reinterpret_cast<const uchar *>(src))
-        , beg(reinterpret_cast<const uchar *>(src))
-        , end(reinterpret_cast<const uchar *>(src))
+        : cur(reinterpret_cast<const uchar*>(src)), beg(reinterpret_cast<const uchar*>(src)),
+          end(reinterpret_cast<const uchar*>(src))
     {
         CV_Assert(src);
         CV_Assert(dt);
@@ -682,7 +673,7 @@ public:
         end = beg + step * static_cast<size_t>(len);
     }
 
-    inline BinaryToCvSeqConvertor & operator >> (CvFileNode & dst)
+    inline BinaryToCvSeqConvertor& operator>>(CvFileNode& dst)
     {
         CV_DbgAssert(*this);
 
@@ -690,12 +681,12 @@ public:
         union
         {
             uchar mem[sizeof(double)];
-            uchar  u;
-            char   b;
+            uchar u;
+            char b;
             ushort w;
-            short  s;
-            int    i;
-            float  f;
+            short s;
+            int i;
+            float f;
             double d;
         } buffer; /* for GCC -Wstrict-aliasing */
         std::memset(buffer.mem, 0, sizeof(buffer));
@@ -704,31 +695,70 @@ public:
         /* set node::data */
         switch (functor_iter->cv_type)
         {
-        case CV_8U : { dst.data.i = cv::saturate_cast<int>   (buffer.u); break;}
-        case CV_8S : { dst.data.i = cv::saturate_cast<int>   (buffer.b); break;}
-        case CV_16U: { dst.data.i = cv::saturate_cast<int>   (buffer.w); break;}
-        case CV_16S: { dst.data.i = cv::saturate_cast<int>   (buffer.s); break;}
-        case CV_32S: { dst.data.i = cv::saturate_cast<int>   (buffer.i); break;}
-        case CV_32F: { dst.data.f = cv::saturate_cast<double>(buffer.f); break;}
-        case CV_64F: { dst.data.f = cv::saturate_cast<double>(buffer.d); break;}
-        default: break;
+        case CV_8U:
+        {
+            dst.data.i = cv::saturate_cast<int>(buffer.u);
+            break;
+        }
+        case CV_8S:
+        {
+            dst.data.i = cv::saturate_cast<int>(buffer.b);
+            break;
+        }
+        case CV_16U:
+        {
+            dst.data.i = cv::saturate_cast<int>(buffer.w);
+            break;
+        }
+        case CV_16S:
+        {
+            dst.data.i = cv::saturate_cast<int>(buffer.s);
+            break;
+        }
+        case CV_32S:
+        {
+            dst.data.i = cv::saturate_cast<int>(buffer.i);
+            break;
+        }
+        case CV_32F:
+        {
+            dst.data.f = cv::saturate_cast<double>(buffer.f);
+            break;
+        }
+        case CV_64F:
+        {
+            dst.data.f = cv::saturate_cast<double>(buffer.d);
+            break;
+        }
+        default:
+            break;
         }
 
         /* set node::tag */
         switch (functor_iter->cv_type)
         {
-        case CV_8U :
-        case CV_8S :
+        case CV_8U:
+        case CV_8S:
         case CV_16U:
         case CV_16S:
-        case CV_32S: { dst.tag = CV_NODE_INT; /*std::printf("%i,", dst.data.i);*/ break; }
+        case CV_32S:
+        {
+            dst.tag = CV_NODE_INT; /*std::printf("%i,", dst.data.i);*/
+            break;
+        }
         case CV_32F:
-        case CV_64F: { dst.tag = CV_NODE_REAL; /*std::printf("%.1f,", dst.data.f);*/ break; }
-        default: break;
+        case CV_64F:
+        {
+            dst.tag = CV_NODE_REAL; /*std::printf("%.1f,", dst.data.f);*/
+            break;
+        }
+        default:
+            break;
         }
 
         /* check if end */
-        if (++functor_iter == binary_to_funcs.end()) {
+        if (++functor_iter == binary_to_funcs.end())
+        {
             functor_iter = binary_to_funcs.begin();
             cur += step;
         }
@@ -736,17 +766,14 @@ public:
         return *this;
     }
 
-    inline operator bool() const
-    {
-        return cur < end;
-    }
+    inline operator bool() const { return cur < end; }
 
 private:
-    typedef size_t(*binary_to_t)(uchar const *, uchar *);
+    typedef size_t (*binary_to_t)(uchar const*, uchar*);
     struct binary_to_filenode_t
     {
-        size_t      cv_type;
-        size_t      offset;
+        size_t cv_type;
+        size_t offset;
         binary_to_t func;
     };
 
@@ -758,8 +785,10 @@ private:
         size_t offset = 0;
 
         std::istringstream iss(dt);
-        while (!iss.eof()) {
-            if (!(iss >> cnt)) {
+        while (!iss.eof())
+        {
+            if (!(iss >> cnt))
+            {
                 iss.clear();
                 cnt = 1;
             }
@@ -777,24 +806,24 @@ private:
                 {
                 case 'u':
                 case 'c':
-                    size      = sizeof(uchar);
+                    size = sizeof(uchar);
                     pack.func = binary_to<uchar>;
                     break;
                 case 'w':
                 case 's':
-                    size      = sizeof(ushort);
+                    size = sizeof(ushort);
                     pack.func = binary_to<ushort>;
                     break;
                 case 'i':
-                    size      = sizeof(uint);
+                    size = sizeof(uint);
                     pack.func = binary_to<uint>;
                     break;
                 case 'f':
-                    size      = sizeof(float);
+                    size = sizeof(float);
                     pack.func = binary_to<float>;
                     break;
                 case 'd':
-                    size      = sizeof(double);
+                    size = sizeof(double);
                     pack.func = binary_to<double>;
                     break;
                 case 'r':
@@ -809,13 +838,41 @@ private:
                 /* set type */
                 switch (type)
                 {
-                case 'u': { pack.cv_type = CV_8U ; break; }
-                case 'c': { pack.cv_type = CV_8S ; break; }
-                case 'w': { pack.cv_type = CV_16U; break; }
-                case 's': { pack.cv_type = CV_16S; break; }
-                case 'i': { pack.cv_type = CV_32S; break; }
-                case 'f': { pack.cv_type = CV_32F; break; }
-                case 'd': { pack.cv_type = CV_64F; break; }
+                case 'u':
+                {
+                    pack.cv_type = CV_8U;
+                    break;
+                }
+                case 'c':
+                {
+                    pack.cv_type = CV_8S;
+                    break;
+                }
+                case 'w':
+                {
+                    pack.cv_type = CV_16U;
+                    break;
+                }
+                case 's':
+                {
+                    pack.cv_type = CV_16S;
+                    break;
+                }
+                case 'i':
+                {
+                    pack.cv_type = CV_32S;
+                    break;
+                }
+                case 'f':
+                {
+                    pack.cv_type = CV_32F;
+                    break;
+                }
+                case 'd':
+                {
+                    pack.cv_type = CV_64F;
+                    break;
+                }
                 case 'r':
                 default:
                     CV_Error(cv::Error::StsError, "type is not supported");
@@ -830,10 +887,9 @@ private:
     }
 
 private:
-
-    const uchar * cur;
-    const uchar * beg;
-    const uchar * end;
+    const uchar* cur;
+    const uchar* beg;
+    const uchar* end;
 
     size_t step;
     std::vector<binary_to_filenode_t> binary_to_funcs;
@@ -845,9 +901,7 @@ private:
  * Wrapper
  ***************************************************************************/
 
-Base64Writer::Base64Writer(::CvFileStorage * fs)
-    : emitter(new Base64ContextEmitter(fs))
-    , data_type_string()
+Base64Writer::Base64Writer(::CvFileStorage* fs) : emitter(new Base64ContextEmitter(fs)), data_type_string()
 {
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
 }
@@ -859,48 +913,48 @@ void Base64Writer::write(const void* _data, size_t len, const char* dt)
     emitter->write(convertor);
 }
 
-template<typename _to_binary_convertor_t> inline
-void Base64Writer::write(_to_binary_convertor_t & convertor, const char* dt)
+template<typename _to_binary_convertor_t>
+inline void Base64Writer::write(_to_binary_convertor_t& convertor, const char* dt)
 {
     check_dt(dt);
     emitter->write(convertor);
 }
 
-Base64Writer::~Base64Writer()
-{
-    delete emitter;
-}
+Base64Writer::~Base64Writer() { delete emitter; }
 
 void Base64Writer::check_dt(const char* dt)
 {
-    if ( dt == 0 )
-        CV_Error( CV_StsBadArg, "Invalid \'dt\'." );
-    else if (data_type_string.empty()) {
+    if (dt == 0)
+        CV_Error(CV_StsBadArg, "Invalid \'dt\'.");
+    else if (data_type_string.empty())
+    {
         data_type_string = dt;
 
         /* output header */
         std::string buffer = make_base64_header(dt);
-        const uchar * beg = reinterpret_cast<const uchar *>(buffer.data());
-        const uchar * end = beg + buffer.size();
+        const uchar* beg = reinterpret_cast<const uchar*>(buffer.data());
+        const uchar* end = beg + buffer.size();
 
         emitter->write(beg, end);
-    } else if ( data_type_string != dt )
-        CV_Error( CV_StsBadArg, "\'dt\' does not match." );
+    }
+    else if (data_type_string != dt)
+        CV_Error(CV_StsBadArg, "\'dt\' does not match.");
 }
 
 
-void make_seq(void * binary, int elem_cnt, const char * dt, ::CvSeq & seq)
+void make_seq(void* binary, int elem_cnt, const char* dt, ::CvSeq& seq)
 {
     ::CvFileNode node;
     node.info = 0;
     BinaryToCvSeqConvertor convertor(binary, elem_cnt, dt);
-    while (convertor) {
+    while (convertor)
+    {
         convertor >> node;
         cvSeqPush(&seq, &node);
     }
 }
 
-} // base64::
+} // namespace base64
 
 /****************************************************************************
  * Interface
@@ -911,15 +965,15 @@ CV_IMPL void cvWriteRawDataBase64(::CvFileStorage* fs, const void* _data, int le
     CV_Assert(fs);
     CV_CHECK_OUTPUT_FILE_STORAGE(fs);
 
-    check_if_write_struct_is_delayed( fs, true );
+    check_if_write_struct_is_delayed(fs, true);
 
-    if ( fs->state_of_writing_base64 == base64::fs::Uncertain )
+    if (fs->state_of_writing_base64 == base64::fs::Uncertain)
     {
-        switch_to_Base64_state( fs, base64::fs::InUse );
+        switch_to_Base64_state(fs, base64::fs::InUse);
     }
-    else if ( fs->state_of_writing_base64 != base64::fs::InUse )
+    else if (fs->state_of_writing_base64 != base64::fs::InUse)
     {
-        CV_Error( CV_StsError, "Base64 should not be used at present." );
+        CV_Error(CV_StsError, "Base64 should not be used at present.");
     }
 
     fs->base64_writer->write(_data, len, dt);

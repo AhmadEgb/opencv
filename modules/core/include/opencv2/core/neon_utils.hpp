@@ -51,8 +51,7 @@
 
 inline int32x2_t cv_vrnd_s32_f32(float32x2_t v)
 {
-    static int32x2_t v_sign = vdup_n_s32(1 << 31),
-        v_05 = vreinterpret_s32_f32(vdup_n_f32(0.5f));
+    static int32x2_t v_sign = vdup_n_s32(1 << 31), v_05 = vreinterpret_s32_f32(vdup_n_f32(0.5f));
 
     int32x2_t v_addition = vorr_s32(v_05, vand_s32(v_sign, vreinterpret_s32_f32(v)));
     return vcvt_s32_f32(vadd_f32(v, vreinterpret_f32_s32(v_addition)));
@@ -60,8 +59,7 @@ inline int32x2_t cv_vrnd_s32_f32(float32x2_t v)
 
 inline int32x4_t cv_vrndq_s32_f32(float32x4_t v)
 {
-    static int32x4_t v_sign = vdupq_n_s32(1 << 31),
-        v_05 = vreinterpretq_s32_f32(vdupq_n_f32(0.5f));
+    static int32x4_t v_sign = vdupq_n_s32(1 << 31), v_05 = vreinterpretq_s32_f32(vdupq_n_f32(0.5f));
 
     int32x4_t v_addition = vorrq_s32(v_05, vandq_s32(v_sign, vreinterpretq_s32_f32(v)));
     return vcvtq_s32_f32(vaddq_f32(v, vreinterpretq_f32_s32(v_addition)));
@@ -111,15 +109,9 @@ inline float32x2_t cv_vrsqrt_f32(float32x2_t val)
     return e;
 }
 
-inline float32x4_t cv_vsqrtq_f32(float32x4_t val)
-{
-    return cv_vrecpq_f32(cv_vrsqrtq_f32(val));
-}
+inline float32x4_t cv_vsqrtq_f32(float32x4_t val) { return cv_vrecpq_f32(cv_vrsqrtq_f32(val)); }
 
-inline float32x2_t cv_vsqrt_f32(float32x2_t val)
-{
-    return cv_vrecp_f32(cv_vrsqrt_f32(val));
-}
+inline float32x2_t cv_vsqrt_f32(float32x2_t val) { return cv_vrecp_f32(cv_vrsqrt_f32(val)); }
 
 #endif
 

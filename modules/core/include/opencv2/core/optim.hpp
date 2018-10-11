@@ -44,8 +44,7 @@
 
 #include "opencv2/core.hpp"
 
-namespace cv
-{
+namespace cv {
 
 /** @addtogroup core_optim
 The algorithms in this section minimize or maximize function value within specified constraints or
@@ -67,7 +66,7 @@ public:
         virtual int getDims() const = 0;
         virtual double getGradientEps() const;
         virtual double calc(const double* x) const = 0;
-        virtual void getGradient(const double* x,double* grad);
+        virtual void getGradient(const double* x, double* grad);
     };
 
     /** @brief Getter for the optimized function.
@@ -161,7 +160,7 @@ public:
     accepts column-vectors as well as row-vectors, this method will return a row-vector.
     @see DownhillSolver::setInitStep
      */
-    virtual void getInitStep(OutputArray step) const=0;
+    virtual void getInitStep(OutputArray step) const = 0;
 
     /** @brief Sets the initial step that will be used in downhill simplex algorithm.
 
@@ -177,7 +176,7 @@ public:
     @param step Initial step that will be used in algorithm. Roughly said, it determines the spread
     (size in each dimension) of an initial simplex.
      */
-    virtual void setInitStep(InputArray step)=0;
+    virtual void setInitStep(InputArray step) = 0;
 
     /** @brief This function returns the reference to the ready-to-use DownhillSolver object.
 
@@ -195,9 +194,10 @@ public:
     @param termcrit Terminal criteria to the algorithm, similarly to the one you submit via
     MinProblemSolver::setTermCriteria.
      */
-    static Ptr<DownhillSolver> create(const Ptr<MinProblemSolver::Function>& f=Ptr<MinProblemSolver::Function>(),
-                                      InputArray initStep=Mat_<double>(1,1,0.0),
-                                      TermCriteria termcrit=TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,5000,0.000001));
+    static Ptr<DownhillSolver>
+    create(const Ptr<MinProblemSolver::Function>& f = Ptr<MinProblemSolver::Function>(),
+           InputArray initStep = Mat_<double>(1, 1, 0.0),
+           TermCriteria termcrit = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5000, 0.000001));
 };
 
 /** @brief This class is used to perform the non-linear non-constrained minimization of a function
@@ -249,17 +249,18 @@ public:
     @param termcrit Terminal criteria to the algorithm, similarly to the one you submit via
     MinProblemSolver::setTermCriteria.
     */
-    static Ptr<ConjGradSolver> create(const Ptr<MinProblemSolver::Function>& f=Ptr<ConjGradSolver::Function>(),
-                                      TermCriteria termcrit=TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,5000,0.000001));
+    static Ptr<ConjGradSolver>
+    create(const Ptr<MinProblemSolver::Function>& f = Ptr<ConjGradSolver::Function>(),
+           TermCriteria termcrit = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5000, 0.000001));
 };
 
 //! return codes for cv::solveLP() function
 enum SolveLPResult
 {
-    SOLVELP_UNBOUNDED    = -2, //!< problem is unbounded (target function can achieve arbitrary high values)
-    SOLVELP_UNFEASIBLE    = -1, //!< problem is unfeasible (there are no points that satisfy all the constraints imposed)
-    SOLVELP_SINGLE    = 0, //!< there is only one maximum for target function
-    SOLVELP_MULTI    = 1 //!< there are multiple maxima for target function - the arbitrary one is returned
+    SOLVELP_UNBOUNDED = -2, //!< problem is unbounded (target function can achieve arbitrary high values)
+    SOLVELP_UNFEASIBLE = -1, //!< problem is unfeasible (there are no points that satisfy all the constraints imposed)
+    SOLVELP_SINGLE = 0, //!< there is only one maximum for target function
+    SOLVELP_MULTI = 1 //!< there are multiple maxima for target function - the arbitrary one is returned
 };
 
 /** @brief Solve given (non-integer) linear programming problem using the Simplex Algorithm (Simplex Method).
@@ -297,6 +298,6 @@ CV_EXPORTS_W int solveLP(const Mat& Func, const Mat& Constr, Mat& z);
 
 //! @}
 
-}// cv
+} // namespace cv
 
 #endif

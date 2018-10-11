@@ -30,9 +30,8 @@ CV_EXPORTS cv::String join(const cv::String& base, const cv::String& path);
  * @param recursive scan nested directories too
  * @param includeDirectories include directories into results list
  */
-CV_EXPORTS void glob(const cv::String& directory, const cv::String& pattern,
-        CV_OUT std::vector<cv::String>& result,
-        bool recursive = false, bool includeDirectories = false);
+CV_EXPORTS void glob(const cv::String& directory, const cv::String& pattern, CV_OUT std::vector<cv::String>& result,
+                     bool recursive = false, bool includeDirectories = false);
 
 /**
  * Generate a list of all files that match the globbing pattern.
@@ -44,8 +43,8 @@ CV_EXPORTS void glob(const cv::String& directory, const cv::String& pattern,
  * @param includeDirectories include directories into results list
  */
 CV_EXPORTS void glob_relative(const cv::String& directory, const cv::String& pattern,
-        CV_OUT std::vector<cv::String>& result,
-        bool recursive = false, bool includeDirectories = false);
+                              CV_OUT std::vector<cv::String>& result, bool recursive = false,
+                              bool includeDirectories = false);
 
 
 CV_EXPORTS bool createDirectory(const cv::String& path);
@@ -66,6 +65,6 @@ CV_EXPORTS cv::String getCacheDirectory(const char* sub_directory_name, const ch
 
 #endif
 
-}}} // namespace
+}}} // namespace cv::utils::fs
 
 #endif // OPENCV_UTILS_FILESYSTEM_HPP

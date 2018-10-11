@@ -14,15 +14,15 @@ namespace cv {
 class DummyBufferPoolController : public BufferPoolController
 {
 public:
-    DummyBufferPoolController() { }
-    virtual ~DummyBufferPoolController() { }
+    DummyBufferPoolController() {}
+    virtual ~DummyBufferPoolController() {}
 
     virtual size_t getReservedSize() const CV_OVERRIDE { return (size_t)-1; }
     virtual size_t getMaxReservedSize() const CV_OVERRIDE { return (size_t)-1; }
     virtual void setMaxReservedSize(size_t size) CV_OVERRIDE { CV_UNUSED(size); }
-    virtual void freeAllReservedBuffers() CV_OVERRIDE { }
+    virtual void freeAllReservedBuffers() CV_OVERRIDE {}
 };
 
-} // namespace
+} // namespace cv
 
 #endif // __OPENCV_CORE_BUFFER_POOL_IMPL_HPP__

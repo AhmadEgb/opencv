@@ -48,16 +48,14 @@ using namespace cv::cuda;
 
 void cv::cuda::GpuMat::updateContinuityFlag()
 {
-    int sz[] = { rows, cols };
-    size_t steps[] = { step, elemSize() };
+    int sz[] = {rows, cols};
+    size_t steps[] = {step, elemSize()};
     flags = cv::updateContinuityFlag(flags, 2, sz, steps);
 }
 
-cv::cuda::GpuMat::GpuMat(int rows_, int cols_, int type_, void* data_, size_t step_) :
-    flags(Mat::MAGIC_VAL + (type_ & Mat::TYPE_MASK)), rows(rows_), cols(cols_),
-    step(step_), data((uchar*)data_), refcount(0),
-    datastart((uchar*)data_), dataend((const uchar*)data_),
-    allocator(defaultAllocator())
+cv::cuda::GpuMat::GpuMat(int rows_, int cols_, int type_, void* data_, size_t step_)
+    : flags(Mat::MAGIC_VAL + (type_ & Mat::TYPE_MASK)), rows(rows_), cols(cols_), step(step_), data((uchar*)data_),
+      refcount(0), datastart((uchar*)data_), dataend((const uchar*)data_), allocator(defaultAllocator())
 {
     size_t minstep = cols * elemSize();
 
@@ -70,18 +68,17 @@ cv::cuda::GpuMat::GpuMat(int rows_, int cols_, int type_, void* data_, size_t st
         if (rows == 1)
             step = minstep;
 
-        CV_DbgAssert( step >= minstep );
+        CV_DbgAssert(step >= minstep);
     }
 
     dataend += step * (rows - 1) + minstep;
     updateContinuityFlag();
 }
 
-cv::cuda::GpuMat::GpuMat(Size size_, int type_, void* data_, size_t step_) :
-    flags(Mat::MAGIC_VAL + (type_ & Mat::TYPE_MASK)), rows(size_.height), cols(size_.width),
-    step(step_), data((uchar*)data_), refcount(0),
-    datastart((uchar*)data_), dataend((const uchar*)data_),
-    allocator(defaultAllocator())
+cv::cuda::GpuMat::GpuMat(Size size_, int type_, void* data_, size_t step_)
+    : flags(Mat::MAGIC_VAL + (type_ & Mat::TYPE_MASK)), rows(size_.height), cols(size_.width), step(step_),
+      data((uchar*)data_), refcount(0), datastart((uchar*)data_), dataend((const uchar*)data_),
+      allocator(defaultAllocator())
 {
     size_t minstep = cols * elemSize();
 
@@ -94,7 +91,7 @@ cv::cuda::GpuMat::GpuMat(Size size_, int type_, void* data_, size_t step_) :
         if (rows == 1)
             step = minstep;
 
-        CV_DbgAssert( step >= minstep );
+        CV_DbgAssert(step >= minstep);
     }
 
     dataend += step * (rows - 1) + minstep;
@@ -104,8 +101,11 @@ cv::cuda::GpuMat::GpuMat(Size size_, int type_, void* data_, size_t step_) :
 cv::cuda::GpuMat::GpuMat(const GpuMat& m, Range rowRange_, Range colRange_)
 {
     flags = m.flags;
-    step = m.step; refcount = m.refcount;
-    data = m.data; datastart = m.datastart; dataend = m.dataend;
+    step = m.step;
+    refcount = m.refcount;
+    data = m.data;
+    datastart = m.datastart;
+    dataend = m.dataend;
     allocator = m.allocator;
 
     if (rowRange_ == Range::all())
@@ -114,10 +114,10 @@ cv::cuda::GpuMat::GpuMat(const GpuMat& m, Range rowRange_, Range colRange_)
     }
     else
     {
-        CV_Assert( 0 <= rowRange_.start && rowRange_.start <= rowRange_.end && rowRange_.end <= m.rows );
+        CV_Assert(0 <= rowRange_.start && rowRange_.start <= rowRange_.end && rowRange_.end <= m.rows);
 
         rows = rowRange_.size();
-        data += step*rowRange_.start;
+        data += step * rowRange_.start;
     }
 
     if (colRange_ == Range::all())
@@ -126,10 +126,10 @@ cv::cuda::GpuMat::GpuMat(const GpuMat& m, Range rowRange_, Range colRange_)
     }
     else
     {
-        CV_Assert( 0 <= colRange_.start && colRange_.start <= colRange_.end && colRange_.end <= m.cols );
+        CV_Assert(0 <= colRange_.start && colRange_.start <= colRange_.end && colRange_.end <= m.cols);
 
         cols = colRange_.size();
-        data += colRange_.start*elemSize();
+        data += colRange_.start * elemSize();
     }
 
     if (refcount)
@@ -141,18 +141,14 @@ cv::cuda::GpuMat::GpuMat(const GpuMat& m, Range rowRange_, Range colRange_)
     updateContinuityFlag();
 }
 
-cv::cuda::GpuMat::GpuMat(const GpuMat& m, Rect roi) :
-    flags(m.flags), rows(roi.height), cols(roi.width),
-    step(m.step), data(m.data + roi.y*step), refcount(m.refcount),
-    datastart(m.datastart), dataend(m.dataend),
-    allocator(m.allocator)
+cv::cuda::GpuMat::GpuMat(const GpuMat& m, Rect roi)
+    : flags(m.flags), rows(roi.height), cols(roi.width), step(m.step), data(m.data + roi.y * step),
+      refcount(m.refcount), datastart(m.datastart), dataend(m.dataend), allocator(m.allocator)
 {
     data += roi.x * elemSize();
 
-    CV_Assert( 0 <= roi.x && 0 <= roi.width &&
-               roi.x + roi.width <= m.cols &&
-               0 <= roi.y && 0 <= roi.height &&
-               roi.y + roi.height <= m.rows );
+    CV_Assert(0 <= roi.x && 0 <= roi.width && roi.x + roi.width <= m.cols && 0 <= roi.y && 0 <= roi.height
+              && roi.y + roi.height <= m.rows);
 
     if (refcount)
         CV_XADD(refcount, 1);
@@ -180,7 +176,8 @@ GpuMat cv::cuda::GpuMat::reshape(int new_cn, int new_rows) const
         int total_size = total_width * rows;
 
         if (!isContinuous())
-            CV_Error(cv::Error::BadStep, "The matrix is not continuous, thus its number of rows can not be changed");
+            CV_Error(cv::Error::BadStep,
+                     "The matrix is not continuous, thus its number of rows can not be changed");
 
         if ((unsigned)new_rows > (unsigned)total_size)
             CV_Error(cv::Error::StsOutOfRange, "Bad new number of rows");
@@ -188,7 +185,8 @@ GpuMat cv::cuda::GpuMat::reshape(int new_cn, int new_rows) const
         total_width = total_size / new_rows;
 
         if (total_width * new_rows != total_size)
-            CV_Error(cv::Error::StsBadArg, "The total number of matrix elements is not divisible by the new number of rows");
+            CV_Error(cv::Error::StsBadArg,
+                     "The total number of matrix elements is not divisible by the new number of rows");
 
         hdr.rows = new_rows;
         hdr.step = total_width * elemSize1();
@@ -207,7 +205,7 @@ GpuMat cv::cuda::GpuMat::reshape(int new_cn, int new_rows) const
 
 void cv::cuda::GpuMat::locateROI(Size& wholeSize, Point& ofs) const
 {
-    CV_DbgAssert( step > 0 );
+    CV_DbgAssert(step > 0);
 
     size_t esz = elemSize();
     ptrdiff_t delta1 = data - datastart;
@@ -222,7 +220,7 @@ void cv::cuda::GpuMat::locateROI(Size& wholeSize, Point& ofs) const
         ofs.y = static_cast<int>(delta1 / step);
         ofs.x = static_cast<int>((delta1 - step * ofs.y) / esz);
 
-        CV_DbgAssert( data == datastart + ofs.y * step + ofs.x * esz );
+        CV_DbgAssert(data == datastart + ofs.y * step + ofs.x * esz);
     }
 
     size_t minstep = (ofs.x + cols) * esz;
@@ -253,19 +251,18 @@ GpuMat& cv::cuda::GpuMat::adjustROI(int dtop, int dbottom, int dleft, int dright
     return *this;
 }
 
-namespace
+namespace {
+template<class ObjType>
+void createContinuousImpl(int rows, int cols, int type, ObjType& obj)
 {
-    template <class ObjType>
-    void createContinuousImpl(int rows, int cols, int type, ObjType& obj)
-    {
-        const int area = rows * cols;
+    const int area = rows * cols;
 
-        if (obj.empty() || obj.type() != type || !obj.isContinuous() || obj.size().area() != area)
-            obj.create(1, area, type);
+    if (obj.empty() || obj.type() != type || !obj.isContinuous() || obj.size().area() != area)
+        obj.create(1, area, type);
 
-        obj = obj.reshape(obj.channels(), rows);
-    }
+    obj = obj.reshape(obj.channels(), rows);
 }
+} // namespace
 
 void cv::cuda::createContinuous(int rows, int cols, int type, OutputArray arr)
 {
@@ -288,38 +285,39 @@ void cv::cuda::createContinuous(int rows, int cols, int type, OutputArray arr)
     }
 }
 
-namespace
+namespace {
+template<class ObjType>
+void ensureSizeIsEnoughImpl(int rows, int cols, int type, ObjType& obj)
 {
-    template <class ObjType>
-    void ensureSizeIsEnoughImpl(int rows, int cols, int type, ObjType& obj)
+    if (obj.empty() || obj.type() != type || obj.data != obj.datastart)
     {
-        if (obj.empty() || obj.type() != type || obj.data != obj.datastart)
+        obj.create(rows, cols, type);
+    }
+    else
+    {
+        const size_t esz = obj.elemSize();
+        const ptrdiff_t delta2 = obj.dataend - obj.datastart;
+
+        const size_t minstep = obj.cols * esz;
+
+        Size wholeSize;
+        wholeSize.height = std::max(static_cast<int>((delta2 - minstep) / static_cast<size_t>(obj.step) + 1),
+                                    obj.rows);
+        wholeSize.width = std::max(
+            static_cast<int>((delta2 - static_cast<size_t>(obj.step) * (wholeSize.height - 1)) / esz), obj.cols);
+
+        if (wholeSize.height < rows || wholeSize.width < cols)
         {
             obj.create(rows, cols, type);
         }
         else
         {
-            const size_t esz = obj.elemSize();
-            const ptrdiff_t delta2 = obj.dataend - obj.datastart;
-
-            const size_t minstep = obj.cols * esz;
-
-            Size wholeSize;
-            wholeSize.height = std::max(static_cast<int>((delta2 - minstep) / static_cast<size_t>(obj.step) + 1), obj.rows);
-            wholeSize.width = std::max(static_cast<int>((delta2 - static_cast<size_t>(obj.step) * (wholeSize.height - 1)) / esz), obj.cols);
-
-            if (wholeSize.height < rows || wholeSize.width < cols)
-            {
-                obj.create(rows, cols, type);
-            }
-            else
-            {
-                obj.cols = cols;
-                obj.rows = rows;
-            }
+            obj.cols = cols;
+            obj.rows = rows;
         }
     }
 }
+} // namespace
 
 void cv::cuda::ensureSizeIsEnough(int rows, int cols, int type, OutputArray arr)
 {
@@ -409,10 +407,7 @@ void cv::cuda::syncOutput(const GpuMat& dst, OutputArray _dst, Stream& stream)
 
 #ifndef HAVE_CUDA
 
-GpuMat::Allocator* cv::cuda::GpuMat::defaultAllocator()
-{
-    return 0;
-}
+GpuMat::Allocator* cv::cuda::GpuMat::defaultAllocator() { return 0; }
 
 void cv::cuda::GpuMat::setDefaultAllocator(Allocator* allocator)
 {
@@ -428,9 +423,7 @@ void cv::cuda::GpuMat::create(int _rows, int _cols, int _type)
     throw_no_cuda();
 }
 
-void cv::cuda::GpuMat::release()
-{
-}
+void cv::cuda::GpuMat::release() {}
 
 void cv::cuda::GpuMat::upload(InputArray arr)
 {

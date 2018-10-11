@@ -14,8 +14,10 @@ String dumpInputArray(InputArray argument)
         return "InputArray: noArray()";
     std::ostringstream ss;
     ss << "InputArray:";
-    try {
-        do {
+    try
+    {
+        do
+        {
             ss << (argument.empty() ? " empty()=true" : " empty()=false");
             ss << cv::format(" kind=0x%08llx", (long long int)argument.kind());
             ss << cv::format(" flags=0x%08llx", (long long int)argument.getFlags());
@@ -33,7 +35,7 @@ String dumpInputArray(InputArray argument)
     }
     catch (...)
     {
-        ss << " ERROR: exception occured, dump is non-complete";  // need to properly support different kinds
+        ss << " ERROR: exception occured, dump is non-complete"; // need to properly support different kinds
     }
     return ss.str();
 }
@@ -44,8 +46,10 @@ CV_EXPORTS_W String dumpInputArrayOfArrays(InputArrayOfArrays argument)
         return "InputArrayOfArrays: noArray()";
     std::ostringstream ss;
     ss << "InputArrayOfArrays:";
-    try {
-        do {
+    try
+    {
+        do
+        {
             ss << (argument.empty() ? " empty()=true" : " empty()=false");
             ss << cv::format(" kind=0x%08llx", (long long int)argument.kind());
             ss << cv::format(" flags=0x%08llx", (long long int)argument.getFlags());
@@ -70,7 +74,7 @@ CV_EXPORTS_W String dumpInputArrayOfArrays(InputArrayOfArrays argument)
     }
     catch (...)
     {
-        ss << " ERROR: exception occured, dump is non-complete";  // need to properly support different kinds
+        ss << " ERROR: exception occured, dump is non-complete"; // need to properly support different kinds
     }
     return ss.str();
 }
@@ -81,8 +85,10 @@ CV_EXPORTS_W String dumpInputOutputArray(InputOutputArray argument)
         return "InputOutputArray: noArray()";
     std::ostringstream ss;
     ss << "InputOutputArray:";
-    try {
-        do {
+    try
+    {
+        do
+        {
             ss << (argument.empty() ? " empty()=true" : " empty()=false");
             ss << cv::format(" kind=0x%08llx", (long long int)argument.kind());
             ss << cv::format(" flags=0x%08llx", (long long int)argument.getFlags());
@@ -100,7 +106,7 @@ CV_EXPORTS_W String dumpInputOutputArray(InputOutputArray argument)
     }
     catch (...)
     {
-        ss << " ERROR: exception occured, dump is non-complete";  // need to properly support different kinds
+        ss << " ERROR: exception occured, dump is non-complete"; // need to properly support different kinds
     }
     return ss.str();
 }
@@ -111,8 +117,10 @@ CV_EXPORTS_W String dumpInputOutputArrayOfArrays(InputOutputArrayOfArrays argume
         return "InputOutputArrayOfArrays: noArray()";
     std::ostringstream ss;
     ss << "InputOutputArrayOfArrays:";
-    try {
-        do {
+    try
+    {
+        do
+        {
             ss << (argument.empty() ? " empty()=true" : " empty()=false");
             ss << cv::format(" kind=0x%08llx", (long long int)argument.kind());
             ss << cv::format(" flags=0x%08llx", (long long int)argument.getFlags());
@@ -137,9 +145,9 @@ CV_EXPORTS_W String dumpInputOutputArrayOfArrays(InputOutputArrayOfArrays argume
     }
     catch (...)
     {
-        ss << " ERROR: exception occured, dump is non-complete";  // need to properly support different kinds
+        ss << " ERROR: exception occured, dump is non-complete"; // need to properly support different kinds
     }
     return ss.str();
 }
 
-}} // namespace
+}} // namespace cv::utils

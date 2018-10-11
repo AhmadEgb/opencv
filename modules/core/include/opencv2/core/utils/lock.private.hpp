@@ -12,14 +12,19 @@ namespace cv { namespace utils {
  *
  * Emulate std::lock_guard (C++11), partially std::unique_lock (C++11),
  */
-template <class _Mutex>
-class lock_guard {
+template<class _Mutex>
+class lock_guard
+{
 public:
     typedef _Mutex Mutex;
 
-    explicit inline lock_guard(Mutex &m) : mutex_(&m) { mutex_->lock(); }
+    explicit inline lock_guard(Mutex& m) : mutex_(&m) { mutex_->lock(); }
 
-    inline ~lock_guard() { if (mutex_) mutex_->unlock(); }
+    inline ~lock_guard()
+    {
+        if (mutex_)
+            mutex_->unlock();
+    }
 
     inline void release()
     {
@@ -41,14 +46,19 @@ private:
  *
  * Emulate boost::shared_lock_guard, subset of std::shared_lock (C++14),
  */
-template <class _Mutex>
-class shared_lock_guard {
+template<class _Mutex>
+class shared_lock_guard
+{
 public:
     typedef _Mutex Mutex;
 
-    explicit inline shared_lock_guard(Mutex &m) : mutex_(&m) { mutex_->lock_shared(); }
+    explicit inline shared_lock_guard(Mutex& m) : mutex_(&m) { mutex_->lock_shared(); }
 
-    inline ~shared_lock_guard() { if (mutex_) mutex_->unlock_shared(); }
+    inline ~shared_lock_guard()
+    {
+        if (mutex_)
+            mutex_->unlock_shared();
+    }
 
     inline void release()
     {
@@ -72,14 +82,23 @@ private:
  *
  * @sa lock_guard
  */
-template <class _Mutex>
-class optional_lock_guard {
+template<class _Mutex>
+class optional_lock_guard
+{
 public:
     typedef _Mutex Mutex;
 
-    explicit inline optional_lock_guard(Mutex* m) : mutex_(m) { if (mutex_) mutex_->lock(); }
+    explicit inline optional_lock_guard(Mutex* m) : mutex_(m)
+    {
+        if (mutex_)
+            mutex_->lock();
+    }
 
-    inline ~optional_lock_guard() { if (mutex_) mutex_->unlock(); }
+    inline ~optional_lock_guard()
+    {
+        if (mutex_)
+            mutex_->unlock();
+    }
 
 private:
     Mutex* mutex_;
@@ -96,14 +115,23 @@ private:
  *
  * @sa shared_lock_guard
  */
-template <class _Mutex>
-class optional_shared_lock_guard {
+template<class _Mutex>
+class optional_shared_lock_guard
+{
 public:
     typedef _Mutex Mutex;
 
-    explicit inline optional_shared_lock_guard(Mutex* m) : mutex_(m) { if (mutex_) mutex_->lock_shared(); }
+    explicit inline optional_shared_lock_guard(Mutex* m) : mutex_(m)
+    {
+        if (mutex_)
+            mutex_->lock_shared();
+    }
 
-    inline ~optional_shared_lock_guard() { if (mutex_) mutex_->unlock_shared(); }
+    inline ~optional_shared_lock_guard()
+    {
+        if (mutex_)
+            mutex_->unlock_shared();
+    }
 
 protected:
     Mutex* mutex_;
@@ -114,6 +142,6 @@ private:
 };
 
 
-}} // namespace
+}} // namespace cv::utils
 
 #endif // OPENCV_UTILS_LOCK_HPP

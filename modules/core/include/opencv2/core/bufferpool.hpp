@@ -8,12 +8,11 @@
 #define OPENCV_CORE_BUFFER_POOL_HPP
 
 #ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 4265)
+#    pragma warning(push)
+#    pragma warning(disable : 4265)
 #endif
 
-namespace cv
-{
+namespace cv {
 
 //! @addtogroup core
 //! @{
@@ -21,7 +20,8 @@ namespace cv
 class BufferPoolController
 {
 protected:
-    ~BufferPoolController() { }
+    ~BufferPoolController() {}
+
 public:
     virtual size_t getReservedSize() const = 0;
     virtual size_t getMaxReservedSize() const = 0;
@@ -31,10 +31,10 @@ public:
 
 //! @}
 
-}
+} // namespace cv
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#    pragma warning(pop)
 #endif
 
 #endif // OPENCV_CORE_BUFFER_POOL_HPP

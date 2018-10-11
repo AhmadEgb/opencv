@@ -15,6 +15,6 @@ struct CV_EXPORTS UMatDataAutoLock
     UMatData* u2;
 };
 
-}
+} // namespace cv
 
 #endif // OPENCV_CORE_SRC_UMATRIX_HPP

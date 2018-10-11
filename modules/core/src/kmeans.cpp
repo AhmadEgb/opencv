@@ -47,33 +47,34 @@
 
 ////////////////////////////////////////// kmeans ////////////////////////////////////////////
 
-namespace cv
-{
+namespace cv {
 
-static int CV_KMEANS_PARALLEL_GRANULARITY = (int)utils::getConfigurationParameterSizeT("OPENCV_KMEANS_PARALLEL_GRANULARITY", 1000);
+static int CV_KMEANS_PARALLEL_GRANULARITY =
+    (int)utils::getConfigurationParameterSizeT("OPENCV_KMEANS_PARALLEL_GRANULARITY", 1000);
 
 static void generateRandomCenter(int dims, const Vec2f* box, float* center, RNG& rng)
 {
-    float margin = 1.f/dims;
+    float margin = 1.f / dims;
     for (int j = 0; j < dims; j++)
-        center[j] = ((float)rng*(1.f+margin*2.f)-margin)*(box[j][1] - box[j][0]) + box[j][0];
+        center[j] = ((float)rng * (1.f + margin * 2.f) - margin) * (box[j][1] - box[j][0]) + box[j][0];
 }
 
 class KMeansPPDistanceComputer : public ParallelLoopBody
 {
 public:
-    KMeansPPDistanceComputer(float *tdist2_, const Mat& data_, const float *dist_, int ci_) :
-        tdist2(tdist2_), data(data_), dist(dist_), ci(ci_)
-    { }
+    KMeansPPDistanceComputer(float* tdist2_, const Mat& data_, const float* dist_, int ci_)
+        : tdist2(tdist2_), data(data_), dist(dist_), ci(ci_)
+    {
+    }
 
-    void operator()( const cv::Range& range ) const CV_OVERRIDE
+    void operator()(const cv::Range& range) const CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         const int begin = range.start;
         const int end = range.end;
         const int dims = data.cols;
 
-        for (int i = begin; i<end; i++)
+        for (int i = begin; i < end; i++)
         {
             tdist2[i] = std::min(hal::normL2Sqr_(data.ptr<float>(i), data.ptr<float>(ci), dims), dist[i]);
         }
@@ -82,9 +83,9 @@ public:
 private:
     KMeansPPDistanceComputer& operator=(const KMeansPPDistanceComputer&); // = delete
 
-    float *tdist2;
+    float* tdist2;
     const Mat& data;
-    const float *dist;
+    const float* dist;
     const int ci;
 };
 
@@ -92,15 +93,14 @@ private:
 k-means center initialization using the following algorithm:
 Arthur & Vassilvitskii (2007) k-means++: The Advantages of Careful Seeding
 */
-static void generateCentersPP(const Mat& data, Mat& _out_centers,
-                              int K, RNG& rng, int trials)
+static void generateCentersPP(const Mat& data, Mat& _out_centers, int K, RNG& rng, int trials)
 {
     CV_TRACE_FUNCTION();
     const int dims = data.cols, N = data.rows;
     cv::AutoBuffer<int, 64> _centers(K);
     int* centers = &_centers[0];
-    cv::AutoBuffer<float, 0> _dist(N*3);
-    float* dist = &_dist[0], *tdist = dist + N, *tdist2 = tdist + N;
+    cv::AutoBuffer<float, 0> _dist(N * 3);
+    float *dist = &_dist[0], *tdist = dist + N, *tdist2 = tdist + N;
     double sum0 = 0;
 
     centers[0] = (unsigned)rng % N;
@@ -118,7 +118,7 @@ static void generateCentersPP(const Mat& data, Mat& _out_centers,
 
         for (int j = 0; j < trials; j++)
         {
-            double p = (double)rng*sum0;
+            double p = (double)rng * sum0;
             int ci = 0;
             for (; ci < N - 1; ci++)
             {
@@ -127,8 +127,7 @@ static void generateCentersPP(const Mat& data, Mat& _out_centers,
                     break;
             }
 
-            parallel_for_(Range(0, N),
-                          KMeansPPDistanceComputer(tdist2, data, dist, ci),
+            parallel_for_(Range(0, N), KMeansPPDistanceComputer(tdist2, data, dist, ci),
                           (double)divUp((size_t)(dims * N), CV_KMEANS_PARALLEL_GRANULARITY));
             double s = 0;
             for (int i = 0; i < N; i++)
@@ -161,14 +160,8 @@ template<bool onlyDistance>
 class KMeansDistanceComputer : public ParallelLoopBody
 {
 public:
-    KMeansDistanceComputer( double *distances_,
-                            int *labels_,
-                            const Mat& data_,
-                            const Mat& centers_)
-        : distances(distances_),
-          labels(labels_),
-          data(data_),
-          centers(centers_)
+    KMeansDistanceComputer(double* distances_, int* labels_, const Mat& data_, const Mat& centers_)
+        : distances(distances_), labels(labels_), data(data_), centers(centers_)
     {
     }
 
@@ -182,7 +175,7 @@ public:
 
         for (int i = begin; i < end; ++i)
         {
-            const float *sample = data.ptr<float>(i);
+            const float* sample = data.ptr<float>(i);
             if (onlyDistance)
             {
                 const float* center = centers.ptr<float>(labels[i]);
@@ -215,30 +208,28 @@ public:
 private:
     KMeansDistanceComputer& operator=(const KMeansDistanceComputer&); // = delete
 
-    double *distances;
-    int *labels;
+    double* distances;
+    int* labels;
     const Mat& data;
     const Mat& centers;
 };
 
-}
+} // namespace cv
 
-double cv::kmeans( InputArray _data, int K,
-                   InputOutputArray _bestLabels,
-                   TermCriteria criteria, int attempts,
-                   int flags, OutputArray _centers )
+double cv::kmeans(InputArray _data, int K, InputOutputArray _bestLabels, TermCriteria criteria, int attempts,
+                  int flags, OutputArray _centers)
 {
     CV_INSTRUMENT_REGION();
     const int SPP_TRIALS = 3;
     Mat data0 = _data.getMat();
     const bool isrow = data0.rows == 1;
     const int N = isrow ? data0.cols : data0.rows;
-    const int dims = (isrow ? 1 : data0.cols)*data0.channels();
+    const int dims = (isrow ? 1 : data0.cols) * data0.channels();
     const int type = data0.depth();
 
     attempts = std::max(attempts, 1);
-    CV_Assert( data0.dims <= 2 && type == CV_32F && K > 0 );
-    CV_Assert( N >= K );
+    CV_Assert(data0.dims <= 2 && type == CV_32F && K > 0);
+    CV_Assert(N >= K);
 
     Mat data(N, dims, CV_32F, data0.ptr(), isrow ? dims * sizeof(float) : static_cast<size_t>(data0.step));
 
@@ -247,10 +238,8 @@ double cv::kmeans( InputArray _data, int K,
     Mat _labels, best_labels = _bestLabels.getMat();
     if (flags & CV_KMEANS_USE_INITIAL_LABELS)
     {
-        CV_Assert( (best_labels.cols == 1 || best_labels.rows == 1) &&
-                  best_labels.cols*best_labels.rows == N &&
-                  best_labels.type() == CV_32S &&
-                  best_labels.isContinuous());
+        CV_Assert((best_labels.cols == 1 || best_labels.rows == 1) && best_labels.cols * best_labels.rows == N
+                  && best_labels.type() == CV_32S && best_labels.isContinuous());
         best_labels.reshape(1, N).copyTo(_labels);
         for (int i = 0; i < N; i++)
         {
@@ -259,10 +248,8 @@ double cv::kmeans( InputArray _data, int K,
     }
     else
     {
-        if (!((best_labels.cols == 1 || best_labels.rows == 1) &&
-             best_labels.cols*best_labels.rows == N &&
-             best_labels.type() == CV_32S &&
-             best_labels.isContinuous()))
+        if (!((best_labels.cols == 1 || best_labels.rows == 1) && best_labels.cols * best_labels.rows == N
+              && best_labels.type() == CV_32S && best_labels.isContinuous()))
         {
             _bestLabels.create(N, 1, CV_32S);
             best_labels = _bestLabels.getMat();
@@ -318,7 +305,7 @@ double cv::kmeans( InputArray _data, int K,
     {
         double compactness = 0;
 
-        for (int iter = 0; ;)
+        for (int iter = 0;;)
         {
             double max_center_shift = iter == 0 ? DBL_MAX : 0.0;
 
@@ -371,9 +358,9 @@ double cv::kmeans( InputArray _data, int K,
                     int farthest_i = -1;
                     float* base_center = centers.ptr<float>(max_k);
                     float* _base_center = temp.ptr<float>(); // normalized
-                    float scale = 1.f/counters[max_k];
+                    float scale = 1.f / counters[max_k];
                     for (int j = 0; j < dims; j++)
-                        _base_center[j] = base_center[j]*scale;
+                        _base_center[j] = base_center[j] * scale;
 
                     for (int i = 0; i < N; i++)
                     {
@@ -405,9 +392,9 @@ double cv::kmeans( InputArray _data, int K,
                 for (int k = 0; k < K; k++)
                 {
                     float* center = centers.ptr<float>(k);
-                    CV_Assert( counters[k] != 0 );
+                    CV_Assert(counters[k] != 0);
 
-                    float scale = 1.f/counters[k];
+                    float scale = 1.f / counters[k];
                     for (int j = 0; j < dims; j++)
                         center[j] *= scale;
 
@@ -418,7 +405,7 @@ double cv::kmeans( InputArray _data, int K,
                         for (int j = 0; j < dims; j++)
                         {
                             double t = center[j] - old_center[j];
-                            dist += t*t;
+                            dist += t * t;
                         }
                         max_center_shift = std::max(max_center_shift, dist);
                     }
@@ -430,14 +417,16 @@ double cv::kmeans( InputArray _data, int K,
             if (isLastIter)
             {
                 // don't re-assign labels to avoid creation of empty clusters
-                parallel_for_(Range(0, N), KMeansDistanceComputer<true>(dists.data(), labels, data, centers), (double)divUp((size_t)(dims * N), CV_KMEANS_PARALLEL_GRANULARITY));
+                parallel_for_(Range(0, N), KMeansDistanceComputer<true>(dists.data(), labels, data, centers),
+                              (double)divUp((size_t)(dims * N), CV_KMEANS_PARALLEL_GRANULARITY));
                 compactness = sum(Mat(Size(N, 1), CV_64F, &dists[0]))[0];
                 break;
             }
             else
             {
                 // assign labels
-                parallel_for_(Range(0, N), KMeansDistanceComputer<false>(dists.data(), labels, data, centers), (double)divUp((size_t)(dims * N * K), CV_KMEANS_PARALLEL_GRANULARITY));
+                parallel_for_(Range(0, N), KMeansDistanceComputer<false>(dists.data(), labels, data, centers),
+                              (double)divUp((size_t)(dims * N * K), CV_KMEANS_PARALLEL_GRANULARITY));
             }
         }
 

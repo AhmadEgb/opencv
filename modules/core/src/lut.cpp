@@ -12,67 +12,63 @@
 *                                    LUT Transform                                       *
 \****************************************************************************************/
 
-namespace cv
-{
+namespace cv {
 
-template<typename T> static void
-LUT8u_( const uchar* src, const T* lut, T* dst, int len, int cn, int lutcn )
+template<typename T>
+static void LUT8u_(const uchar* src, const T* lut, T* dst, int len, int cn, int lutcn)
 {
-    if( lutcn == 1 )
+    if (lutcn == 1)
     {
-        for( int i = 0; i < len*cn; i++ )
+        for (int i = 0; i < len * cn; i++)
             dst[i] = lut[src[i]];
     }
     else
     {
-        for( int i = 0; i < len*cn; i += cn )
-            for( int k = 0; k < cn; k++ )
-                dst[i+k] = lut[src[i+k]*cn+k];
+        for (int i = 0; i < len * cn; i += cn)
+            for (int k = 0; k < cn; k++)
+                dst[i + k] = lut[src[i + k] * cn + k];
     }
 }
 
-static void LUT8u_8u( const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn )
+static void LUT8u_8u(const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn)
 {
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    LUT8u_(src, lut, dst, len, cn, lutcn);
 }
 
-static void LUT8u_8s( const uchar* src, const schar* lut, schar* dst, int len, int cn, int lutcn )
+static void LUT8u_8s(const uchar* src, const schar* lut, schar* dst, int len, int cn, int lutcn)
 {
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    LUT8u_(src, lut, dst, len, cn, lutcn);
 }
 
-static void LUT8u_16u( const uchar* src, const ushort* lut, ushort* dst, int len, int cn, int lutcn )
+static void LUT8u_16u(const uchar* src, const ushort* lut, ushort* dst, int len, int cn, int lutcn)
 {
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    LUT8u_(src, lut, dst, len, cn, lutcn);
 }
 
-static void LUT8u_16s( const uchar* src, const short* lut, short* dst, int len, int cn, int lutcn )
+static void LUT8u_16s(const uchar* src, const short* lut, short* dst, int len, int cn, int lutcn)
 {
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    LUT8u_(src, lut, dst, len, cn, lutcn);
 }
 
-static void LUT8u_32s( const uchar* src, const int* lut, int* dst, int len, int cn, int lutcn )
+static void LUT8u_32s(const uchar* src, const int* lut, int* dst, int len, int cn, int lutcn)
 {
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    LUT8u_(src, lut, dst, len, cn, lutcn);
 }
 
-static void LUT8u_32f( const uchar* src, const float* lut, float* dst, int len, int cn, int lutcn )
+static void LUT8u_32f(const uchar* src, const float* lut, float* dst, int len, int cn, int lutcn)
 {
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    LUT8u_(src, lut, dst, len, cn, lutcn);
 }
 
-static void LUT8u_64f( const uchar* src, const double* lut, double* dst, int len, int cn, int lutcn )
+static void LUT8u_64f(const uchar* src, const double* lut, double* dst, int len, int cn, int lutcn)
 {
-    LUT8u_( src, lut, dst, len, cn, lutcn );
+    LUT8u_(src, lut, dst, len, cn, lutcn);
 }
 
-typedef void (*LUTFunc)( const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn );
+typedef void (*LUTFunc)(const uchar* src, const uchar* lut, uchar* dst, int len, int cn, int lutcn);
 
-static LUTFunc lutTab[] =
-{
-    (LUTFunc)LUT8u_8u, (LUTFunc)LUT8u_8s, (LUTFunc)LUT8u_16u, (LUTFunc)LUT8u_16s,
-    (LUTFunc)LUT8u_32s, (LUTFunc)LUT8u_32f, (LUTFunc)LUT8u_64f, 0
-};
+static LUTFunc lutTab[] = {(LUTFunc)LUT8u_8u,  (LUTFunc)LUT8u_8s,  (LUTFunc)LUT8u_16u, (LUTFunc)LUT8u_16s,
+                           (LUTFunc)LUT8u_32s, (LUTFunc)LUT8u_32f, (LUTFunc)LUT8u_64f, 0};
 
 #ifdef HAVE_OPENCL
 
@@ -86,15 +82,15 @@ static bool ocl_LUT(InputArray _src, InputArray _lut, OutputArray _dst)
     int kercn = lcn == 1 ? std::min(4, ocl::predictOptimalVectorWidth(_src, _dst)) : dcn;
 
     ocl::Kernel k("LUT", ocl::core::lut_oclsrc,
-                  format("-D dcn=%d -D lcn=%d -D srcT=%s -D dstT=%s", kercn, lcn,
-                         ocl::typeToStr(src.depth()), ocl::memopTypeToStr(ddepth)));
+                  format("-D dcn=%d -D lcn=%d -D srcT=%s -D dstT=%s", kercn, lcn, ocl::typeToStr(src.depth()),
+                         ocl::memopTypeToStr(ddepth)));
     if (k.empty())
         return false;
 
     k.args(ocl::KernelArg::ReadOnlyNoSize(src), ocl::KernelArg::ReadOnlyNoSize(lut),
-        ocl::KernelArg::WriteOnly(dst, dcn, kercn));
+           ocl::KernelArg::WriteOnly(dst, dcn, kercn));
 
-    size_t globalSize[2] = { (size_t)dst.cols * dcn / kercn, ((size_t)dst.rows + 3) / 4 };
+    size_t globalSize[2] = {(size_t)dst.cols * dcn / kercn, ((size_t)dst.rows + 3) / 4};
     return k.run(2, globalSize, NULL, false);
 }
 
@@ -110,21 +106,22 @@ static bool openvx_LUT(Mat src, Mat dst, Mat _lut)
     {
         ivx::Context ctx = ovx::getOpenVXContext();
 
-        ivx::Image
-            ia = ivx::Image::createFromHandle(ctx, VX_DF_IMAGE_U8,
-                ivx::Image::createAddressing(src.cols, src.rows, 1, (vx_int32)(src.step)), src.data),
-            ib = ivx::Image::createFromHandle(ctx, VX_DF_IMAGE_U8,
-                ivx::Image::createAddressing(dst.cols, dst.rows, 1, (vx_int32)(dst.step)), dst.data);
+        ivx::Image ia = ivx::Image::createFromHandle(
+                       ctx, VX_DF_IMAGE_U8,
+                       ivx::Image::createAddressing(src.cols, src.rows, 1, (vx_int32)(src.step)), src.data),
+                   ib = ivx::Image::createFromHandle(
+                       ctx, VX_DF_IMAGE_U8,
+                       ivx::Image::createAddressing(dst.cols, dst.rows, 1, (vx_int32)(dst.step)), dst.data);
 
         ivx::LUT lut = ivx::LUT::create(ctx);
         lut.copyFrom(_lut);
         ivx::IVX_CHECK_STATUS(vxuTableLookup(ctx, ia, lut, ib));
     }
-    catch (ivx::RuntimeError & e)
+    catch (ivx::RuntimeError& e)
     {
         VX_DbgThrow(e.what());
     }
-    catch (ivx::WrapperError & e)
+    catch (ivx::WrapperError& e)
     {
         VX_DbgThrow(e.what());
     }
@@ -134,7 +131,7 @@ static bool openvx_LUT(Mat src, Mat dst, Mat _lut)
 #endif
 
 #if defined(HAVE_IPP)
-#if !IPP_DISABLE_PERF_LUT // there are no performance benefits (PR #2653)
+#    if !IPP_DISABLE_PERF_LUT // there are no performance benefits (PR #2653)
 namespace ipp {
 
 class IppLUTParallelBody_LUTC1 : public ParallelLoopBody
@@ -158,7 +155,7 @@ public:
         *ok = true;
     }
 
-    void operator()( const cv::Range& range ) const
+    void operator()(const cv::Range& range) const
     {
         if (!*ok)
             return;
@@ -169,20 +166,25 @@ public:
         Mat src = src_.rowRange(row0, row1);
         Mat dst = dst_.rowRange(row0, row1);
 
-        IppiSize sz = { width, dst.rows };
+        IppiSize sz = {width, dst.rows};
 
         if (elemSize1 == 1)
         {
-            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C1R, (const Ipp8u*)src.data, (int)src.step[0], dst.data, (int)dst.step[0], sz, lut_.data, 8) >= 0)
+            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C1R, (const Ipp8u*)src.data, (int)src.step[0], dst.data,
+                                      (int)dst.step[0], sz, lut_.data, 8)
+                >= 0)
                 return;
         }
         else if (elemSize1 == 4)
         {
-            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u32u_C1R, (const Ipp8u*)src.data, (int)src.step[0], (Ipp32u*)dst.data, (int)dst.step[0], sz, (Ipp32u*)lut_.data, 8) >= 0)
+            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u32u_C1R, (const Ipp8u*)src.data, (int)src.step[0],
+                                      (Ipp32u*)dst.data, (int)dst.step[0], sz, (Ipp32u*)lut_.data, 8)
+                >= 0)
                 return;
         }
         *ok = false;
     }
+
 private:
     IppLUTParallelBody_LUTC1(const IppLUTParallelBody_LUTC1&);
     IppLUTParallelBody_LUTC1& operator=(const IppLUTParallelBody_LUTC1&);
@@ -191,7 +193,7 @@ private:
 class IppLUTParallelBody_LUTCN : public ParallelLoopBody
 {
 public:
-    bool *ok;
+    bool* ok;
     const Mat& src_;
     const Mat& lut_;
     Mat& dst_;
@@ -218,13 +220,15 @@ public:
         CV_DbgAssert(lutcn == 3 || lutcn == 4);
         if (lutcn == 3)
         {
-            IppStatus status = CV_INSTRUMENT_FUN_IPP(ippiCopy_8u_C3P3R, lut.ptr(), (int)lut.step[0], lutTable, (int)lut.step[0], sz256);
+            IppStatus status = CV_INSTRUMENT_FUN_IPP(ippiCopy_8u_C3P3R, lut.ptr(), (int)lut.step[0], lutTable,
+                                                     (int)lut.step[0], sz256);
             if (status < 0)
                 return;
         }
         else if (lutcn == 4)
         {
-            IppStatus status = CV_INSTRUMENT_FUN_IPP(ippiCopy_8u_C4P4R, lut.ptr(), (int)lut.step[0], lutTable, (int)lut.step[0], sz256);
+            IppStatus status = CV_INSTRUMENT_FUN_IPP(ippiCopy_8u_C4P4R, lut.ptr(), (int)lut.step[0], lutTable,
+                                                     (int)lut.step[0], sz256);
             if (status < 0)
                 return;
         }
@@ -240,7 +244,7 @@ public:
         lutTable[0] = NULL;
     }
 
-    void operator()( const cv::Range& range ) const
+    void operator()(const cv::Range& range) const
     {
         if (!*ok)
             return;
@@ -253,29 +257,34 @@ public:
 
         if (lutcn == 3)
         {
-            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C3R, src.ptr(), (int)src.step[0], dst.ptr(), (int)dst.step[0], ippiSize(dst.size()), lutTable, 8) >= 0)
+            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C3R, src.ptr(), (int)src.step[0], dst.ptr(),
+                                      (int)dst.step[0], ippiSize(dst.size()), lutTable, 8)
+                >= 0)
                 return;
         }
         else if (lutcn == 4)
         {
-            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C4R, src.ptr(), (int)src.step[0], dst.ptr(), (int)dst.step[0], ippiSize(dst.size()), lutTable, 8) >= 0)
+            if (CV_INSTRUMENT_FUN_IPP(ippiLUTPalette_8u_C4R, src.ptr(), (int)src.step[0], dst.ptr(),
+                                      (int)dst.step[0], ippiSize(dst.size()), lutTable, 8)
+                >= 0)
                 return;
         }
         *ok = false;
     }
+
 private:
     IppLUTParallelBody_LUTCN(const IppLUTParallelBody_LUTCN&);
     IppLUTParallelBody_LUTCN& operator=(const IppLUTParallelBody_LUTCN&);
 };
 } // namespace ipp
 
-static bool ipp_lut(Mat &src, Mat &lut, Mat &dst)
+static bool ipp_lut(Mat& src, Mat& lut, Mat& dst)
 {
     CV_INSTRUMENT_REGION_IPP();
 
     int lutcn = lut.channels();
 
-    if(src.dims > 2)
+    if (src.dims > 2)
         return false;
 
     bool ok = false;
@@ -297,8 +306,8 @@ static bool ipp_lut(Mat &src, Mat &lut, Mat &dst)
     if (body != NULL && ok)
     {
         Range all(0, dst.rows);
-        if (dst.total()>>18)
-            parallel_for_(all, *body, (double)std::max((size_t)1, dst.total()>>16));
+        if (dst.total() >> 18)
+            parallel_for_(all, *body, (double)std::max((size_t)1, dst.total() >> 16));
         else
             (*body)(all);
         if (ok)
@@ -308,7 +317,7 @@ static bool ipp_lut(Mat &src, Mat &lut, Mat &dst)
     return false;
 }
 
-#endif
+#    endif
 #endif // IPP
 
 class LUTParallelBody : public ParallelLoopBody
@@ -321,14 +330,13 @@ public:
 
     LUTFunc func;
 
-    LUTParallelBody(const Mat& src, const Mat& lut, Mat& dst, bool* _ok)
-        : ok(_ok), src_(src), lut_(lut), dst_(dst)
+    LUTParallelBody(const Mat& src, const Mat& lut, Mat& dst, bool* _ok) : ok(_ok), src_(src), lut_(lut), dst_(dst)
     {
         func = lutTab[lut.depth()];
         *ok = (func != NULL);
     }
 
-    void operator()( const cv::Range& range ) const CV_OVERRIDE
+    void operator()(const cv::Range& range) const CV_OVERRIDE
     {
         CV_DbgAssert(*ok);
 
@@ -346,36 +354,34 @@ public:
         NAryMatIterator it(arrays, ptrs);
         int len = (int)it.size;
 
-        for( size_t i = 0; i < it.nplanes; i++, ++it )
+        for (size_t i = 0; i < it.nplanes; i++, ++it)
             func(ptrs[0], lut_.ptr(), ptrs[1], len, cn, lutcn);
     }
+
 private:
     LUTParallelBody(const LUTParallelBody&);
     LUTParallelBody& operator=(const LUTParallelBody&);
 };
 
-} // cv::
+} // namespace cv
 
-void cv::LUT( InputArray _src, InputArray _lut, OutputArray _dst )
+void cv::LUT(InputArray _src, InputArray _lut, OutputArray _dst)
 {
     CV_INSTRUMENT_REGION();
 
     int cn = _src.channels(), depth = _src.depth();
     int lutcn = _lut.channels();
 
-    CV_Assert( (lutcn == cn || lutcn == 1) &&
-        _lut.total() == 256 && _lut.isContinuous() &&
-        (depth == CV_8U || depth == CV_8S) );
+    CV_Assert((lutcn == cn || lutcn == 1) && _lut.total() == 256 && _lut.isContinuous()
+              && (depth == CV_8U || depth == CV_8S));
 
-    CV_OCL_RUN(_dst.isUMat() && _src.dims() <= 2,
-               ocl_LUT(_src, _lut, _dst))
+    CV_OCL_RUN(_dst.isUMat() && _src.dims() <= 2, ocl_LUT(_src, _lut, _dst))
 
     Mat src = _src.getMat(), lut = _lut.getMat();
     _dst.create(src.dims, src.size, CV_MAKETYPE(_lut.depth(), cn));
     Mat dst = _dst.getMat();
 
-    CV_OVX_RUN(!ovx::skipSmallImages<VX_KERNEL_TABLE_LOOKUP>(src.cols, src.rows),
-               openvx_LUT(src, dst, lut))
+    CV_OVX_RUN(!ovx::skipSmallImages<VX_KERNEL_TABLE_LOOKUP>(src.cols, src.rows), openvx_LUT(src, dst, lut))
 
 #if !IPP_DISABLE_PERF_LUT
     CV_IPP_RUN(_src.dims() <= 2, ipp_lut(src, lut, dst));
@@ -388,8 +394,8 @@ void cv::LUT( InputArray _src, InputArray _lut, OutputArray _dst )
         if (ok)
         {
             Range all(0, dst.rows);
-            if (dst.total() >= (size_t)(1<<18))
-                parallel_for_(all, body, (double)std::max((size_t)1, dst.total()>>16));
+            if (dst.total() >= (size_t)(1 << 18))
+                parallel_for_(all, body, (double)std::max((size_t)1, dst.total() >> 16));
             else
                 body(all);
             if (ok)
@@ -398,13 +404,13 @@ void cv::LUT( InputArray _src, InputArray _lut, OutputArray _dst )
     }
 
     LUTFunc func = lutTab[lut.depth()];
-    CV_Assert( func != 0 );
+    CV_Assert(func != 0);
 
     const Mat* arrays[] = {&src, &dst, 0};
     uchar* ptrs[2] = {};
     NAryMatIterator it(arrays, ptrs);
     int len = (int)it.size;
 
-    for( size_t i = 0; i < it.nplanes; i++, ++it )
+    for (size_t i = 0; i < it.nplanes; i++, ++it)
         func(ptrs[0], lut.ptr(), ptrs[1], len, cn, lutcn);
 }

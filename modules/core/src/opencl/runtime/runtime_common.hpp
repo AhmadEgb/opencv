@@ -50,7 +50,7 @@ struct DynamicFnEntry
     void** ppFn; // &clCreateContext_pfn
 };
 
-} } } // namespace cv::ocl::runtime
+}}} // namespace cv::ocl::runtime
 
 using namespace cv::ocl::runtime;
 

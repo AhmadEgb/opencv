@@ -9,19 +9,19 @@
 #define OPENCV_CORE_VA_INTEL_HPP
 
 #ifndef __cplusplus
-#  error va_intel.hpp header must be compiled as C++
+#    error va_intel.hpp header must be compiled as C++
 #endif
 
 #include "opencv2/core.hpp"
 #include "ocl.hpp"
 
 #if defined(HAVE_VA)
-# include "va/va.h"
-#else  // HAVE_VA
-# if !defined(_VA_H_)
-    typedef void* VADisplay;
-    typedef unsigned int VASurfaceID;
-# endif // !_VA_H_
+#    include "va/va.h"
+#else // HAVE_VA
+#    if !defined(_VA_H_)
+typedef void* VADisplay;
+typedef unsigned int VASurfaceID;
+#    endif // !_VA_H_
 #endif // HAVE_VA
 
 namespace cv { namespace va_intel {
@@ -53,7 +53,7 @@ using namespace cv::ocl;
  */
 CV_EXPORTS Context& initializeContextFromVA(VADisplay display, bool tryInterop = true);
 
-} // namespace cv::va_intel::ocl
+} // namespace ocl
 
 /** @brief Converts InputArray to VASurfaceID object.
 @param display - VADisplay object.

@@ -43,9 +43,9 @@
 #include "precomp.hpp"
 
 #ifdef HAVE_POSIX_MEMALIGN
-#include <stdlib.h>
+#    include <stdlib.h>
 #elif defined HAVE_MALLOC_H
-#include <malloc.h>
+#    include <malloc.h>
 #endif
 
 namespace cv {
@@ -56,23 +56,23 @@ static void* OutOfMemoryError(size_t size)
 }
 
 
-void* fastMalloc( size_t size )
+void* fastMalloc(size_t size)
 {
 #ifdef HAVE_POSIX_MEMALIGN
     void* ptr = NULL;
-    if(posix_memalign(&ptr, CV_MALLOC_ALIGN, size))
+    if (posix_memalign(&ptr, CV_MALLOC_ALIGN, size))
         ptr = NULL;
-    if(!ptr)
+    if (!ptr)
         return OutOfMemoryError(size);
     return ptr;
 #elif defined HAVE_MEMALIGN
     void* ptr = memalign(CV_MALLOC_ALIGN, size);
-    if(!ptr)
+    if (!ptr)
         return OutOfMemoryError(size);
     return ptr;
 #else
     uchar* udata = (uchar*)malloc(size + sizeof(void*) + CV_MALLOC_ALIGN);
-    if(!udata)
+    if (!udata)
         return OutOfMemoryError(size);
     uchar** adata = alignPtr((uchar**)udata + 1, CV_MALLOC_ALIGN);
     adata[-1] = udata;
@@ -85,26 +85,19 @@ void fastFree(void* ptr)
 #if defined HAVE_POSIX_MEMALIGN || defined HAVE_MEMALIGN
     free(ptr);
 #else
-    if(ptr)
+    if (ptr)
     {
         uchar* udata = ((uchar**)ptr)[-1];
-        CV_DbgAssert(udata < (uchar*)ptr &&
-               ((uchar*)ptr - udata) <= (ptrdiff_t)(sizeof(void*)+CV_MALLOC_ALIGN));
+        CV_DbgAssert(udata < (uchar*)ptr && ((uchar*)ptr - udata) <= (ptrdiff_t)(sizeof(void*) + CV_MALLOC_ALIGN));
         free(udata);
     }
 #endif
 }
 
-} // namespace
+} // namespace cv
 
-CV_IMPL void* cvAlloc( size_t size )
-{
-    return cv::fastMalloc( size );
-}
+CV_IMPL void* cvAlloc(size_t size) { return cv::fastMalloc(size); }
 
-CV_IMPL void cvFree_( void* ptr )
-{
-    cv::fastFree( ptr );
-}
+CV_IMPL void cvFree_(void* ptr) { cv::fastFree(ptr); }
 
 /* End of file. */

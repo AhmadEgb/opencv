@@ -46,7 +46,7 @@
 #define OPENCV_CORE_UTILITY_H
 
 #ifndef __cplusplus
-#  error utility.hpp header must be compiled as C++
+#    error utility.hpp header must be compiled as C++
 #endif
 
 #if defined(check)
@@ -59,34 +59,33 @@
 #include <functional>
 
 #if !defined(_M_CEE)
-#include <mutex>  // std::mutex, std::lock_guard
+#    include <mutex> // std::mutex, std::lock_guard
 #endif
 
-namespace cv
-{
+namespace cv {
 
 #ifdef CV_COLLECT_IMPL_DATA
 CV_EXPORTS void setImpl(int flags); // set implementation flags and reset storage arrays
 CV_EXPORTS void addImpl(int flag, const char* func = 0); // add implementation and function name to storage arrays
 // Get stored implementation flags and functions names arrays
 // Each implementation entry correspond to function name entry, so you can find which implementation was executed in which function
-CV_EXPORTS int getImpl(std::vector<int> &impl, std::vector<String> &funName);
+CV_EXPORTS int getImpl(std::vector<int>& impl, std::vector<String>& funName);
 
 CV_EXPORTS bool useCollection(); // return implementation collection state
 CV_EXPORTS void setUseCollection(bool flag); // set implementation collection state
 
-#define CV_IMPL_PLAIN  0x01 // native CPU OpenCV implementation
-#define CV_IMPL_OCL    0x02 // OpenCL implementation
-#define CV_IMPL_IPP    0x04 // IPP implementation
-#define CV_IMPL_MT     0x10 // multithreaded implementation
+#    define CV_IMPL_PLAIN 0x01 // native CPU OpenCV implementation
+#    define CV_IMPL_OCL 0x02 // OpenCL implementation
+#    define CV_IMPL_IPP 0x04 // IPP implementation
+#    define CV_IMPL_MT 0x10 // multithreaded implementation
 
-#define CV_IMPL_ADD(impl)                                                   \
-    if(cv::useCollection())                                                 \
-    {                                                                       \
-        cv::addImpl(impl, CV_Func);                                         \
-    }
+#    define CV_IMPL_ADD(impl) \
+        if (cv::useCollection()) \
+        { \
+            cv::addImpl(impl, CV_Func); \
+        }
 #else
-#define CV_IMPL_ADD(impl)
+#    define CV_IMPL_ADD(impl)
 #endif
 
 //! @addtogroup core_utils
@@ -118,7 +117,8 @@ CV_EXPORTS void setUseCollection(bool flag); // set implementation collection st
  }
  \endcode
 */
-template<typename _Tp, size_t fixed_size = 1024/sizeof(_Tp)+8> class AutoBuffer
+template<typename _Tp, size_t fixed_size = 1024 / sizeof(_Tp) + 8>
+class AutoBuffer
 {
 public:
     typedef _Tp value_type;
@@ -131,7 +131,7 @@ public:
     //! the copy constructor
     AutoBuffer(const AutoBuffer<_Tp, fixed_size>& buf);
     //! the assignment operator
-    AutoBuffer<_Tp, fixed_size>& operator = (const AutoBuffer<_Tp, fixed_size>& buf);
+    AutoBuffer<_Tp, fixed_size>& operator=(const AutoBuffer<_Tp, fixed_size>& buf);
 
     //! destructor. calls deallocate()
     ~AutoBuffer();
@@ -151,14 +151,22 @@ public:
 
 #if !defined(OPENCV_DISABLE_DEPRECATED_COMPATIBILITY) // use to .data() calls instead
     //! returns pointer to the real buffer, stack-allocated or heap-allocated
-    operator _Tp* () { return ptr; }
+    operator _Tp*() { return ptr; }
     //! returns read-only pointer to the real buffer, stack-allocated or heap-allocated
-    operator const _Tp* () const { return ptr; }
+    operator const _Tp*() const { return ptr; }
 #else
     //! returns a reference to the element at specified location. No bounds checking is performed in Release builds.
-    inline _Tp& operator[] (size_t i) { CV_DbgCheckLT(i, sz, "out of range"); return ptr[i]; }
+    inline _Tp& operator[](size_t i)
+    {
+        CV_DbgCheckLT(i, sz, "out of range");
+        return ptr[i];
+    }
     //! returns a reference to the element at specified location. No bounds checking is performed in Release builds.
-    inline const _Tp& operator[] (size_t i) const { CV_DbgCheckLT(i, sz, "out of range"); return ptr[i]; }
+    inline const _Tp& operator[](size_t i) const
+    {
+        CV_DbgCheckLT(i, sz, "out of range");
+        return ptr[i];
+    }
 #endif
 
 protected:
@@ -179,9 +187,8 @@ can make debugging more convenient.
  */
 CV_EXPORTS bool setBreakOnError(bool flag);
 
-extern "C" typedef int (*ErrorCallback)( int status, const char* func_name,
-                                       const char* err_msg, const char* file_name,
-                                       int line, void* userdata );
+extern "C" typedef int (*ErrorCallback)(int status, const char* func_name, const char* err_msg,
+                                        const char* file_name, int line, void* userdata);
 
 
 /** @brief Sets the new error handler and the optional user data.
@@ -194,9 +201,9 @@ extern "C" typedef int (*ErrorCallback)( int status, const char* func_name,
 
   \return the previous error handler
 */
-CV_EXPORTS ErrorCallback redirectError( ErrorCallback errCallback, void* userdata=0, void** prevUserdata=0);
+CV_EXPORTS ErrorCallback redirectError(ErrorCallback errCallback, void* userdata = 0, void** prevUserdata = 0);
 
-CV_EXPORTS String tempfile( const char* suffix = 0);
+CV_EXPORTS String tempfile(const char* suffix = 0);
 CV_EXPORTS void glob(String pattern, std::vector<String>& result, bool recursive = false);
 
 /** @brief OpenCV will try to set the number of threads for the next parallel region.
@@ -331,80 +338,59 @@ class CV_EXPORTS_W TickMeter
 {
 public:
     //! the default constructor
-    CV_WRAP TickMeter()
-    {
-    reset();
-    }
+    CV_WRAP TickMeter() { reset(); }
 
     /**
     starts counting ticks.
     */
-    CV_WRAP void start()
-    {
-    startTime = cv::getTickCount();
-    }
+    CV_WRAP void start() { startTime = cv::getTickCount(); }
 
     /**
     stops counting ticks.
     */
     CV_WRAP void stop()
     {
-    int64 time = cv::getTickCount();
-    if (startTime == 0)
-    return;
-    ++counter;
-    sumTime += (time - startTime);
-    startTime = 0;
+        int64 time = cv::getTickCount();
+        if (startTime == 0)
+            return;
+        ++counter;
+        sumTime += (time - startTime);
+        startTime = 0;
     }
 
     /**
     returns counted ticks.
     */
-    CV_WRAP int64 getTimeTicks() const
-    {
-    return sumTime;
-    }
+    CV_WRAP int64 getTimeTicks() const { return sumTime; }
 
     /**
     returns passed time in microseconds.
     */
-    CV_WRAP double getTimeMicro() const
-    {
-    return getTimeMilli()*1e3;
-    }
+    CV_WRAP double getTimeMicro() const { return getTimeMilli() * 1e3; }
 
     /**
     returns passed time in milliseconds.
     */
-    CV_WRAP double getTimeMilli() const
-    {
-    return getTimeSec()*1e3;
-    }
+    CV_WRAP double getTimeMilli() const { return getTimeSec() * 1e3; }
 
     /**
     returns passed time in seconds.
     */
-    CV_WRAP double getTimeSec()   const
-    {
-    return (double)getTimeTicks() / getTickFrequency();
-    }
+    CV_WRAP double getTimeSec() const { return (double)getTimeTicks() / getTickFrequency(); }
 
     /**
     returns internal counter value.
     */
-    CV_WRAP int64 getCounter() const
-    {
-    return counter;
-    }
+    CV_WRAP int64 getCounter() const { return counter; }
 
     /**
     resets internal values.
     */
     CV_WRAP void reset()
     {
-    startTime = 0;
-    sumTime = 0;
-    counter = 0;
+        startTime = 0;
+        sumTime = 0;
+        counter = 0;
     }
 
 private:
@@ -423,8 +409,7 @@ std::cout << tm;
 @endcode
 */
 
-static inline
-std::ostream& operator << (std::ostream& out, const TickMeter& tm)
+static inline std::ostream& operator<<(std::ostream& out, const TickMeter& tm)
 {
     return out << tm.getTimeSec() << "sec";
 }
@@ -483,10 +468,11 @@ The function returns the aligned pointer of the same type as the input pointer:
 @param ptr Aligned pointer.
 @param n Alignment size that must be a power of two.
  */
-template<typename _Tp> static inline _Tp* alignPtr(_Tp* ptr, int n=(int)sizeof(_Tp))
+template<typename _Tp>
+static inline _Tp* alignPtr(_Tp* ptr, int n = (int)sizeof(_Tp))
 {
     CV_DbgAssert((n & (n - 1)) == 0); // n is a power of 2
-    return (_Tp*)(((size_t)ptr + n-1) & -n);
+    return (_Tp*)(((size_t)ptr + n - 1) & -n);
 }
 
 /** @brief Aligns a buffer size to the specified number of bytes.
@@ -499,7 +485,7 @@ The function returns the minimum number that is greater than or equal to sz and 
 static inline size_t alignSize(size_t sz, int n)
 {
     CV_DbgAssert((n & (n - 1)) == 0); // n is a power of 2
-    return (sz + n-1) & -n;
+    return (sz + n - 1) & -n;
 }
 
 /** @brief Integer division with result round up.
@@ -514,10 +500,7 @@ static inline int divUp(int a, unsigned int b)
     return (a + b - 1) / b;
 }
 /** @overload */
-static inline size_t divUp(size_t a, unsigned int b)
-{
-    return (a + b - 1) / b;
-}
+static inline size_t divUp(size_t a, unsigned int b) { return (a + b - 1) / b; }
 
 /** @brief Enables or disables the optimized code.
 
@@ -550,37 +533,35 @@ class CV_EXPORTS ParallelLoopBody
 {
 public:
     virtual ~ParallelLoopBody();
-    virtual void operator() (const Range& range) const = 0;
+    virtual void operator()(const Range& range) const = 0;
 };
 
 /** @brief Parallel data processor
 */
-CV_EXPORTS void parallel_for_(const Range& range, const ParallelLoopBody& body, double nstripes=-1.);
+CV_EXPORTS void parallel_for_(const Range& range, const ParallelLoopBody& body, double nstripes = -1.);
 
 class ParallelLoopBodyLambdaWrapper : public ParallelLoopBody
 {
 private:
     std::function<void(const Range&)> m_functor;
-public:
-    ParallelLoopBodyLambdaWrapper(std::function<void(const Range&)> functor) :
-        m_functor(functor)
-    { }
 
-    virtual void operator() (const cv::Range& range) const CV_OVERRIDE
-    {
-        m_functor(range);
-    }
+public:
+    ParallelLoopBodyLambdaWrapper(std::function<void(const Range&)> functor) : m_functor(functor) {}
+
+    virtual void operator()(const cv::Range& range) const CV_OVERRIDE { m_functor(range); }
 };
 
-inline void parallel_for_(const Range& range, std::function<void(const Range&)> functor, double nstripes=-1.)
+inline void parallel_for_(const Range& range, std::function<void(const Range&)> functor, double nstripes = -1.)
 {
     parallel_for_(range, ParallelLoopBodyLambdaWrapper(functor), nstripes);
 }
 
 /////////////////////////////// forEach method of cv::Mat ////////////////////////////
-template<typename _Tp, typename Functor> inline
-void Mat::forEach_impl(const Functor& operation) {
-    if (false) {
+template<typename _Tp, typename Functor>
+inline void Mat::forEach_impl(const Functor& operation)
+{
+    if (false)
+    {
         operation(*reinterpret_cast<_Tp*>(0), reinterpret_cast<int*>(0));
         // If your compiler fails in this line.
         // Please check that your functor signature is
@@ -591,35 +572,42 @@ void Mat::forEach_impl(const Functor& operation) {
     CV_Assert(this->total() / this->size[this->dims - 1] <= INT_MAX);
     const int LINES = static_cast<int>(this->total() / this->size[this->dims - 1]);
 
-    class PixelOperationWrapper :public ParallelLoopBody
+    class PixelOperationWrapper : public ParallelLoopBody
     {
     public:
-        PixelOperationWrapper(Mat_<_Tp>* const frame, const Functor& _operation)
-            : mat(frame), op(_operation) {}
-        virtual ~PixelOperationWrapper(){}
+        PixelOperationWrapper(Mat_<_Tp>* const frame, const Functor& _operation) : mat(frame), op(_operation) {}
+        virtual ~PixelOperationWrapper() {}
         // ! Overloaded virtual operator
         // convert range call to row call.
-        virtual void operator()(const Range &range) const CV_OVERRIDE
+        virtual void operator()(const Range& range) const CV_OVERRIDE
         {
             const int DIMS = mat->dims;
             const int COLS = mat->size[DIMS - 1];
-            if (DIMS <= 2) {
-                for (int row = range.start; row < range.end; ++row) {
+            if (DIMS <= 2)
+            {
+                for (int row = range.start; row < range.end; ++row)
+                {
                     this->rowCall2(row, COLS);
                 }
-            } else {
+            }
+            else
+            {
                 std::vector<int> idx(DIMS); /// idx is modified in this->rowCall
                 idx[DIMS - 2] = range.start - 1;
 
-                for (int line_num = range.start; line_num < range.end; ++line_num) {
+                for (int line_num = range.start; line_num < range.end; ++line_num)
+                {
                     idx[DIMS - 2]++;
-                    for (int i = DIMS - 2; i >= 0; --i) {
-                        if (idx[i] >= mat->size[i]) {
+                    for (int i = DIMS - 2; i >= 0; --i)
+                    {
+                        if (idx[i] >= mat->size[i])
+                        {
                             idx[i - 1] += idx[i] / mat->size[i];
                             idx[i] %= mat->size[i];
                             continue; // carry-over;
                         }
-                        else {
+                        else
+                        {
                             break;
                         }
                     }
@@ -627,31 +615,33 @@ void Mat::forEach_impl(const Functor& operation) {
                 }
             }
         }
+
     private:
         Mat_<_Tp>* const mat;
         const Functor op;
         // ! Call operator for each elements in this row.
-        inline void rowCall(int* const idx, const int COLS, const int DIMS) const {
-            int &col = idx[DIMS - 1];
+        inline void rowCall(int* const idx, const int COLS, const int DIMS) const
+        {
+            int& col = idx[DIMS - 1];
             col = 0;
             _Tp* pixel = &(mat->template at<_Tp>(idx));
 
-            while (col < COLS) {
+            while (col < COLS)
+            {
                 op(*pixel, const_cast<const int*>(idx));
-                pixel++; col++;
+                pixel++;
+                col++;
             }
             col = 0;
         }
         // ! Call operator for each elements in this row. 2d mat special version.
-        inline void rowCall2(const int row, const int COLS) const {
-            union Index{
+        inline void rowCall2(const int row, const int COLS) const
+        {
+            union Index
+            {
                 int body[2];
-                operator const int*() const {
-                    return reinterpret_cast<const int*>(this);
-                }
-                int& operator[](const int i) {
-                    return body[i];
-                }
+                operator const int*() const { return reinterpret_cast<const int*>(this); }
+                int& operator[](const int i) { return body[i]; }
             } idx = {{row, 0}};
             // Special union is needed to avoid
             // "error: array subscript is above array bounds [-Werror=array-bounds]"
@@ -659,12 +649,14 @@ void Mat::forEach_impl(const Functor& operation) {
 
             _Tp* pixel = &(mat->template at<_Tp>(idx));
             const _Tp* const pixel_end = pixel + COLS;
-            while(pixel < pixel_end) {
+            while (pixel < pixel_end)
+            {
                 op(*pixel++, static_cast<const int*>(idx));
                 idx[1]++;
             }
         }
-        PixelOperationWrapper& operator=(const PixelOperationWrapper &) {
+        PixelOperationWrapper& operator=(const PixelOperationWrapper&)
+        {
             CV_Assert(false);
             // We can not remove this implementation because Visual Studio warning C4822.
             return *this;
@@ -688,13 +680,13 @@ protected:
     TLSDataContainer();
     virtual ~TLSDataContainer();
 
-    void  gatherData(std::vector<void*> &data) const;
+    void gatherData(std::vector<void*>& data) const;
     void* getData() const;
-    void  release();
+    void release();
 
 private:
     virtual void* createDataInstance() const = 0;
-    virtual void  deleteDataInstance(void* pData) const = 0;
+    virtual void deleteDataInstance(void* pData) const = 0;
 
     int key_;
 
@@ -703,31 +695,39 @@ public:
 };
 
 // Main TLS data class
-template <typename T>
+template<typename T>
 class TLSData : protected TLSDataContainer
 {
 public:
-    inline TLSData()        {}
-    inline ~TLSData()       { release();            } // Release key and delete associated data
-    inline T* get() const   { return (T*)getData(); } // Get data associated with key
-    inline T& getRef() const { T* ptr = (T*)getData(); CV_Assert(ptr); return *ptr; } // Get data associated with key
+    inline TLSData() {}
+    inline ~TLSData() { release(); } // Release key and delete associated data
+    inline T* get() const { return (T*)getData(); } // Get data associated with key
+    inline T& getRef() const
+    {
+        T* ptr = (T*)getData();
+        CV_Assert(ptr);
+        return *ptr;
+    } // Get data associated with key
 
     // Get data from all threads
-    inline void gather(std::vector<T*> &data) const
+    inline void gather(std::vector<T*>& data) const
     {
-        std::vector<void*> &dataVoid = reinterpret_cast<std::vector<void*>&>(data);
+        std::vector<void*>& dataVoid = reinterpret_cast<std::vector<void*>&>(data);
         gatherData(dataVoid);
     }
 
     inline void cleanup() { TLSDataContainer::cleanup(); }
 
 private:
-    virtual void* createDataInstance() const CV_OVERRIDE {return new T;}                // Wrapper to allocate data by template
-    virtual void  deleteDataInstance(void* pData) const CV_OVERRIDE {delete (T*)pData;} // Wrapper to release data by template
+    virtual void* createDataInstance() const CV_OVERRIDE { return new T; } // Wrapper to allocate data by template
+    virtual void deleteDataInstance(void* pData) const CV_OVERRIDE
+    {
+        delete (T*)pData;
+    } // Wrapper to release data by template
 
     // Disable TLS copy operations
-    TLSData(TLSData &) {}
-    TLSData& operator =(const TLSData &) {return *this;}
+    TLSData(TLSData&) {}
+    TLSData& operator=(const TLSData&) { return *this; }
 };
 
 /** @brief Designed for command line parsing
@@ -810,7 +810,6 @@ For the described keys:
 class CV_EXPORTS CommandLineParser
 {
 public:
-
     /** @brief Constructor
 
     Initializes command line parser object
@@ -825,7 +824,7 @@ public:
     CommandLineParser(const CommandLineParser& parser);
 
     /** @brief Assignment operator */
-    CommandLineParser& operator = (const CommandLineParser& parser);
+    CommandLineParser& operator=(const CommandLineParser& parser);
 
     /** @brief Destructor */
     ~CommandLineParser();
@@ -873,7 +872,7 @@ public:
     parser.get<String>("@image");
     @endcode
      */
-    template <typename T>
+    template<typename T>
     T get(const String& name, bool space_delete = true) const
     {
         T val = T();
@@ -905,7 +904,7 @@ public:
     @param space_delete remove spaces from the left and right of the string
     @tparam T the argument will be converted to this type if possible
      */
-    template <typename T>
+    template<typename T>
     T get(int index, bool space_delete = true) const
     {
         T val = T();
@@ -960,68 +959,70 @@ protected:
 
 /////////////////////////////// AutoBuffer implementation ////////////////////////////////////////
 
-template<typename _Tp, size_t fixed_size> inline
-AutoBuffer<_Tp, fixed_size>::AutoBuffer()
+template<typename _Tp, size_t fixed_size>
+inline AutoBuffer<_Tp, fixed_size>::AutoBuffer()
 {
     ptr = buf;
     sz = fixed_size;
 }
 
-template<typename _Tp, size_t fixed_size> inline
-AutoBuffer<_Tp, fixed_size>::AutoBuffer(size_t _size)
+template<typename _Tp, size_t fixed_size>
+inline AutoBuffer<_Tp, fixed_size>::AutoBuffer(size_t _size)
 {
     ptr = buf;
     sz = fixed_size;
     allocate(_size);
 }
 
-template<typename _Tp, size_t fixed_size> inline
-AutoBuffer<_Tp, fixed_size>::AutoBuffer(const AutoBuffer<_Tp, fixed_size>& abuf )
+template<typename _Tp, size_t fixed_size>
+inline AutoBuffer<_Tp, fixed_size>::AutoBuffer(const AutoBuffer<_Tp, fixed_size>& abuf)
 {
     ptr = buf;
     sz = fixed_size;
     allocate(abuf.size());
-    for( size_t i = 0; i < sz; i++ )
+    for (size_t i = 0; i < sz; i++)
         ptr[i] = abuf.ptr[i];
 }
 
-template<typename _Tp, size_t fixed_size> inline AutoBuffer<_Tp, fixed_size>&
-AutoBuffer<_Tp, fixed_size>::operator = (const AutoBuffer<_Tp, fixed_size>& abuf)
+template<typename _Tp, size_t fixed_size>
+inline AutoBuffer<_Tp, fixed_size>& AutoBuffer<_Tp, fixed_size>::operator=(const AutoBuffer<_Tp, fixed_size>& abuf)
 {
-    if( this != &abuf )
+    if (this != &abuf)
     {
         deallocate();
         allocate(abuf.size());
-        for( size_t i = 0; i < sz; i++ )
+        for (size_t i = 0; i < sz; i++)
             ptr[i] = abuf.ptr[i];
     }
     return *this;
 }
 
-template<typename _Tp, size_t fixed_size> inline
-AutoBuffer<_Tp, fixed_size>::~AutoBuffer()
-{ deallocate(); }
-
-template<typename _Tp, size_t fixed_size> inline void
-AutoBuffer<_Tp, fixed_size>::allocate(size_t _size)
+template<typename _Tp, size_t fixed_size>
+inline AutoBuffer<_Tp, fixed_size>::~AutoBuffer()
 {
-    if(_size <= sz)
+    deallocate();
+}
+
+template<typename _Tp, size_t fixed_size>
+inline void AutoBuffer<_Tp, fixed_size>::allocate(size_t _size)
+{
+    if (_size <= sz)
     {
         sz = _size;
         return;
     }
     deallocate();
     sz = _size;
-    if(_size > fixed_size)
+    if (_size > fixed_size)
     {
         ptr = new _Tp[_size];
     }
 }
 
-template<typename _Tp, size_t fixed_size> inline void
-AutoBuffer<_Tp, fixed_size>::deallocate()
+template<typename _Tp, size_t fixed_size>
+inline void AutoBuffer<_Tp, fixed_size>::deallocate()
 {
-    if( ptr != buf )
+    if (ptr != buf)
     {
         delete[] ptr;
         ptr = buf;
@@ -1029,10 +1030,10 @@ AutoBuffer<_Tp, fixed_size>::deallocate()
     }
 }
 
-template<typename _Tp, size_t fixed_size> inline void
-AutoBuffer<_Tp, fixed_size>::resize(size_t _size)
+template<typename _Tp, size_t fixed_size>
+inline void AutoBuffer<_Tp, fixed_size>::resize(size_t _size)
 {
-    if(_size <= sz)
+    if (_size <= sz)
     {
         sz = _size;
         return;
@@ -1043,19 +1044,21 @@ AutoBuffer<_Tp, fixed_size>::resize(size_t _size)
     ptr = _size > fixed_size ? new _Tp[_size] : buf;
     sz = _size;
 
-    if( ptr != prevptr )
-        for( i = 0; i < minsize; i++ )
+    if (ptr != prevptr)
+        for (i = 0; i < minsize; i++)
             ptr[i] = prevptr[i];
-    for( i = prevsize; i < _size; i++ )
+    for (i = prevsize; i < _size; i++)
         ptr[i] = _Tp();
 
-    if( prevptr != buf )
+    if (prevptr != buf)
         delete[] prevptr;
 }
 
-template<typename _Tp, size_t fixed_size> inline size_t
-AutoBuffer<_Tp, fixed_size>::size() const
-{ return sz; }
+template<typename _Tp, size_t fixed_size>
+inline size_t AutoBuffer<_Tp, fixed_size>::size() const
+{
+    return sz;
+}
 
 //! @endcond
 
@@ -1065,14 +1068,8 @@ template<class OBJECT>
 class CV_EXPORTS Node
 {
 public:
-    Node()
-    {
-        m_pParent  = 0;
-    }
-    Node(OBJECT& payload) : m_payload(payload)
-    {
-        m_pParent  = 0;
-    }
+    Node() { m_pParent = 0; }
+    Node(OBJECT& payload) : m_payload(payload) { m_pParent = 0; }
     ~Node()
     {
         removeChilds();
@@ -1086,27 +1083,27 @@ public:
 
     Node<OBJECT>* findChild(OBJECT& payload) const
     {
-        for(size_t i = 0; i < this->m_childs.size(); i++)
+        for (size_t i = 0; i < this->m_childs.size(); i++)
         {
-            if(this->m_childs[i]->m_payload == payload)
+            if (this->m_childs[i]->m_payload == payload)
                 return this->m_childs[i];
         }
         return NULL;
     }
 
-    int findChild(Node<OBJECT> *pNode) const
+    int findChild(Node<OBJECT>* pNode) const
     {
         for (size_t i = 0; i < this->m_childs.size(); i++)
         {
-            if(this->m_childs[i] == pNode)
+            if (this->m_childs[i] == pNode)
                 return (int)i;
         }
         return -1;
     }
 
-    void addChild(Node<OBJECT> *pNode)
+    void addChild(Node<OBJECT>* pNode)
     {
-        if(!pNode)
+        if (!pNode)
             return;
 
         CV_Assert(pNode->m_pParent == 0);
@@ -1116,7 +1113,7 @@ public:
 
     void removeChilds()
     {
-        for(size_t i = 0; i < m_childs.size(); i++)
+        for (size_t i = 0; i < m_childs.size(); i++)
         {
             m_childs[i]->m_pParent = 0; // avoid excessive parent vector trimming
             delete m_childs[i];
@@ -1126,30 +1123,30 @@ public:
 
     int getDepth()
     {
-        int   count   = 0;
-        Node *pParent = m_pParent;
-        while(pParent) count++, pParent = pParent->m_pParent;
+        int count = 0;
+        Node* pParent = m_pParent;
+        while (pParent)
+            count++, pParent = pParent->m_pParent;
         return count;
     }
 
 public:
-    OBJECT                     m_payload;
-    Node<OBJECT>*              m_pParent;
+    OBJECT m_payload;
+    Node<OBJECT>* m_pParent;
     std::vector<Node<OBJECT>*> m_childs;
 };
 
 // Instrumentation external interface
-namespace instr
-{
+namespace instr {
 
 #if !defined OPENCV_ABI_CHECK
 
 enum TYPE
 {
-    TYPE_GENERAL = 0,   // OpenCV API function, e.g. exported function
-    TYPE_MARKER,        // Information marker
-    TYPE_WRAPPER,       // Wrapper function for implementation
-    TYPE_FUN,           // Simple function call
+    TYPE_GENERAL = 0, // OpenCV API function, e.g. exported function
+    TYPE_MARKER, // Information marker
+    TYPE_WRAPPER, // Wrapper function for implementation
+    TYPE_FUN, // Simple function call
 };
 
 enum IMPL
@@ -1161,38 +1158,37 @@ enum IMPL
 
 struct NodeDataTls
 {
-    NodeDataTls()
-    {
-        m_ticksTotal = 0;
-    }
-    uint64      m_ticksTotal;
+    NodeDataTls() { m_ticksTotal = 0; }
+    uint64 m_ticksTotal;
 };
 
 class CV_EXPORTS NodeData
 {
 public:
-    NodeData(const char* funName = 0, const char* fileName = NULL, int lineNum = 0, void* retAddress = NULL, bool alwaysExpand = false, cv::instr::TYPE instrType = TYPE_GENERAL, cv::instr::IMPL implType = IMPL_PLAIN);
-    NodeData(NodeData &ref);
+    NodeData(const char* funName = 0, const char* fileName = NULL, int lineNum = 0, void* retAddress = NULL,
+             bool alwaysExpand = false, cv::instr::TYPE instrType = TYPE_GENERAL,
+             cv::instr::IMPL implType = IMPL_PLAIN);
+    NodeData(NodeData& ref);
     ~NodeData();
     NodeData& operator=(const NodeData&);
 
-    cv::String          m_funName;
-    cv::instr::TYPE     m_instrType;
-    cv::instr::IMPL     m_implType;
-    const char*         m_fileName;
-    int                 m_lineNum;
-    void*               m_retAddress;
-    bool                m_alwaysExpand;
-    bool                m_funError;
+    cv::String m_funName;
+    cv::instr::TYPE m_instrType;
+    cv::instr::IMPL m_implType;
+    const char* m_fileName;
+    int m_lineNum;
+    void* m_retAddress;
+    bool m_alwaysExpand;
+    bool m_funError;
 
-    volatile int         m_counter;
-    volatile uint64      m_ticksTotal;
+    volatile int m_counter;
+    volatile uint64 m_ticksTotal;
     TLSData<NodeDataTls> m_tls;
-    int                  m_threads;
+    int m_threads;
 
     // No synchronization
-    double getTotalMs()   const { return ((double)m_ticksTotal / cv::getTickFrequency()) * 1000; }
-    double getMeanMs()    const { return (((double)m_ticksTotal/m_counter) / cv::getTickFrequency()) * 1000; }
+    double getTotalMs() const { return ((double)m_ticksTotal / cv::getTickFrequency()) * 1000; }
+    double getMeanMs() const { return (((double)m_ticksTotal / m_counter) / cv::getTickFrequency()) * 1000; }
 };
 bool operator==(const NodeData& lhs, const NodeData& rhs);
 
@@ -1203,27 +1199,27 @@ CV_EXPORTS InstrNode* getTrace();
 #endif // !defined OPENCV_ABI_CHECK
 
 
-CV_EXPORTS bool       useInstrumentation();
-CV_EXPORTS void       setUseInstrumentation(bool flag);
-CV_EXPORTS void       resetTrace();
+CV_EXPORTS bool useInstrumentation();
+CV_EXPORTS void setUseInstrumentation(bool flag);
+CV_EXPORTS void resetTrace();
 
 enum FLAGS
 {
-    FLAGS_NONE              = 0,
-    FLAGS_MAPPING           = 0x01,
+    FLAGS_NONE = 0,
+    FLAGS_MAPPING = 0x01,
     FLAGS_EXPAND_SAME_NAMES = 0x02,
 };
 
-CV_EXPORTS void       setFlags(FLAGS modeFlags);
-static inline void    setFlags(int modeFlags) { setFlags((FLAGS)modeFlags); }
-CV_EXPORTS FLAGS      getFlags();
-}
+CV_EXPORTS void setFlags(FLAGS modeFlags);
+static inline void setFlags(int modeFlags) { setFlags((FLAGS)modeFlags); }
+CV_EXPORTS FLAGS getFlags();
+} // namespace instr
 
 namespace utils {
 
 CV_EXPORTS int getThreadID();
 
-} // namespace
+} // namespace utils
 
 } //namespace cv
 

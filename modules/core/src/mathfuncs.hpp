@@ -7,9 +7,9 @@
 
 namespace cv { namespace details {
 const double* getExpTab64f();
-const float*  getExpTab32f();
+const float* getExpTab32f();
 const double* getLogTab64f();
-const float*  getLogTab32f();
-}} // namespace
+const float* getLogTab32f();
+}} // namespace cv::details
 
 #endif // OPENCV_CORE_SRC_MATHFUNCS_HPP

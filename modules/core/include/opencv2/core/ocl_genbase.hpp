@@ -44,8 +44,7 @@
 
 //! @cond IGNORED
 
-namespace cv {
-namespace ocl {
+namespace cv { namespace ocl {
 
 class ProgramSource;
 
@@ -59,10 +58,11 @@ struct CV_EXPORTS ProgramEntry
     const char* programHash;
     ProgramSource* pProgramSource;
 
-    operator ProgramSource& () const;
+    operator ProgramSource&() const;
 };
 
-} } } // namespace
+} // namespace internal
+}} // namespace cv::ocl
 
 //! @endcond
 

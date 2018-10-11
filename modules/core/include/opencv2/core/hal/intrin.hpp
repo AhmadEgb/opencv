@@ -71,12 +71,14 @@ enum StoreMode
 
 }
 
-template<typename _Tp> struct V_TypeTraits
+template<typename _Tp>
+struct V_TypeTraits
 {
 };
 
 #define CV_INTRIN_DEF_TYPE_TRAITS(type, int_type_, uint_type_, abs_type_, w_type_, q_type_, sum_type_, nlanes128_) \
-    template<> struct V_TypeTraits<type> \
+    template<> \
+    struct V_TypeTraits<type> \
     { \
         typedef type value_type; \
         typedef int_type_ int_type; \
@@ -85,18 +87,29 @@ template<typename _Tp> struct V_TypeTraits
         typedef w_type_ w_type; \
         typedef q_type_ q_type; \
         typedef sum_type_ sum_type; \
-        enum { nlanes128 = nlanes128_ }; \
-    \
+        enum \
+        { \
+            nlanes128 = nlanes128_ \
+        }; \
+\
         static inline int_type reinterpret_int(type x) \
         { \
-            union { type l; int_type i; } v; \
+            union \
+            { \
+                type l; \
+                int_type i; \
+            } v; \
             v.l = x; \
             return v.i; \
         } \
-    \
+\
         static inline type reinterpret_from_int(int_type x) \
         { \
-            union { type l; int_type i; } v; \
+            union \
+            { \
+                type l; \
+                int_type i; \
+            } v; \
             v.i = x; \
             return v.l; \
         } \
@@ -115,46 +128,48 @@ CV_INTRIN_DEF_TYPE_TRAITS(double, int64, uint64, double, void, void, double, 2);
 
 #ifndef CV_DOXYGEN
 
-#ifdef CV_CPU_DISPATCH_MODE
-    #define CV_CPU_OPTIMIZATION_HAL_NAMESPACE __CV_CAT(hal_, CV_CPU_DISPATCH_MODE)
-    #define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN namespace __CV_CAT(hal_, CV_CPU_DISPATCH_MODE) {
-    #define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_END }
-#else
-    #define CV_CPU_OPTIMIZATION_HAL_NAMESPACE hal_baseline
-    #define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN namespace hal_baseline {
-    #define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_END }
-#endif
+#    ifdef CV_CPU_DISPATCH_MODE
+#        define CV_CPU_OPTIMIZATION_HAL_NAMESPACE __CV_CAT(hal_, CV_CPU_DISPATCH_MODE)
+#        define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN \
+            namespace __CV_CAT(hal_, CV_CPU_DISPATCH_MODE) \
+            {
+#        define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_END }
+#    else
+#        define CV_CPU_OPTIMIZATION_HAL_NAMESPACE hal_baseline
+#        define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN namespace hal_baseline {
+#        define CV_CPU_OPTIMIZATION_HAL_NAMESPACE_END }
+#    endif
 
 CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN
 CV_CPU_OPTIMIZATION_HAL_NAMESPACE_END
 using namespace CV_CPU_OPTIMIZATION_HAL_NAMESPACE;
 #endif
-}
+} // namespace cv
 
 #ifdef CV_DOXYGEN
-#   undef CV_AVX2
-#   undef CV_SSE2
-#   undef CV_NEON
-#   undef CV_VSX
-#   undef CV_FP16
+#    undef CV_AVX2
+#    undef CV_SSE2
+#    undef CV_NEON
+#    undef CV_VSX
+#    undef CV_FP16
 #endif
 
 #if CV_SSE2
 
-#include "opencv2/core/hal/intrin_sse.hpp"
+#    include "opencv2/core/hal/intrin_sse.hpp"
 
 #elif CV_NEON
 
-#include "opencv2/core/hal/intrin_neon.hpp"
+#    include "opencv2/core/hal/intrin_neon.hpp"
 
 #elif CV_VSX
 
-#include "opencv2/core/hal/intrin_vsx.hpp"
+#    include "opencv2/core/hal/intrin_vsx.hpp"
 
 #else
 
-#define CV_SIMD128_CPP 1
-#include "opencv2/core/hal/intrin_cpp.hpp"
+#    define CV_SIMD128_CPP 1
+#    include "opencv2/core/hal/intrin_cpp.hpp"
 
 #endif
 
@@ -168,7 +183,7 @@ using namespace CV_CPU_OPTIMIZATION_HAL_NAMESPACE;
 // (and will be mapped to v256_ counterparts) (e.g. vx_load() => v256_load())
 #if CV_AVX2
 
-#include "opencv2/core/hal/intrin_avx.hpp"
+#    include "opencv2/core/hal/intrin_avx.hpp"
 
 #endif
 
@@ -181,39 +196,39 @@ CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN
 #endif
 
 #ifndef CV_SIMD128
-#define CV_SIMD128 0
+#    define CV_SIMD128 0
 #endif
 
 #ifndef CV_SIMD128_64F
-#define CV_SIMD128_64F 0
+#    define CV_SIMD128_64F 0
 #endif
 
 #ifndef CV_SIMD256
-#define CV_SIMD256 0
+#    define CV_SIMD256 0
 #endif
 
 #ifndef CV_SIMD256_64F
-#define CV_SIMD256_64F 0
+#    define CV_SIMD256_64F 0
 #endif
 
 #ifndef CV_SIMD512
-#define CV_SIMD512 0
+#    define CV_SIMD512 0
 #endif
 
 #ifndef CV_SIMD512_64F
-#define CV_SIMD512_64F 0
+#    define CV_SIMD512_64F 0
 #endif
 
 #ifndef CV_SIMD128_FP16
-#define CV_SIMD128_FP16 0
+#    define CV_SIMD128_FP16 0
 #endif
 
 #ifndef CV_SIMD256_FP16
-#define CV_SIMD256_FP16 0
+#    define CV_SIMD256_FP16 0
 #endif
 
 #ifndef CV_SIMD512_FP16
-#define CV_SIMD512_FP16 0
+#    define CV_SIMD512_FP16 0
 #endif
 
 //==================================================================================================
@@ -224,7 +239,10 @@ CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN
     inline vtyp vx_##loadsfx(const typ* ptr) { return prefix##_##loadsfx(ptr); } \
     inline vtyp vx_##loadsfx##_aligned(const typ* ptr) { return prefix##_##loadsfx##_aligned(ptr); } \
     inline vtyp vx_##loadsfx##_low(const typ* ptr) { return prefix##_##loadsfx##_low(ptr); } \
-    inline vtyp vx_##loadsfx##_halves(const typ* ptr0, const typ* ptr1) { return prefix##_##loadsfx##_halves(ptr0, ptr1); } \
+    inline vtyp vx_##loadsfx##_halves(const typ* ptr0, const typ* ptr1) \
+    { \
+        return prefix##_##loadsfx##_halves(ptr0, ptr1); \
+    } \
     inline void vx_store(typ* ptr, const vtyp& v) { return v_store(ptr, v); } \
     inline void vx_store_aligned(typ* ptr, const vtyp& v) { return v_store_aligned(ptr, v); }
 
@@ -255,12 +273,14 @@ CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN
     CV_INTRIN_DEFINE_WIDE_INTRIN(uint64, v_uint64, u64, prefix, load) \
     CV_INTRIN_DEFINE_WIDE_LOAD_EXPAND(float16_t, v_float32, prefix)
 
-template<typename _Tp> struct V_RegTraits
+template<typename _Tp>
+struct V_RegTraits
 {
 };
 
 #define CV_DEF_REG_TRAITS(prefix, _reg, lane_type, suffix, _u_reg, _w_reg, _q_reg, _int_reg, _round_reg) \
-    template<> struct V_RegTraits<_reg> \
+    template<> \
+    struct V_RegTraits<_reg> \
     { \
         typedef _reg reg; \
         typedef _u_reg u_reg; \
@@ -271,109 +291,110 @@ template<typename _Tp> struct V_RegTraits
     }
 
 #if CV_SIMD128 || CV_SIMD128_CPP
-    CV_DEF_REG_TRAITS(v, v_uint8x16, uchar, u8, v_uint8x16, v_uint16x8, v_uint32x4, v_int8x16, void);
-    CV_DEF_REG_TRAITS(v, v_int8x16, schar, s8, v_uint8x16, v_int16x8, v_int32x4, v_int8x16, void);
-    CV_DEF_REG_TRAITS(v, v_uint16x8, ushort, u16, v_uint16x8, v_uint32x4, v_uint64x2, v_int16x8, void);
-    CV_DEF_REG_TRAITS(v, v_int16x8, short, s16, v_uint16x8, v_int32x4, v_int64x2, v_int16x8, void);
-    CV_DEF_REG_TRAITS(v, v_uint32x4, unsigned, u32, v_uint32x4, v_uint64x2, void, v_int32x4, void);
-    CV_DEF_REG_TRAITS(v, v_int32x4, int, s32, v_uint32x4, v_int64x2, void, v_int32x4, void);
-#if CV_SIMD128_64F
-    CV_DEF_REG_TRAITS(v, v_float32x4, float, f32, v_float32x4, v_float64x2, void, v_int32x4, v_int32x4);
-#else
-    CV_DEF_REG_TRAITS(v, v_float32x4, float, f32, v_float32x4, void, void, v_int32x4, v_int32x4);
-#endif
-    CV_DEF_REG_TRAITS(v, v_uint64x2, uint64, u64, v_uint64x2, void, void, v_int64x2, void);
-    CV_DEF_REG_TRAITS(v, v_int64x2, int64, s64, v_uint64x2, void, void, v_int64x2, void);
-#if CV_SIMD128_64F
-    CV_DEF_REG_TRAITS(v, v_float64x2, double, f64, v_float64x2, void, void, v_int64x2, v_int32x4);
-#endif
+CV_DEF_REG_TRAITS(v, v_uint8x16, uchar, u8, v_uint8x16, v_uint16x8, v_uint32x4, v_int8x16, void);
+CV_DEF_REG_TRAITS(v, v_int8x16, schar, s8, v_uint8x16, v_int16x8, v_int32x4, v_int8x16, void);
+CV_DEF_REG_TRAITS(v, v_uint16x8, ushort, u16, v_uint16x8, v_uint32x4, v_uint64x2, v_int16x8, void);
+CV_DEF_REG_TRAITS(v, v_int16x8, short, s16, v_uint16x8, v_int32x4, v_int64x2, v_int16x8, void);
+CV_DEF_REG_TRAITS(v, v_uint32x4, unsigned, u32, v_uint32x4, v_uint64x2, void, v_int32x4, void);
+CV_DEF_REG_TRAITS(v, v_int32x4, int, s32, v_uint32x4, v_int64x2, void, v_int32x4, void);
+#    if CV_SIMD128_64F
+CV_DEF_REG_TRAITS(v, v_float32x4, float, f32, v_float32x4, v_float64x2, void, v_int32x4, v_int32x4);
+#    else
+CV_DEF_REG_TRAITS(v, v_float32x4, float, f32, v_float32x4, void, void, v_int32x4, v_int32x4);
+#    endif
+CV_DEF_REG_TRAITS(v, v_uint64x2, uint64, u64, v_uint64x2, void, void, v_int64x2, void);
+CV_DEF_REG_TRAITS(v, v_int64x2, int64, s64, v_uint64x2, void, void, v_int64x2, void);
+#    if CV_SIMD128_64F
+CV_DEF_REG_TRAITS(v, v_float64x2, double, f64, v_float64x2, void, void, v_int64x2, v_int32x4);
+#    endif
 #endif
 
 #if CV_SIMD256
-    CV_DEF_REG_TRAITS(v256, v_uint8x32, uchar, u8, v_uint8x32, v_uint16x16, v_uint32x8, v_int8x32, void);
-    CV_DEF_REG_TRAITS(v256, v_int8x32, schar, s8, v_uint8x32, v_int16x16, v_int32x8, v_int8x32, void);
-    CV_DEF_REG_TRAITS(v256, v_uint16x16, ushort, u16, v_uint16x16, v_uint32x8, v_uint64x4, v_int16x16, void);
-    CV_DEF_REG_TRAITS(v256, v_int16x16, short, s16, v_uint16x16, v_int32x8, v_int64x4, v_int16x16, void);
-    CV_DEF_REG_TRAITS(v256, v_uint32x8, unsigned, u32, v_uint32x8, v_uint64x4, void, v_int32x8, void);
-    CV_DEF_REG_TRAITS(v256, v_int32x8, int, s32, v_uint32x8, v_int64x4, void, v_int32x8, void);
-    CV_DEF_REG_TRAITS(v256, v_float32x8, float, f32, v_float32x8, v_float64x4, void, v_int32x8, v_int32x8);
-    CV_DEF_REG_TRAITS(v256, v_uint64x4, uint64, u64, v_uint64x4, void, void, v_int64x4, void);
-    CV_DEF_REG_TRAITS(v256, v_int64x4, int64, s64, v_uint64x4, void, void, v_int64x4, void);
-    CV_DEF_REG_TRAITS(v256, v_float64x4, double, f64, v_float64x4, void, void, v_int64x4, v_int32x8);
+CV_DEF_REG_TRAITS(v256, v_uint8x32, uchar, u8, v_uint8x32, v_uint16x16, v_uint32x8, v_int8x32, void);
+CV_DEF_REG_TRAITS(v256, v_int8x32, schar, s8, v_uint8x32, v_int16x16, v_int32x8, v_int8x32, void);
+CV_DEF_REG_TRAITS(v256, v_uint16x16, ushort, u16, v_uint16x16, v_uint32x8, v_uint64x4, v_int16x16, void);
+CV_DEF_REG_TRAITS(v256, v_int16x16, short, s16, v_uint16x16, v_int32x8, v_int64x4, v_int16x16, void);
+CV_DEF_REG_TRAITS(v256, v_uint32x8, unsigned, u32, v_uint32x8, v_uint64x4, void, v_int32x8, void);
+CV_DEF_REG_TRAITS(v256, v_int32x8, int, s32, v_uint32x8, v_int64x4, void, v_int32x8, void);
+CV_DEF_REG_TRAITS(v256, v_float32x8, float, f32, v_float32x8, v_float64x4, void, v_int32x8, v_int32x8);
+CV_DEF_REG_TRAITS(v256, v_uint64x4, uint64, u64, v_uint64x4, void, void, v_int64x4, void);
+CV_DEF_REG_TRAITS(v256, v_int64x4, int64, s64, v_uint64x4, void, void, v_int64x4, void);
+CV_DEF_REG_TRAITS(v256, v_float64x4, double, f64, v_float64x4, void, void, v_int64x4, v_int32x8);
 #endif
 
 #if CV_SIMD512 && (!defined(CV__SIMD_FORCE_WIDTH) || CV__SIMD_FORCE_WIDTH == 512)
-#define CV__SIMD_NAMESPACE simd512
+#    define CV__SIMD_NAMESPACE simd512
 namespace CV__SIMD_NAMESPACE {
-    #define CV_SIMD 1
-    #define CV_SIMD_64F CV_SIMD512_64F
-    #define CV_SIMD_WIDTH 64
-    // TODO typedef v_uint8 / v_int32 / etc types here
-} // namespace
+#    define CV_SIMD 1
+#    define CV_SIMD_64F CV_SIMD512_64F
+#    define CV_SIMD_WIDTH 64
+// TODO typedef v_uint8 / v_int32 / etc types here
+} // namespace CV__SIMD_NAMESPACE
 using namespace CV__SIMD_NAMESPACE;
 #elif CV_SIMD256 && (!defined(CV__SIMD_FORCE_WIDTH) || CV__SIMD_FORCE_WIDTH == 256)
-#define CV__SIMD_NAMESPACE simd256
+#    define CV__SIMD_NAMESPACE simd256
 namespace CV__SIMD_NAMESPACE {
-    #define CV_SIMD 1
-    #define CV_SIMD_64F CV_SIMD256_64F
-    #define CV_SIMD_FP16 CV_SIMD256_FP16
-    #define CV_SIMD_WIDTH 32
-    typedef v_uint8x32   v_uint8;
-    typedef v_int8x32    v_int8;
-    typedef v_uint16x16  v_uint16;
-    typedef v_int16x16   v_int16;
-    typedef v_uint32x8   v_uint32;
-    typedef v_int32x8    v_int32;
-    typedef v_uint64x4   v_uint64;
-    typedef v_int64x4    v_int64;
-    typedef v_float32x8  v_float32;
-    #if CV_SIMD256_64F
-    typedef v_float64x4  v_float64;
-    #endif
-    CV_INTRIN_DEFINE_WIDE_INTRIN_ALL_TYPES(v256)
-    CV_INTRIN_DEFINE_WIDE_INTRIN(double, v_float64, f64, v256, load)
-    inline void vx_cleanup() { v256_cleanup(); }
-} // namespace
+#    define CV_SIMD 1
+#    define CV_SIMD_64F CV_SIMD256_64F
+#    define CV_SIMD_FP16 CV_SIMD256_FP16
+#    define CV_SIMD_WIDTH 32
+typedef v_uint8x32 v_uint8;
+typedef v_int8x32 v_int8;
+typedef v_uint16x16 v_uint16;
+typedef v_int16x16 v_int16;
+typedef v_uint32x8 v_uint32;
+typedef v_int32x8 v_int32;
+typedef v_uint64x4 v_uint64;
+typedef v_int64x4 v_int64;
+typedef v_float32x8 v_float32;
+#    if CV_SIMD256_64F
+typedef v_float64x4 v_float64;
+#    endif
+CV_INTRIN_DEFINE_WIDE_INTRIN_ALL_TYPES(v256)
+CV_INTRIN_DEFINE_WIDE_INTRIN(double, v_float64, f64, v256, load)
+inline void vx_cleanup() { v256_cleanup(); }
+} // namespace CV__SIMD_NAMESPACE
 using namespace CV__SIMD_NAMESPACE;
 #elif (CV_SIMD128 || CV_SIMD128_CPP) && (!defined(CV__SIMD_FORCE_WIDTH) || CV__SIMD_FORCE_WIDTH == 128)
-#define CV__SIMD_NAMESPACE simd128
+#    define CV__SIMD_NAMESPACE simd128
 namespace CV__SIMD_NAMESPACE {
-    #define CV_SIMD CV_SIMD128
-    #define CV_SIMD_64F CV_SIMD128_64F
-    #define CV_SIMD_WIDTH 16
-    typedef v_uint8x16  v_uint8;
-    typedef v_int8x16   v_int8;
-    typedef v_uint16x8  v_uint16;
-    typedef v_int16x8   v_int16;
-    typedef v_uint32x4  v_uint32;
-    typedef v_int32x4   v_int32;
-    typedef v_uint64x2  v_uint64;
-    typedef v_int64x2   v_int64;
-    typedef v_float32x4 v_float32;
-    #if CV_SIMD128_64F
-    typedef v_float64x2 v_float64;
-    #endif
-    CV_INTRIN_DEFINE_WIDE_INTRIN_ALL_TYPES(v)
-    #if CV_SIMD128_64F
-    CV_INTRIN_DEFINE_WIDE_INTRIN(double, v_float64, f64, v, load)
-    #endif
-    inline void vx_cleanup() { v_cleanup(); }
-} // namespace
+#    define CV_SIMD CV_SIMD128
+#    define CV_SIMD_64F CV_SIMD128_64F
+#    define CV_SIMD_WIDTH 16
+typedef v_uint8x16 v_uint8;
+typedef v_int8x16 v_int8;
+typedef v_uint16x8 v_uint16;
+typedef v_int16x8 v_int16;
+typedef v_uint32x4 v_uint32;
+typedef v_int32x4 v_int32;
+typedef v_uint64x2 v_uint64;
+typedef v_int64x2 v_int64;
+typedef v_float32x4 v_float32;
+#    if CV_SIMD128_64F
+typedef v_float64x2 v_float64;
+#    endif
+CV_INTRIN_DEFINE_WIDE_INTRIN_ALL_TYPES(v)
+#    if CV_SIMD128_64F
+CV_INTRIN_DEFINE_WIDE_INTRIN(double, v_float64, f64, v, load)
+#    endif
+inline void vx_cleanup() { v_cleanup(); }
+} // namespace CV__SIMD_NAMESPACE
 using namespace CV__SIMD_NAMESPACE;
 #endif
 
-inline unsigned int trailingZeros32(unsigned int value) {
+inline unsigned int trailingZeros32(unsigned int value)
+{
 #if defined(_MSC_VER)
-#if (_MSC_VER < 1700) || defined(_M_ARM)
+#    if (_MSC_VER < 1700) || defined(_M_ARM)
     unsigned long index = 0;
     _BitScanForward(&index, value);
     return (unsigned int)index;
-#elif defined(__clang__)
+#    elif defined(__clang__)
     // clang-cl doesn't export _tzcnt_u32 for non BMI systems
     return value ? __builtin_ctz(value) : 32;
-#else
+#    else
     return _tzcnt_u32(value);
-#endif
+#    endif
 #elif defined(__GNUC__) || defined(__GNUG__)
     return __builtin_ctz(value);
 #elif defined(__ICC) || defined(__INTEL_COMPILER)
@@ -381,9 +402,9 @@ inline unsigned int trailingZeros32(unsigned int value) {
 #elif defined(__clang__)
     return llvm.cttz.i32(value, true);
 #else
-    static const int MultiplyDeBruijnBitPosition[32] = {
-        0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8,
-        31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9 };
+    static const int MultiplyDeBruijnBitPosition[32] = {0,  1,  28, 2,  29, 14, 24, 3,  30, 22, 20,
+                                                        15, 25, 17, 4,  8,  31, 27, 13, 23, 21, 19,
+                                                        16, 7,  26, 12, 18, 6,  11, 5,  10, 9};
     return MultiplyDeBruijnBitPosition[((uint32_t)((value & -value) * 0x077CB531U)) >> 27];
 #endif
 }
@@ -393,19 +414,20 @@ CV_CPU_OPTIMIZATION_HAL_NAMESPACE_END
 #endif
 
 #ifndef CV_SIMD_64F
-#define CV_SIMD_64F 0
+#    define CV_SIMD_64F 0
 #endif
 
 #ifndef CV_SIMD_FP16
-#define CV_SIMD_FP16 0  //!< Defined to 1 on native support of operations with float16x8_t / float16x16_t (SIMD256) types
+#    define CV_SIMD_FP16 \
+        0 //!< Defined to 1 on native support of operations with float16x8_t / float16x16_t (SIMD256) types
 #endif
 
 
 #ifndef CV_SIMD
-#define CV_SIMD 0
+#    define CV_SIMD 0
 #endif
 
-} // cv::
+} // namespace cv
 
 //! @endcond
 

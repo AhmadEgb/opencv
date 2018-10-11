@@ -55,7 +55,7 @@
 #include "opencv2/core/private.hpp"
 #include "opencv2/core/private.cuda.hpp"
 #ifdef HAVE_OPENCL
-#include "opencv2/core/ocl.hpp"
+#    include "opencv2/core/ocl.hpp"
 #endif
 
 #include <assert.h>
@@ -76,10 +76,10 @@
 #include <cstring>
 #include <cassert>
 
-#define USE_SSE2  (cv::checkHardwareSupport(CV_CPU_SSE2))
-#define USE_SSE4_2  (cv::checkHardwareSupport(CV_CPU_SSE4_2))
-#define USE_AVX  (cv::checkHardwareSupport(CV_CPU_AVX))
-#define USE_AVX2  (cv::checkHardwareSupport(CV_CPU_AVX2))
+#define USE_SSE2 (cv::checkHardwareSupport(CV_CPU_SSE2))
+#define USE_SSE4_2 (cv::checkHardwareSupport(CV_CPU_SSE4_2))
+#define USE_AVX (cv::checkHardwareSupport(CV_CPU_AVX))
+#define USE_AVX2 (cv::checkHardwareSupport(CV_CPU_AVX2))
 
 #include "opencv2/core/hal/hal.hpp"
 #include "opencv2/core/hal/intrin.hpp"
@@ -91,107 +91,110 @@
 
 #define GET_OPTIMIZED(func) (func)
 
-namespace cv
-{
+namespace cv {
 
 // -128.f ... 255.f
 extern const float g_8x32fTab[];
-#define CV_8TO32F(x)  cv::g_8x32fTab[(x)+128]
+#define CV_8TO32F(x) cv::g_8x32fTab[(x) + 128]
 
 extern const ushort g_8x16uSqrTab[];
-#define CV_SQR_8U(x)  cv::g_8x16uSqrTab[(x)+255]
+#define CV_SQR_8U(x) cv::g_8x16uSqrTab[(x) + 255]
 
 extern const uchar g_Saturate8u[];
-#define CV_FAST_CAST_8U(t)   (assert(-256 <= (t) && (t) <= 512), cv::g_Saturate8u[(t)+256])
-#define CV_MIN_8U(a,b)       ((a) - CV_FAST_CAST_8U((a) - (b)))
-#define CV_MAX_8U(a,b)       ((a) + CV_FAST_CAST_8U((b) - (a)))
+#define CV_FAST_CAST_8U(t) (assert(-256 <= (t) && (t) <= 512), cv::g_Saturate8u[(t) + 256])
+#define CV_MIN_8U(a, b) ((a)-CV_FAST_CAST_8U((a) - (b)))
+#define CV_MAX_8U(a, b) ((a) + CV_FAST_CAST_8U((b) - (a)))
 
-template<> inline uchar OpAdd<uchar>::operator ()(uchar a, uchar b) const
-{ return CV_FAST_CAST_8U(a + b); }
+template<>
+inline uchar OpAdd<uchar>::operator()(uchar a, uchar b) const
+{
+    return CV_FAST_CAST_8U(a + b);
+}
 
-template<> inline uchar OpSub<uchar>::operator ()(uchar a, uchar b) const
-{ return CV_FAST_CAST_8U(a - b); }
+template<>
+inline uchar OpSub<uchar>::operator()(uchar a, uchar b) const
+{
+    return CV_FAST_CAST_8U(a - b);
+}
 
-template<> inline short OpAbsDiff<short>::operator ()(short a, short b) const
-{ return saturate_cast<short>(std::abs(a - b)); }
+template<>
+inline short OpAbsDiff<short>::operator()(short a, short b) const
+{
+    return saturate_cast<short>(std::abs(a - b));
+}
 
-template<> inline schar OpAbsDiff<schar>::operator ()(schar a, schar b) const
-{ return saturate_cast<schar>(std::abs(a - b)); }
+template<>
+inline schar OpAbsDiff<schar>::operator()(schar a, schar b) const
+{
+    return saturate_cast<schar>(std::abs(a - b));
+}
 
-template<> inline uchar OpMin<uchar>::operator ()(uchar a, uchar b) const { return CV_MIN_8U(a, b); }
+template<>
+inline uchar OpMin<uchar>::operator()(uchar a, uchar b) const
+{
+    return CV_MIN_8U(a, b);
+}
 
-template<> inline uchar OpMax<uchar>::operator ()(uchar a, uchar b) const { return CV_MAX_8U(a, b); }
+template<>
+inline uchar OpMax<uchar>::operator()(uchar a, uchar b) const
+{
+    return CV_MAX_8U(a, b);
+}
 
-typedef void (*UnaryFunc)(const uchar* src1, size_t step1,
-                       uchar* dst, size_t step, Size sz,
-                       void*);
+typedef void (*UnaryFunc)(const uchar* src1, size_t step1, uchar* dst, size_t step, Size sz, void*);
 
-typedef void (*BinaryFunc)(const uchar* src1, size_t step1,
-                       const uchar* src2, size_t step2,
-                       uchar* dst, size_t step, Size sz,
-                       void*);
+typedef void (*BinaryFunc)(const uchar* src1, size_t step1, const uchar* src2, size_t step2, uchar* dst,
+                           size_t step, Size sz, void*);
 
-typedef void (*BinaryFuncC)(const uchar* src1, size_t step1,
-                       const uchar* src2, size_t step2,
-                       uchar* dst, size_t step, int width, int height,
-                       void*);
+typedef void (*BinaryFuncC)(const uchar* src1, size_t step1, const uchar* src2, size_t step2, uchar* dst,
+                            size_t step, int width, int height, void*);
 
 BinaryFunc getConvertFunc(int sdepth, int ddepth);
 BinaryFunc getConvertScaleFunc(int sdepth, int ddepth);
 BinaryFunc getCopyMaskFunc(size_t esz);
 
 /* default memory block for sparse array elements */
-#define  CV_SPARSE_MAT_BLOCK     (1<<12)
+#define CV_SPARSE_MAT_BLOCK (1 << 12)
 
 /* initial hash table size */
-#define  CV_SPARSE_HASH_SIZE0    (1<<10)
+#define CV_SPARSE_HASH_SIZE0 (1 << 10)
 
 /* maximal average node_count/hash_size ratio beyond which hash table is resized */
-#define  CV_SPARSE_HASH_RATIO    3
+#define CV_SPARSE_HASH_RATIO 3
 
-inline Size getContinuousSize_( int flags, int cols, int rows, int widthScale )
+inline Size getContinuousSize_(int flags, int cols, int rows, int widthScale)
 {
     int64 sz = (int64)cols * rows * widthScale;
-    return (flags & Mat::CONTINUOUS_FLAG) != 0 &&
-        (int)sz == sz ? Size((int)sz, 1) : Size(cols * widthScale, rows);
+    return (flags & Mat::CONTINUOUS_FLAG) != 0 && (int)sz == sz ? Size((int)sz, 1) : Size(cols * widthScale, rows);
 }
 
-inline Size getContinuousSize( const Mat& m1, int widthScale=1 )
+inline Size getContinuousSize(const Mat& m1, int widthScale = 1)
 {
-    return getContinuousSize_(m1.flags,
-                              m1.cols, m1.rows, widthScale);
+    return getContinuousSize_(m1.flags, m1.cols, m1.rows, widthScale);
 }
 
-inline Size getContinuousSize( const Mat& m1, const Mat& m2, int widthScale=1 )
+inline Size getContinuousSize(const Mat& m1, const Mat& m2, int widthScale = 1)
 {
-    return getContinuousSize_(m1.flags & m2.flags,
-                              m1.cols, m1.rows, widthScale);
+    return getContinuousSize_(m1.flags & m2.flags, m1.cols, m1.rows, widthScale);
 }
 
-inline Size getContinuousSize( const Mat& m1, const Mat& m2,
-                               const Mat& m3, int widthScale=1 )
+inline Size getContinuousSize(const Mat& m1, const Mat& m2, const Mat& m3, int widthScale = 1)
 {
-    return getContinuousSize_(m1.flags & m2.flags & m3.flags,
-                              m1.cols, m1.rows, widthScale);
+    return getContinuousSize_(m1.flags & m2.flags & m3.flags, m1.cols, m1.rows, widthScale);
 }
 
-inline Size getContinuousSize( const Mat& m1, const Mat& m2,
-                               const Mat& m3, const Mat& m4,
-                               int widthScale=1 )
+inline Size getContinuousSize(const Mat& m1, const Mat& m2, const Mat& m3, const Mat& m4, int widthScale = 1)
 {
-    return getContinuousSize_(m1.flags & m2.flags & m3.flags & m4.flags,
-                              m1.cols, m1.rows, widthScale);
+    return getContinuousSize_(m1.flags & m2.flags & m3.flags & m4.flags, m1.cols, m1.rows, widthScale);
 }
 
-inline Size getContinuousSize( const Mat& m1, const Mat& m2,
-                               const Mat& m3, const Mat& m4,
-                               const Mat& m5, int widthScale=1 )
+inline Size getContinuousSize(const Mat& m1, const Mat& m2, const Mat& m3, const Mat& m4, const Mat& m5,
+                              int widthScale = 1)
 {
-    return getContinuousSize_(m1.flags & m2.flags & m3.flags & m4.flags & m5.flags,
-                              m1.cols, m1.rows, widthScale);
+    return getContinuousSize_(m1.flags & m2.flags & m3.flags & m4.flags & m5.flags, m1.cols, m1.rows, widthScale);
 }
 
-void setSize( Mat& m, int _dims, const int* _sz, const size_t* _steps, bool autoSteps=false );
+void setSize(Mat& m, int _dims, const int* _sz, const size_t* _steps, bool autoSteps = false);
 void finalizeHdr(Mat& m);
 int updateContinuityFlag(int flags, int dims, const int* size, const size_t* step);
 
@@ -200,58 +203,62 @@ struct NoVec
     size_t operator()(const void*, const void*, void*, size_t) const { return 0; }
 };
 
-#define CV_SPLIT_MERGE_MAX_BLOCK_SIZE(cn) ((INT_MAX/4)/(cn)) // HAL implementation accepts 'int' len, so INT_MAX doesn't work here
+#define CV_SPLIT_MERGE_MAX_BLOCK_SIZE(cn) \
+    ((INT_MAX / 4) / (cn)) // HAL implementation accepts 'int' len, so INT_MAX doesn't work here
 
-enum { BLOCK_SIZE = 1024 };
+enum
+{
+    BLOCK_SIZE = 1024
+};
 
 #if defined HAVE_IPP && (IPP_VERSION_X100 >= 700)
-#define ARITHM_USE_IPP 1
+#    define ARITHM_USE_IPP 1
 #else
-#define ARITHM_USE_IPP 0
+#    define ARITHM_USE_IPP 0
 #endif
 
 inline bool checkScalar(const Mat& sc, int atype, _InputArray::KindFlag sckind, _InputArray::KindFlag akind)
 {
-    if( sc.dims > 2 || !sc.isContinuous() )
+    if (sc.dims > 2 || !sc.isContinuous())
         return false;
     Size sz = sc.size();
-    if(sz.width != 1 && sz.height != 1)
+    if (sz.width != 1 && sz.height != 1)
         return false;
     int cn = CV_MAT_CN(atype);
-    if( akind == _InputArray::MATX && sckind != _InputArray::MATX )
+    if (akind == _InputArray::MATX && sckind != _InputArray::MATX)
         return false;
-    return sz == Size(1, 1) || sz == Size(1, cn) || sz == Size(cn, 1) ||
-           (sz == Size(1, 4) && sc.type() == CV_64F && cn <= 4);
+    return sz == Size(1, 1) || sz == Size(1, cn) || sz == Size(cn, 1)
+           || (sz == Size(1, 4) && sc.type() == CV_64F && cn <= 4);
 }
 
 inline bool checkScalar(InputArray sc, int atype, _InputArray::KindFlag sckind, _InputArray::KindFlag akind)
 {
-    if( sc.dims() > 2 || !sc.isContinuous() )
+    if (sc.dims() > 2 || !sc.isContinuous())
         return false;
     Size sz = sc.size();
-    if(sz.width != 1 && sz.height != 1)
+    if (sz.width != 1 && sz.height != 1)
         return false;
     int cn = CV_MAT_CN(atype);
-    if( akind == _InputArray::MATX && sckind != _InputArray::MATX )
+    if (akind == _InputArray::MATX && sckind != _InputArray::MATX)
         return false;
-    return sz == Size(1, 1) || sz == Size(1, cn) || sz == Size(cn, 1) ||
-           (sz == Size(1, 4) && sc.type() == CV_64F && cn <= 4);
+    return sz == Size(1, 1) || sz == Size(1, cn) || sz == Size(cn, 1)
+           || (sz == Size(1, 4) && sc.type() == CV_64F && cn <= 4);
 }
 
-void convertAndUnrollScalar( const Mat& sc, int buftype, uchar* scbuf, size_t blocksize );
+void convertAndUnrollScalar(const Mat& sc, int buftype, uchar* scbuf, size_t blocksize);
 
 #ifdef CV_COLLECT_IMPL_DATA
 struct ImplCollector
 {
     ImplCollector()
     {
-        useCollection   = false;
-        implFlags       = 0;
+        useCollection = false;
+        implFlags = 0;
     }
     bool useCollection; // enable/disable impl data collection
 
     int implFlags;
-    std::vector<int>    implCode;
+    std::vector<int> implCode;
     std::vector<String> implFun;
 
     cv::Mutex mutex;
@@ -260,24 +267,25 @@ struct ImplCollector
 
 struct CoreTLSData
 {
-    CoreTLSData() :
-//#ifdef HAVE_OPENCL
-        device(0), useOpenCL(-1),
-//#endif
-        useIPP(-1),
-        useIPP_NE(-1)
+    CoreTLSData()
+        : //#ifdef HAVE_OPENCL
+          device(0), useOpenCL(-1),
+          //#endif
+          useIPP(-1), useIPP_NE(-1)
 #ifdef HAVE_OPENVX
-        ,useOpenVX(-1)
+          ,
+          useOpenVX(-1)
 #endif
-    {}
+    {
+    }
 
     RNG rng;
-//#ifdef HAVE_OPENCL
+    //#ifdef HAVE_OPENCL
     int device; // device index of an array of devices in a context, see also Device::getDefault
     ocl::Queue oclQueue; // the queue used for running a kernel, see also getQueue, Kernel::run
     int useOpenCL; // 1 - use, 0 - do not use, -1 - auto/not initialized
-//#endif
-    int useIPP;    // 1 - use, 0 - do not use, -1 - auto/not initialized
+    //#endif
+    int useIPP; // 1 - use, 0 - do not use, -1 - auto/not initialized
     int useIPP_NE; // 1 - use, 0 - do not use, -1 - auto/not initialized
 #ifdef HAVE_OPENVX
     int useOpenVX; // 1 - use, 0 - do not use, -1 - auto/not initialized
@@ -287,19 +295,19 @@ struct CoreTLSData
 TLSData<CoreTLSData>& getCoreTlsData();
 
 #if defined(BUILD_SHARED_LIBS)
-#if defined _WIN32 || defined WINCE
-#define CL_RUNTIME_EXPORT __declspec(dllexport)
-#elif defined __GNUC__ && __GNUC__ >= 4
-#define CL_RUNTIME_EXPORT __attribute__ ((visibility ("default")))
+#    if defined _WIN32 || defined WINCE
+#        define CL_RUNTIME_EXPORT __declspec(dllexport)
+#    elif defined __GNUC__ && __GNUC__ >= 4
+#        define CL_RUNTIME_EXPORT __attribute__((visibility("default")))
+#    else
+#        define CL_RUNTIME_EXPORT
+#    endif
 #else
-#define CL_RUNTIME_EXPORT
-#endif
-#else
-#define CL_RUNTIME_EXPORT
+#    define CL_RUNTIME_EXPORT
 #endif
 
 extern bool __termination; // skip some cleanups, because process is terminating
-                           // (for example, if ExitProcess() was already called)
+    // (for example, if ExitProcess() was already called)
 
 cv::Mutex& getInitializationMutex();
 
@@ -319,6 +327,6 @@ cv::Mutex& getInitializationMutex();
 
 int cv_snprintf(char* buf, int len, const char* fmt, ...);
 int cv_vsnprintf(char* buf, int len, const char* fmt, va_list args);
-}
+} // namespace cv
 
 #endif /*_CXCORE_INTERNAL_H_*/

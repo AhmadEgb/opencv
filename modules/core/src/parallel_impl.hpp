@@ -12,6 +12,6 @@ void parallel_for_pthreads(const Range& range, const ParallelLoopBody& body, dou
 size_t parallel_pthreads_get_threads_num();
 void parallel_pthreads_set_threads_num(int num);
 
-}
+} // namespace cv
 
 #endif // OPENCV_CORE_PARALLEL_IMPL_HPP

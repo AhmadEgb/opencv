@@ -44,7 +44,7 @@
 #define OPENCV_CORE_OPENGL_HPP
 
 #ifndef __cplusplus
-#  error opengl.hpp header must be compiled as C++
+#    error opengl.hpp header must be compiled as C++
 #endif
 
 #include "opencv2/core.hpp"
@@ -83,15 +83,15 @@ public:
     */
     enum Target
     {
-        ARRAY_BUFFER         = 0x8892, //!< The buffer will be used as a source for vertex data
+        ARRAY_BUFFER = 0x8892, //!< The buffer will be used as a source for vertex data
         ELEMENT_ARRAY_BUFFER = 0x8893, //!< The buffer will be used for indices (in glDrawElements, for example)
-        PIXEL_PACK_BUFFER    = 0x88EB, //!< The buffer will be used for reading from OpenGL textures
-        PIXEL_UNPACK_BUFFER  = 0x88EC  //!< The buffer will be used for writing to OpenGL textures
+        PIXEL_PACK_BUFFER = 0x88EB, //!< The buffer will be used for reading from OpenGL textures
+        PIXEL_UNPACK_BUFFER = 0x88EC //!< The buffer will be used for writing to OpenGL textures
     };
 
     enum Access
     {
-        READ_ONLY  = 0x88B8,
+        READ_ONLY = 0x88B8,
         WRITE_ONLY = 0x88B9,
         READ_WRITE = 0x88BA
     };
@@ -287,10 +287,10 @@ public:
     */
     enum Format
     {
-        NONE            = 0,
+        NONE = 0,
         DEPTH_COMPONENT = 0x1902, //!< Depth
-        RGB             = 0x1907, //!< Red, Green, Blue
-        RGBA            = 0x1908  //!< Red, Green, Blue, Alpha
+        RGB = 0x1907, //!< Red, Green, Blue
+        RGBA = 0x1908 //!< Red, Green, Blue, Alpha
     };
 
     /** @brief The constructors.
@@ -475,17 +475,18 @@ private:
 /////////////////// Render Functions ///////////////////
 
 //! render mode
-enum RenderModes {
-    POINTS         = 0x0000,
-    LINES          = 0x0001,
-    LINE_LOOP      = 0x0002,
-    LINE_STRIP     = 0x0003,
-    TRIANGLES      = 0x0004,
+enum RenderModes
+{
+    POINTS = 0x0000,
+    LINES = 0x0001,
+    LINE_LOOP = 0x0002,
+    LINE_STRIP = 0x0003,
+    TRIANGLES = 0x0004,
     TRIANGLE_STRIP = 0x0005,
-    TRIANGLE_FAN   = 0x0006,
-    QUADS          = 0x0007,
-    QUAD_STRIP     = 0x0008,
-    POLYGON        = 0x0009
+    TRIANGLE_FAN = 0x0006,
+    QUADS = 0x0007,
+    QUAD_STRIP = 0x0008,
+    POLYGON = 0x0009
 };
 
 /** @brief Render OpenGL texture or primitives.
@@ -493,9 +494,8 @@ enum RenderModes {
 @param wndRect Region of window, where to draw a texture (normalized coordinates).
 @param texRect Region of texture to draw (normalized coordinates).
  */
-CV_EXPORTS void render(const Texture2D& tex,
-    Rect_<double> wndRect = Rect_<double>(0.0, 0.0, 1.0, 1.0),
-    Rect_<double> texRect = Rect_<double>(0.0, 0.0, 1.0, 1.0));
+CV_EXPORTS void render(const Texture2D& tex, Rect_<double> wndRect = Rect_<double>(0.0, 0.0, 1.0, 1.0),
+                       Rect_<double> texRect = Rect_<double>(0.0, 0.0, 1.0, 1.0));
 
 /** @overload
 @param arr Array of privitives vertices.
@@ -523,7 +523,7 @@ using namespace cv::ocl;
  */
 CV_EXPORTS Context& initializeContextFromGL();
 
-} // namespace cv::ogl::ocl
+} // namespace ocl
 
 /** @brief Converts InputArray to Texture2D object.
 @param src     - source InputArray.
@@ -571,7 +571,7 @@ This function should be explicitly called after OpenGL context creation and befo
  */
 CV_EXPORTS void setGlDevice(int device = 0);
 
-}}
+}} // namespace cv::cuda
 
 //! @cond IGNORED
 
@@ -579,146 +579,77 @@ CV_EXPORTS void setGlDevice(int device = 0);
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
-inline
-cv::ogl::Buffer::Buffer(int arows, int acols, int atype, Target target, bool autoRelease) : rows_(0), cols_(0), type_(0)
+inline cv::ogl::Buffer::Buffer(int arows, int acols, int atype, Target target, bool autoRelease)
+    : rows_(0), cols_(0), type_(0)
 {
     create(arows, acols, atype, target, autoRelease);
 }
 
-inline
-cv::ogl::Buffer::Buffer(Size asize, int atype, Target target, bool autoRelease) : rows_(0), cols_(0), type_(0)
+inline cv::ogl::Buffer::Buffer(Size asize, int atype, Target target, bool autoRelease)
+    : rows_(0), cols_(0), type_(0)
 {
     create(asize, atype, target, autoRelease);
 }
 
-inline
-void cv::ogl::Buffer::create(Size asize, int atype, Target target, bool autoRelease)
+inline void cv::ogl::Buffer::create(Size asize, int atype, Target target, bool autoRelease)
 {
     create(asize.height, asize.width, atype, target, autoRelease);
 }
 
-inline
-int cv::ogl::Buffer::rows() const
-{
-    return rows_;
-}
+inline int cv::ogl::Buffer::rows() const { return rows_; }
 
-inline
-int cv::ogl::Buffer::cols() const
-{
-    return cols_;
-}
+inline int cv::ogl::Buffer::cols() const { return cols_; }
 
-inline
-cv::Size cv::ogl::Buffer::size() const
-{
-    return Size(cols_, rows_);
-}
+inline cv::Size cv::ogl::Buffer::size() const { return Size(cols_, rows_); }
 
-inline
-bool cv::ogl::Buffer::empty() const
-{
-    return rows_ == 0 || cols_ == 0;
-}
+inline bool cv::ogl::Buffer::empty() const { return rows_ == 0 || cols_ == 0; }
 
-inline
-int cv::ogl::Buffer::type() const
-{
-    return type_;
-}
+inline int cv::ogl::Buffer::type() const { return type_; }
 
-inline
-int cv::ogl::Buffer::depth() const
-{
-    return CV_MAT_DEPTH(type_);
-}
+inline int cv::ogl::Buffer::depth() const { return CV_MAT_DEPTH(type_); }
 
-inline
-int cv::ogl::Buffer::channels() const
-{
-    return CV_MAT_CN(type_);
-}
+inline int cv::ogl::Buffer::channels() const { return CV_MAT_CN(type_); }
 
-inline
-int cv::ogl::Buffer::elemSize() const
-{
-    return CV_ELEM_SIZE(type_);
-}
+inline int cv::ogl::Buffer::elemSize() const { return CV_ELEM_SIZE(type_); }
 
-inline
-int cv::ogl::Buffer::elemSize1() const
-{
-    return CV_ELEM_SIZE1(type_);
-}
+inline int cv::ogl::Buffer::elemSize1() const { return CV_ELEM_SIZE1(type_); }
 
 ///////
 
-inline
-cv::ogl::Texture2D::Texture2D(int arows, int acols, Format aformat, bool autoRelease) : rows_(0), cols_(0), format_(NONE)
+inline cv::ogl::Texture2D::Texture2D(int arows, int acols, Format aformat, bool autoRelease)
+    : rows_(0), cols_(0), format_(NONE)
 {
     create(arows, acols, aformat, autoRelease);
 }
 
-inline
-cv::ogl::Texture2D::Texture2D(Size asize, Format aformat, bool autoRelease) : rows_(0), cols_(0), format_(NONE)
+inline cv::ogl::Texture2D::Texture2D(Size asize, Format aformat, bool autoRelease)
+    : rows_(0), cols_(0), format_(NONE)
 {
     create(asize, aformat, autoRelease);
 }
 
-inline
-void cv::ogl::Texture2D::create(Size asize, Format aformat, bool autoRelease)
+inline void cv::ogl::Texture2D::create(Size asize, Format aformat, bool autoRelease)
 {
     create(asize.height, asize.width, aformat, autoRelease);
 }
 
-inline
-int cv::ogl::Texture2D::rows() const
-{
-    return rows_;
-}
+inline int cv::ogl::Texture2D::rows() const { return rows_; }
 
-inline
-int cv::ogl::Texture2D::cols() const
-{
-    return cols_;
-}
+inline int cv::ogl::Texture2D::cols() const { return cols_; }
 
-inline
-cv::Size cv::ogl::Texture2D::size() const
-{
-    return Size(cols_, rows_);
-}
+inline cv::Size cv::ogl::Texture2D::size() const { return Size(cols_, rows_); }
 
-inline
-bool cv::ogl::Texture2D::empty() const
-{
-    return rows_ == 0 || cols_ == 0;
-}
+inline bool cv::ogl::Texture2D::empty() const { return rows_ == 0 || cols_ == 0; }
 
-inline
-cv::ogl::Texture2D::Format cv::ogl::Texture2D::format() const
-{
-    return format_;
-}
+inline cv::ogl::Texture2D::Format cv::ogl::Texture2D::format() const { return format_; }
 
 ///////
 
-inline
-cv::ogl::Arrays::Arrays() : size_(0)
-{
-}
+inline cv::ogl::Arrays::Arrays() : size_(0) {}
 
-inline
-int cv::ogl::Arrays::size() const
-{
-    return size_;
-}
+inline int cv::ogl::Arrays::size() const { return size_; }
 
-inline
-bool cv::ogl::Arrays::empty() const
-{
-    return size_ == 0;
-}
+inline bool cv::ogl::Arrays::empty() const { return size_ == 0; }
 
 //! @endcond
 
