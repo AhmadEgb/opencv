@@ -91,31 +91,28 @@
 #define __OPENCV_DNN_CAFFE_IO_HPP__
 #ifdef HAVE_PROTOBUF
 
-#if defined(__GNUC__) && __GNUC__ >= 5
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsuggest-override"
-#endif
-#include "opencv-caffe.pb.h"
-#if defined(__GNUC__) && __GNUC__ >= 5
-#pragma GCC diagnostic pop
-#endif
+#    if defined(__GNUC__) && __GNUC__ >= 5
+#        pragma GCC diagnostic push
+#        pragma GCC diagnostic ignored "-Wsuggest-override"
+#    endif
+#    include "opencv-caffe.pb.h"
+#    if defined(__GNUC__) && __GNUC__ >= 5
+#        pragma GCC diagnostic pop
+#    endif
 
-namespace caffe { using namespace opencv_caffe; } // avoid massive renames from caffe proto package
+namespace caffe {
+using namespace opencv_caffe;
+} // namespace caffe
 
-namespace cv {
-namespace dnn {
+namespace cv { namespace dnn {
 
 // Read parameters from a file into a NetParameter proto message.
-void ReadNetParamsFromTextFileOrDie(const char* param_file,
-                                    caffe::NetParameter* param);
-void ReadNetParamsFromBinaryFileOrDie(const char* param_file,
-                                      caffe::NetParameter* param);
+void ReadNetParamsFromTextFileOrDie(const char* param_file, caffe::NetParameter* param);
+void ReadNetParamsFromBinaryFileOrDie(const char* param_file, caffe::NetParameter* param);
 
 // Read parameters from a memory buffer into a NetParammeter proto message.
-void ReadNetParamsFromBinaryBufferOrDie(const char* data, size_t len,
-                                        caffe::NetParameter* param);
-void ReadNetParamsFromTextBufferOrDie(const char* data, size_t len,
-                                      caffe::NetParameter* param);
+void ReadNetParamsFromBinaryBufferOrDie(const char* data, size_t len, caffe::NetParameter* param);
+void ReadNetParamsFromTextBufferOrDie(const char* data, size_t len, caffe::NetParameter* param);
 
 // Utility functions used internally by Caffe and TensorFlow loaders
 bool ReadProtoFromTextFile(const char* filename, ::google::protobuf::Message* proto);
@@ -123,7 +120,6 @@ bool ReadProtoFromBinaryFile(const char* filename, ::google::protobuf::Message* 
 bool ReadProtoFromTextBuffer(const char* data, size_t len, ::google::protobuf::Message* proto);
 bool ReadProtoFromBinaryBuffer(const char* data, size_t len, ::google::protobuf::Message* proto);
 
-}
-}
+}} // namespace cv::dnn
 #endif
 #endif

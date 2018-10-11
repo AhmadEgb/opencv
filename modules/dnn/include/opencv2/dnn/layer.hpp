@@ -43,8 +43,7 @@
 #define OPENCV_DNN_LAYER_HPP
 #include <opencv2/dnn.hpp>
 
-namespace cv {
-namespace dnn {
+namespace cv { namespace dnn {
 CV__DNN_INLINE_NS_BEGIN
 //! @addtogroup dnn
 //! @{
@@ -56,22 +55,21 @@ CV__DNN_INLINE_NS_BEGIN
 class CV_EXPORTS LayerFactory
 {
 public:
-
     //! Each Layer class must provide this function to the factory
-    typedef Ptr<Layer>(*Constructor)(LayerParams &params);
+    typedef Ptr<Layer> (*Constructor)(LayerParams& params);
 
     //! Registers the layer class with typename @p type and specified @p constructor. Thread-safe.
-    static void registerLayer(const String &type, Constructor constructor);
+    static void registerLayer(const String& type, Constructor constructor);
 
     //! Unregisters registered layer with specified type name. Thread-safe.
-    static void unregisterLayer(const String &type);
+    static void unregisterLayer(const String& type);
 
     /** @brief Creates instance of registered layer.
      *  @param type type name of creating layer.
      *  @param params parameters which will be used for layer initialization.
      *  @note Thread-safe.
      */
-    static Ptr<Layer> createLayerInstance(const String &type, LayerParams& params);
+    static Ptr<Layer> createLayerInstance(const String& type, LayerParams& params);
 
 private:
     LayerFactory();
@@ -80,6 +78,5 @@ private:
 //! @}
 //! @}
 CV__DNN_INLINE_NS_END
-}
-}
+}} // namespace cv::dnn
 #endif

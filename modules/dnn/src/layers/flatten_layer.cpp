@@ -47,15 +47,12 @@
 #include <algorithm>
 #include <opencv2/dnn/shape_utils.hpp>
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class FlattenLayerImpl CV_FINAL : public FlattenLayer
 {
 public:
-    FlattenLayerImpl(const LayerParams &params)
+    FlattenLayerImpl(const LayerParams& params)
     {
         _startAxis = params.get<int>("axis", 1);
         _endAxis = params.get<int>("end_axis", -1);
@@ -64,14 +61,11 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() > 0);
         for (size_t i = 1; i < inputs.size(); i++)
@@ -106,7 +100,8 @@ public:
     }
 
 #ifdef HAVE_OPENCL
-    bool forward_ocl(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr)
+    bool forward_ocl(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                     OutputArrayOfArrays internals_arr)
     {
         std::vector<UMat> inpvec;
         std::vector<UMat> outputs;
@@ -129,13 +124,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget) &&
-                   outputs_arr.isUMatVector(),
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget) && outputs_arr.isUMatVector(),
                    forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         std::vector<Mat> inputs, outputs;
@@ -152,7 +147,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -163,7 +158,7 @@ public:
         ieLayer->params["axis"] = format("%d", _startAxis);
         ieLayer->params["end_axis"] = format("%d", _endAxis);
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -176,5 +171,4 @@ Ptr<FlattenLayer> FlattenLayer::create(const LayerParams& params)
     return Ptr<FlattenLayer>(new FlattenLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

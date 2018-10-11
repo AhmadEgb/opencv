@@ -10,10 +10,7 @@
 
 #include <opencv2/dnn.hpp>
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class HalideScheduler
 {
@@ -31,7 +28,6 @@ private:
     FileStorage fs;
 };
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn
 
-#endif  // __OPENCV_DNN_HALIDE_SCHEDULER_HPP__
+#endif // __OPENCV_DNN_HALIDE_SCHEDULER_HPP__

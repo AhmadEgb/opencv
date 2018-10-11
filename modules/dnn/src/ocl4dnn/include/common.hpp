@@ -48,7 +48,8 @@
 #define CL_KERNEL_SELECT(kernel) kernel "_float"
 
 #define OCL_CHECK(condition) \
-    do { \
+    do \
+    { \
         cl_int error = (condition); \
         CHECK_EQ(error, CL_SUCCESS) << " " << cv::ocl::getOpenCLErrorString(error); \
     } while (0)

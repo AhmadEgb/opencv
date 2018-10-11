@@ -46,14 +46,19 @@
 #include <sstream>
 #include <opencv2/core.hpp>
 
-#define CHECK(cond)     for(cv::dnn::GLogWrapper _logger(__FILE__, CV_Func, __LINE__, "CHECK", #cond, cond); _logger.exit(); _logger.check()) _logger.stream()
-#define CHECK_EQ(a, b)  for(cv::dnn::GLogWrapper _logger(__FILE__, CV_Func, __LINE__, "CHECK", #a"="#b, ((a) == (b))); _logger.exit(); _logger.check()) _logger.stream()
-#define LOG(TYPE)       for(cv::dnn::GLogWrapper _logger(__FILE__, CV_Func, __LINE__, #TYPE); _logger.exit(); _logger.check()) _logger.stream()
+#define CHECK(cond) \
+    for (cv::dnn::GLogWrapper _logger(__FILE__, CV_Func, __LINE__, "CHECK", #cond, cond); _logger.exit(); \
+         _logger.check()) \
+    _logger.stream()
+#define CHECK_EQ(a, b) \
+    for (cv::dnn::GLogWrapper _logger(__FILE__, CV_Func, __LINE__, "CHECK", #a "=" #b, ((a) == (b))); \
+         _logger.exit(); _logger.check()) \
+    _logger.stream()
+#define LOG(TYPE) \
+    for (cv::dnn::GLogWrapper _logger(__FILE__, CV_Func, __LINE__, #TYPE); _logger.exit(); _logger.check()) \
+    _logger.stream()
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class GLogWrapper
 {
@@ -63,23 +68,16 @@ class GLogWrapper
     std::stringstream sstream;
 
 public:
-
-    GLogWrapper(const char *_file, const char *_func, int _line,
-          const char *_type,
-          const char *_cond_str = NULL, bool _cond_status = true
-    ) :
-        file(_file), func(_func), type(_type), cond_str(_cond_str),
-        line(_line), cond_status(_cond_status), exit_loop(true) {}
-
-    std::iostream &stream()
+    GLogWrapper(const char* _file, const char* _func, int _line, const char* _type, const char* _cond_str = NULL,
+                bool _cond_status = true)
+        : file(_file), func(_func), type(_type), cond_str(_cond_str), line(_line), cond_status(_cond_status),
+          exit_loop(true)
     {
-        return sstream;
     }
 
-    bool exit()
-    {
-        return exit_loop;
-    }
+    std::iostream& stream() { return sstream; }
+
+    bool exit() { return exit_loop; }
 
     void check()
     {
@@ -91,16 +89,15 @@ public:
         }
         else if (!cond_str && strcmp(type, "CHECK"))
         {
-            #ifndef NDEBUG
+#ifndef NDEBUG
             if (!std::strcmp(type, "INFO"))
                 std::cout << sstream.str() << std::endl;
             else
                 std::cerr << sstream.str() << std::endl;
-            #endif
+#endif
         }
     }
 };
 
-}
-}
+}} // namespace cv::dnn
 #endif

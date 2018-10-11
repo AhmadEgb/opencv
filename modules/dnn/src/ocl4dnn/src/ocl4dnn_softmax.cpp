@@ -90,7 +90,8 @@ bool OCL4DNNSoftmax<Dtype>::Forward(const UMat& bottom, UMat& top)
         String kname;
         ocl::Kernel oclk_softmax_forward_kernel;
 
-        if (log_softmax_) opts += " -DLOG_SOFTMAX ";
+        if (log_softmax_)
+            opts += " -DLOG_SOFTMAX ";
         if (use_slm_)
             kname = "softmax_forward_slm";
         else
@@ -102,8 +103,8 @@ bool OCL4DNNSoftmax<Dtype>::Forward(const UMat& bottom, UMat& top)
         if (!oclk_softmax_forward_kernel.create(kname.c_str(), ocl::dnn::softmax_loss_oclsrc, opts))
             return false;
 
-        size_t global_size[] = { 256, (size_t)outer_num_, 1 };
-        size_t local_size[] = { 256, 1, 1 };
+        size_t global_size[] = {256, (size_t)outer_num_, 1};
+        size_t local_size[] = {256, 1, 1};
         cl_uint argIdx = 0;
 
         if (use_slm_)
@@ -114,9 +115,9 @@ bool OCL4DNNSoftmax<Dtype>::Forward(const UMat& bottom, UMat& top)
             oclk_softmax_forward_kernel.set(argIdx++, ocl::KernelArg::PtrWriteOnly(scale_data_));
             oclk_softmax_forward_kernel.set(argIdx++, ocl::KernelArg::PtrReadOnly(bottom));
             oclk_softmax_forward_kernel.set(argIdx++, ocl::KernelArg::PtrWriteOnly(top));
-            oclk_softmax_forward_kernel.set(argIdx++, NULL, channels_ * inner_num_* sizeof(Dtype));
-            oclk_softmax_forward_kernel.set(argIdx++, NULL, inner_num_* sizeof(Dtype));
-            oclk_softmax_forward_kernel.set(argIdx++, NULL, 16 * inner_num_* sizeof(Dtype));
+            oclk_softmax_forward_kernel.set(argIdx++, NULL, channels_ * inner_num_ * sizeof(Dtype));
+            oclk_softmax_forward_kernel.set(argIdx++, NULL, inner_num_ * sizeof(Dtype));
+            oclk_softmax_forward_kernel.set(argIdx++, NULL, 16 * inner_num_ * sizeof(Dtype));
         }
         else
         {

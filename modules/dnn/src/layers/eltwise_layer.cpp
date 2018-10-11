@@ -46,13 +46,10 @@
 #include "../op_inf_engine.hpp"
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class EltwiseLayerImpl CV_FINAL : public EltwiseLayer
 {
@@ -96,15 +93,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && (op != SUM || coeffs.empty());
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && (op != SUM || coeffs.empty());
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() >= 2);
         CV_Assert(coeffs.size() == 0 || coeffs.size() == inputs.size());
@@ -133,20 +127,22 @@ public:
         int channels;
         size_t planeSize;
 
-        EltwiseInvoker() : srcs(0), nsrcs(0), dst(0), coeffs(0), op(PROD), nstripes(0), activ(0), channels(0), planeSize(0)  {}
+        EltwiseInvoker()
+            : srcs(0), nsrcs(0), dst(0), coeffs(0), op(PROD), nstripes(0), activ(0), channels(0), planeSize(0)
+        {
+        }
 
-        static void run(const Mat* srcs, int nsrcs, Mat& dst,
-                        const std::vector<float>& coeffs, EltwiseOp op,
+        static void run(const Mat* srcs, int nsrcs, Mat& dst, const std::vector<float>& coeffs, EltwiseOp op,
                         const ActivationLayer* activ, int nstripes)
         {
-            CV_Check(dst.dims, 1 < dst.dims && dst.dims <= 4, ""); CV_CheckTypeEQ(dst.type(), CV_32FC1, ""); CV_Assert(dst.isContinuous());
+            CV_Check(dst.dims, 1 < dst.dims && dst.dims <= 4, "");
+            CV_CheckTypeEQ(dst.type(), CV_32FC1, "");
+            CV_Assert(dst.isContinuous());
             CV_Assert(coeffs.empty() || coeffs.size() == (size_t)nsrcs);
 
-            for( int i = 0; i > nsrcs; i++ )
+            for (int i = 0; i > nsrcs; i++)
             {
-                CV_Assert(srcs[i].size == dst.size &&
-                          srcs[i].type() == dst.type() &&
-                          srcs[i].isContinuous());
+                CV_Assert(srcs[i].size == dst.size && srcs[i].type() == dst.type() && srcs[i].isContinuous());
             }
 
             EltwiseInvoker p;
@@ -156,17 +152,16 @@ public:
             p.op = op;
             p.nstripes = nstripes;
             p.channels = (dst.dims == 4 ? dst.size[1] : 1);
-            p.planeSize = (dst.dims >= 3 ? dst.size[dst.dims - 1] * dst.size[dst.dims - 2] :
-                                           dst.size[dst.dims - 1]);
+            p.planeSize = (dst.dims >= 3 ? dst.size[dst.dims - 1] * dst.size[dst.dims - 2] : dst.size[dst.dims - 1]);
             CV_Assert(dst.total() == dst.size[0] * p.channels * p.planeSize);
 
             bool simpleCoeffs = true;
-            if( op == SUM && !coeffs.empty() )
+            if (op == SUM && !coeffs.empty())
             {
-                CV_Assert( coeffs.size() == (size_t)nsrcs );
+                CV_Assert(coeffs.size() == (size_t)nsrcs);
 
-                for( size_t i = 0; i < coeffs.size(); i++ )
-                    if( coeffs[i] != 1 )
+                for (size_t i = 0; i < coeffs.size(); i++)
+                    if (coeffs[i] != 1)
                     {
                         simpleCoeffs = false;
                         break;
@@ -180,59 +175,59 @@ public:
 
         void operator()(const Range& r) const CV_OVERRIDE
         {
-            size_t total = dst->size[0]*planeSize;
-            size_t stripeSize = (total + nstripes - 1)/nstripes;
-            size_t stripeStart = r.start*stripeSize;
-            size_t stripeEnd = std::min(r.end*stripeSize, total);
+            size_t total = dst->size[0] * planeSize;
+            size_t stripeSize = (total + nstripes - 1) / nstripes;
+            size_t stripeStart = r.start * stripeSize;
+            size_t stripeEnd = std::min(r.end * stripeSize, total);
             int c, j, k, n = nsrcs;
             const float* coeffsptr = coeffs && !coeffs->empty() ? &coeffs->at(0) : 0;
             float* dstptr0 = dst->ptr<float>();
             int blockSize0 = 1 << 12, blockSize;
 
-            for( size_t ofs = stripeStart; ofs < stripeEnd; ofs += blockSize )
+            for (size_t ofs = stripeStart; ofs < stripeEnd; ofs += blockSize)
             {
                 int sampleIdx = (int)(ofs / planeSize);
                 int delta = (int)ofs - sampleIdx * planeSize;
                 blockSize = std::min(blockSize0, std::min((int)(stripeEnd - ofs), (int)planeSize - delta));
-                if( blockSize <= 0 )
+                if (blockSize <= 0)
                     break;
 
-                for( c = 0; c < channels; c++ )
+                for (c = 0; c < channels; c++)
                 {
-                    size_t globalDelta = delta + (sampleIdx*channels + c)*planeSize;
+                    size_t globalDelta = delta + (sampleIdx * channels + c) * planeSize;
                     const float* srcptr0 = srcs[0].ptr<float>() + globalDelta;
                     float* dstptr = dstptr0 + globalDelta;
 
-                    if( op == PROD )
+                    if (op == PROD)
                     {
-                        for( k = 1; k < n; k++ )
+                        for (k = 1; k < n; k++)
                         {
                             const float* srcptr1 = srcs[k].ptr<float>() + globalDelta;
-                            for( j = 0; j < blockSize; j++ )
+                            for (j = 0; j < blockSize; j++)
                             {
-                                dstptr[j] = srcptr0[j]*srcptr1[j];
+                                dstptr[j] = srcptr0[j] * srcptr1[j];
                             }
                             srcptr0 = (const float*)dstptr;
                         }
                     }
-                    else if( op == MAX )
+                    else if (op == MAX)
                     {
-                        for( k = 1; k < n; k++ )
+                        for (k = 1; k < n; k++)
                         {
                             const float* srcptr1 = srcs[k].ptr<float>() + globalDelta;
-                            for( j = 0; j < blockSize; j++ )
+                            for (j = 0; j < blockSize; j++)
                             {
                                 dstptr[j] = std::max(srcptr0[j], srcptr1[j]);
                             }
                             srcptr0 = (const float*)dstptr;
                         }
                     }
-                    else if( !coeffsptr )
+                    else if (!coeffsptr)
                     {
-                        for( k = 1; k < n; k++ )
+                        for (k = 1; k < n; k++)
                         {
                             const float* srcptr1 = srcs[k].ptr<float>() + globalDelta;
-                            for( j = 0; j < blockSize; j++ )
+                            for (j = 0; j < blockSize; j++)
                             {
                                 dstptr[j] = srcptr0[j] + srcptr1[j];
                             }
@@ -242,13 +237,13 @@ public:
                     else
                     {
                         float c0 = coeffsptr[0];
-                        for( k = 1; k < n; k++ )
+                        for (k = 1; k < n; k++)
                         {
                             const float* srcptr1 = srcs[k].ptr<float>() + globalDelta;
                             float c1 = coeffsptr[k];
-                            for( j = 0; j < blockSize; j++ )
+                            for (j = 0; j < blockSize; j++)
                             {
-                                dstptr[j] = c0*srcptr0[j] + c1*srcptr1[j];
+                                dstptr[j] = c0 * srcptr0[j] + c1 * srcptr1[j];
                             }
                             srcptr0 = (const float*)dstptr;
                             c0 = 1;
@@ -256,9 +251,9 @@ public:
                     }
                 }
 
-                if( activ )
+                if (activ)
                 {
-                    float* ptr = dstptr0 + delta + sampleIdx*channels*planeSize;
+                    float* ptr = dstptr0 + delta + sampleIdx * channels * planeSize;
                     activ->forwardSlice(ptr, ptr, blockSize, planeSize, 0, channels);
                 }
             }
@@ -279,83 +274,83 @@ public:
 
         switch (op)
         {
-            case SUM:
+        case SUM:
+        {
+            int channels = total(shape(outputs[0]), 0, 2);
+            int plane_size = total(shape(outputs[0]), 2);
+            if (channels % 4 == 0 && plane_size % 4 == 0)
+            {
+                size_t localsize[] = {128};
+                size_t globalsize[] = {(size_t)channels / 4 * localsize[0]};
+                String opts;
+                if (inputs_.depth() == CV_16S)
+                    opts = " -DDtype=half -DDtype4=half4 -DDtype8=half8";
+                else
+                    opts = " -DDtype=float -DDtype4=float4 -DDtype8=float8";
+
+                for (int i = 0; i < (inputs.size() - 1); ++i)
                 {
-                    int channels = total(shape(outputs[0]), 0, 2);
-                    int plane_size = total(shape(outputs[0]), 2);
-                    if (channels % 4 == 0 && plane_size % 4 == 0)
-                    {
-                        size_t localsize[] = { 128 };
-                        size_t globalsize[] = { (size_t)channels / 4 * localsize[0] };
-                        String opts;
-                        if (inputs_.depth() == CV_16S)
-                            opts = " -DDtype=half -DDtype4=half4 -DDtype8=half8";
-                        else
-                            opts = " -DDtype=float -DDtype4=float4 -DDtype8=float8";
-
-                        for (int i = 0; i < (inputs.size() - 1); ++i)
-                        {
-                            String buildopt = format("-DLOOP=%d", i) + opts;
-                            ocl::Kernel kernel("op_sum4", ocl::dnn::eltwise_oclsrc, buildopt);
-                            int idx = 0;
-                            UMat inpMat = (i == 0) ? inputs[0] : UMat();
-                            float coeff1 = (coeffs.empty() || i > 0) ? 1.0f : coeffs[i];
-                            float coeff2 = coeffs.empty() ? 1.0f : coeffs[i + 1];
-                            kernel.set(idx++, ocl::KernelArg::PtrReadOnly(inputs[0]));
-                            kernel.set(idx++, ocl::KernelArg::PtrReadOnly(inputs[1]));
-                            kernel.set(idx++, (int)plane_size);
-                            kernel.set(idx++, (float)coeff1);
-                            kernel.set(idx++, (float)coeff2);
-                            kernel.set(idx++, ocl::KernelArg::PtrReadWrite(outputs[0]));
-                            bool ret = kernel.run(1, globalsize, localsize, false);
-                            if (!ret)
-                                return false;
-                        }
-                    }
-                    else
-                    {
-                        if (inputs_.depth() == CV_16S)
-                            return false;
-
-                        float coeff1 = coeffs.empty() ? 1.f : coeffs[0];
-                        float coeff2 = coeffs.empty() ? 1.f : coeffs[1];
-                        UMat mul0, mul1;
-                        multiply(coeff1, inputs[0], mul0);
-                        multiply(coeff2, inputs[1], mul1);
-                        add(mul0, mul1, outputs[0]);
-                        for (int i = 2; i < inputs.size(); ++i)
-                        {
-                            float coeff = coeffs.empty() ? 1.f : coeffs[i];
-                            multiply(coeff, inputs[i], mul0);
-                            add(mul0, outputs[0], outputs[0]);
-                        }
-                    }
+                    String buildopt = format("-DLOOP=%d", i) + opts;
+                    ocl::Kernel kernel("op_sum4", ocl::dnn::eltwise_oclsrc, buildopt);
+                    int idx = 0;
+                    UMat inpMat = (i == 0) ? inputs[0] : UMat();
+                    float coeff1 = (coeffs.empty() || i > 0) ? 1.0f : coeffs[i];
+                    float coeff2 = coeffs.empty() ? 1.0f : coeffs[i + 1];
+                    kernel.set(idx++, ocl::KernelArg::PtrReadOnly(inputs[0]));
+                    kernel.set(idx++, ocl::KernelArg::PtrReadOnly(inputs[1]));
+                    kernel.set(idx++, (int)plane_size);
+                    kernel.set(idx++, (float)coeff1);
+                    kernel.set(idx++, (float)coeff2);
+                    kernel.set(idx++, ocl::KernelArg::PtrReadWrite(outputs[0]));
+                    bool ret = kernel.run(1, globalsize, localsize, false);
+                    if (!ret)
+                        return false;
                 }
-                break;
-            case PROD:
-                multiply(inputs[0], inputs[1], outputs[0]);
+            }
+            else
+            {
+                if (inputs_.depth() == CV_16S)
+                    return false;
+
+                float coeff1 = coeffs.empty() ? 1.f : coeffs[0];
+                float coeff2 = coeffs.empty() ? 1.f : coeffs[1];
+                UMat mul0, mul1;
+                multiply(coeff1, inputs[0], mul0);
+                multiply(coeff2, inputs[1], mul1);
+                add(mul0, mul1, outputs[0]);
                 for (int i = 2; i < inputs.size(); ++i)
-                    multiply(inputs[i], outputs[0], outputs[0]);
-                break;
-            case MAX:
-                max(inputs[0], inputs[1], outputs[0]);
-                for (int i = 2; i < inputs.size(); ++i)
-                    max(inputs[i], outputs[0], outputs[0]);
-                break;
-            default:
-                return false;
+                {
+                    float coeff = coeffs.empty() ? 1.f : coeffs[i];
+                    multiply(coeff, inputs[i], mul0);
+                    add(mul0, outputs[0], outputs[0]);
+                }
+            }
+        }
+        break;
+        case PROD:
+            multiply(inputs[0], inputs[1], outputs[0]);
+            for (int i = 2; i < inputs.size(); ++i)
+                multiply(inputs[i], outputs[0], outputs[0]);
+            break;
+        case MAX:
+            max(inputs[0], inputs[1], outputs[0]);
+            for (int i = 2; i < inputs.size(); ++i)
+                max(inputs[i], outputs[0], outputs[0]);
+            break;
+        default:
+            return false;
         }
         return true;
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -369,57 +364,52 @@ public:
 
         CV_Assert(outputs.size() == 1);
         const int nstripes = getNumThreads();
-        EltwiseInvoker::run(&inputs[0], (int)inputs.size(), outputs[0],
-                            coeffs, op, activ.get(), nstripes);
+        EltwiseInvoker::run(&inputs[0], (int)inputs.size(), outputs[0], coeffs, op, activ.get(), nstripes);
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &input) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& input) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = (name.empty() ? Halide::Func() : Halide::Func(name));
         Halide::Expr topExpr;
-        std::vector<Halide::Buffer<> > inputBuffers = halideBuffers(input);
+        std::vector<Halide::Buffer<>> inputBuffers = halideBuffers(input);
         switch (op)
         {
-            case SUM:
-                if (coeffs.empty())
-                {
-                    topExpr = inputBuffers[0](x, y, c, n) +
-                              inputBuffers[1](x, y, c, n);
-                    for (int i = 2; i < inputBuffers.size(); ++i)
-                        topExpr += inputBuffers[i](x, y, c, n);
-                }
-                else
-                {
-                  topExpr = coeffs[0] * inputBuffers[0](x, y, c, n) +
-                            coeffs[1] * inputBuffers[1](x, y, c, n);
-                  for (int i = 2; i < inputBuffers.size(); ++i)
-                      topExpr += coeffs[i] * inputBuffers[i](x, y, c, n);
-                }
-                break;
-            case PROD:
-                topExpr = inputBuffers[0](x, y, c, n) *
-                          inputBuffers[1](x, y, c, n);
+        case SUM:
+            if (coeffs.empty())
+            {
+                topExpr = inputBuffers[0](x, y, c, n) + inputBuffers[1](x, y, c, n);
                 for (int i = 2; i < inputBuffers.size(); ++i)
-                    topExpr *= inputBuffers[i](x, y, c, n);
-                break;
-            case MAX:
-                topExpr = max(inputBuffers[0](x, y, c, n),
-                              inputBuffers[1](x, y, c, n));
+                    topExpr += inputBuffers[i](x, y, c, n);
+            }
+            else
+            {
+                topExpr = coeffs[0] * inputBuffers[0](x, y, c, n) + coeffs[1] * inputBuffers[1](x, y, c, n);
                 for (int i = 2; i < inputBuffers.size(); ++i)
-                    topExpr = max(topExpr, inputBuffers[i](x, y, c, n));
-                break;
-            default:
-                return Ptr<BackendNode>();
+                    topExpr += coeffs[i] * inputBuffers[i](x, y, c, n);
+            }
+            break;
+        case PROD:
+            topExpr = inputBuffers[0](x, y, c, n) * inputBuffers[1](x, y, c, n);
+            for (int i = 2; i < inputBuffers.size(); ++i)
+                topExpr *= inputBuffers[i](x, y, c, n);
+            break;
+        case MAX:
+            topExpr = max(inputBuffers[0](x, y, c, n), inputBuffers[1](x, y, c, n));
+            for (int i = 2; i < inputBuffers.size(); ++i)
+                topExpr = max(topExpr, inputBuffers[i](x, y, c, n));
+            break;
+        default:
+            return Ptr<BackendNode>();
         }
         top(x, y, c, n) = topExpr;
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -436,12 +426,11 @@ public:
         else
             CV_Error(Error::StsNotImplemented, "Unsupported eltwise operation");
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(outputs); // suppress unused variable warning
         CV_Assert(inputs.size());
@@ -470,5 +459,4 @@ Ptr<EltwiseLayer> EltwiseLayer::create(const LayerParams& params)
     return Ptr<EltwiseLayer>(new EltwiseLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

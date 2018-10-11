@@ -14,7 +14,8 @@ namespace cv { namespace dnn {
 class ResizeLayerImpl : public ResizeLayer
 {
 public:
-    ResizeLayerImpl(const LayerParams& params) : zoomFactorWidth(0), zoomFactorHeight(0), scaleWidth(0), scaleHeight(0)
+    ResizeLayerImpl(const LayerParams& params)
+        : zoomFactorWidth(0), zoomFactorHeight(0), scaleWidth(0), scaleHeight(0)
     {
         setParamsFrom(params);
         outWidth = params.get<float>("width", 0);
@@ -36,10 +37,8 @@ public:
         alignCorners = params.get<bool>("align_corners", false);
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert_N(inputs.size() == 1, inputs[0].size() == 4);
         outputs.resize(1, inputs[0]);
@@ -79,7 +78,8 @@ public:
             scaleWidth = static_cast<float>(inputs[0].size[3]) / outWidth;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -106,8 +106,8 @@ public:
             {
                 for (size_t ch = 0; ch < inputs[0].size[1]; ++ch)
                 {
-                    resize(getPlane(inp, n, ch), getPlane(out, n, ch),
-                           Size(outWidth, outHeight), 0, 0, INTER_NEAREST);
+                    resize(getPlane(inp, n, ch), getPlane(out, n, ch), Size(outWidth, outHeight), 0, 0,
+                           INTER_NEAREST);
                 }
             }
         }
@@ -139,10 +139,12 @@ public:
                     const float* inpData_row1_c = inpData_row1;
                     for (int c = 0; c < numPlanes; ++c)
                     {
-                        *outData = inpData_row0_c[x0] +
-                            (input_y - y0) * (inpData_row1_c[x0] - inpData_row0_c[x0]) +
-                            (input_x - x0) * (inpData_row0_c[x1] - inpData_row0_c[x0] +
-                            (input_y - y0) * (inpData_row1_c[x1] - inpData_row0_c[x1] - inpData_row1_c[x0] + inpData_row0_c[x0]));
+                        *outData = inpData_row0_c[x0] + (input_y - y0) * (inpData_row1_c[x0] - inpData_row0_c[x0])
+                                   + (input_x - x0)
+                                         * (inpData_row0_c[x1] - inpData_row0_c[x0]
+                                            + (input_y - y0)
+                                                  * (inpData_row1_c[x1] - inpData_row0_c[x1] - inpData_row1_c[x0]
+                                                     + inpData_row0_c[x0]));
 
                         inpData_row0_c += inpSpatialSize;
                         inpData_row1_c += inpSpatialSize;
@@ -155,7 +157,7 @@ public:
             CV_Error(Error::StsNotImplemented, "Unknown interpolation: " + interpolation);
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -170,7 +172,7 @@ public:
         ieLayer->params["height"] = cv::format("%d", outHeight);
 
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -192,10 +194,8 @@ class InterpLayerImpl CV_FINAL : public ResizeLayerImpl
 public:
     InterpLayerImpl(const LayerParams& params) : ResizeLayerImpl(params) {}
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert_N(inputs.size() == 1, inputs[0].size() == 4);
         outputs.resize(1, inputs[0]);
@@ -227,7 +227,7 @@ public:
         scaleWidth = (outWidth > 1) ? (static_cast<float>(inpWidth - 1) / (outWidth - 1)) : 0.f;
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -239,7 +239,7 @@ public:
         ieLayer->params["pad_beg"] = "0";
         ieLayer->params["pad_end"] = "0";
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 };
@@ -251,5 +251,4 @@ Ptr<Layer> InterpLayer::create(const LayerParams& params)
     return Ptr<Layer>(new InterpLayerImpl(lp));
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

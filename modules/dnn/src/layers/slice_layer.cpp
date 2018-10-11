@@ -46,13 +46,10 @@
 #include <opencv2/dnn/shape_utils.hpp>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class SliceLayerImpl CV_FINAL : public SliceLayer
 {
@@ -64,9 +61,8 @@ public:
         if (params.has("slice_point"))
         {
             CV_Assert(!params.has("begin") && !params.has("size") && !params.has("end"));
-            const DictValue &indicesValue = params.get("slice_point");
-            sliceRanges.resize(indicesValue.size() + 1,
-                               std::vector<Range>(axis + 1, Range::all()));
+            const DictValue& indicesValue = params.get("slice_point");
+            sliceRanges.resize(indicesValue.size() + 1, std::vector<Range>(axis + 1, Range::all()));
             int prevSlice = 0;
             for (int i = 0; i < indicesValue.size(); ++i)
             {
@@ -79,8 +75,8 @@ public:
         else if (params.has("begin"))
         {
             CV_Assert(params.has("size") ^ params.has("end"));
-            const DictValue &begins = params.get("begin");
-            const DictValue &sizesOrEnds = params.has("size") ? params.get("size") : params.get("end");
+            const DictValue& begins = params.get("begin");
+            const DictValue& sizesOrEnds = params.has("size") ? params.get("size") : params.get("end");
             CV_Assert(begins.size() == sizesOrEnds.size());
 
             sliceRanges.resize(1);
@@ -88,21 +84,21 @@ public:
             for (int i = 0; i < begins.size(); ++i)
             {
                 int start = begins.get<int>(i);
-                int sizeOrEnd = sizesOrEnds.get<int>(i);  // It may be negative to reverse indexation.
+                int sizeOrEnd = sizesOrEnds.get<int>(i); // It may be negative to reverse indexation.
                 CV_Assert(start >= 0);
 
                 sliceRanges[0][i].start = start;
                 if (params.has("size"))
                 {
                     int size = sizeOrEnd;
-                    CV_Assert(size == -1 || size > 0);  // -1 value means range [start, axis_size).
-                    sliceRanges[0][i].end = size > 0 ? (start + size) : -1;  // We'll finalize a negative value later.
+                    CV_Assert(size == -1 || size > 0); // -1 value means range [start, axis_size).
+                    sliceRanges[0][i].end = size > 0 ? (start + size) : -1; // We'll finalize a negative value later.
                 }
                 else
                 {
                     int end = sizeOrEnd;
-                    CV_Assert(end < 0 || end > start);  // End index is excluded.
-                    sliceRanges[0][i].end = end;  // We'll finalize a negative value later.
+                    CV_Assert(end < 0 || end > start); // End index is excluded.
+                    sliceRanges[0][i].end = end; // We'll finalize a negative value later.
                 }
             }
         }
@@ -110,14 +106,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && sliceRanges.size() == 1 && sliceRanges[0].size() == 4;
+        return backendId == DNN_BACKEND_OPENCV
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && sliceRanges.size() == 1 && sliceRanges[0].size() == 4;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                            const int requiredOutputs,
-                            std::vector<MatShape> &outputs,
-                            std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 1);
         MatShape inpShape = inputs[0];
@@ -134,7 +128,7 @@ public:
                 }
             }
         }
-        else  // Divide input blob on equal parts by axis.
+        else // Divide input blob on equal parts by axis.
         {
             CV_Assert(0 <= axis && axis < inpShape.size());
             CV_Assert(requiredOutputs > 0 && inpShape[axis] % requiredOutputs == 0);
@@ -157,8 +151,7 @@ public:
         {
             // Divide input blob on equal parts by axis.
             int outAxisSize = inpShape[axis] / outputs.size();
-            sliceRanges.resize(outputs.size(),
-                               std::vector<Range>(axis + 1, Range::all()));
+            sliceRanges.resize(outputs.size(), std::vector<Range>(axis + 1, Range::all()));
             int prevSlice = 0;
             for (int i = 0; i < outputs.size(); ++i)
             {
@@ -196,8 +189,8 @@ public:
         inputs_.getUMatVector(inputs);
         outputs_.getUMatVector(outputs);
 
-        if (inputs[0].dims < 4 || (total(shape(outputs[0]), 0, 2) % 4 != 0) ||
-            (total(shape(outputs[0]), 2) % 4 != 0))
+        if (inputs[0].dims < 4 || (total(shape(outputs[0]), 0, 2) % 4 != 0)
+            || (total(shape(outputs[0]), 2) % 4 != 0))
             return false;
 
         String opts;
@@ -214,8 +207,8 @@ public:
             int cols = outputs[i].size[3];
 
             ocl::Kernel kernel("slice", ocl::dnn::slice_oclsrc, opts);
-            size_t local[] = { 128 };
-            size_t global[] = { (size_t)groups * channels / 4 * local[0] };
+            size_t local[] = {128};
+            size_t global[] = {(size_t)groups * channels / 4 * local[0]};
             int idx = 0;
             kernel.set(idx++, ocl::KernelArg::PtrReadOnly(inpMat));
             kernel.set(idx++, (int)(inpMat.size[2] * inpMat.size[3]));
@@ -234,13 +227,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         std::vector<Mat> inputs, outputs;
         inputs_arr.getMatVector(inputs);
@@ -254,7 +247,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >& inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::DataPtr input = infEngineDataNode(inputs[0]);
@@ -287,7 +280,7 @@ public:
         }
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
 
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 };
@@ -297,5 +290,4 @@ Ptr<SliceLayer> SliceLayer::create(const LayerParams& params)
     return Ptr<SliceLayer>(new SliceLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

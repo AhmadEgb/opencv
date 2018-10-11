@@ -46,13 +46,10 @@
 #include <cmath>
 #include <opencv2/dnn/shape_utils.hpp>
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 template<typename Dtype>
-static void tanh(const Mat &src, Mat &dst)
+static void tanh(const Mat& src, Mat& dst)
 {
     MatConstIterator_<Dtype> itSrc = src.begin<Dtype>();
     MatIterator_<Dtype> itDst = dst.begin<Dtype>();
@@ -62,7 +59,7 @@ static void tanh(const Mat &src, Mat &dst)
 }
 
 //TODO: make utils method
-static void tanh(const Mat &src, Mat &dst)
+static void tanh(const Mat& src, Mat& dst)
 {
     dst.create(src.dims, (const int*)src.size, src.type());
 
@@ -74,7 +71,7 @@ static void tanh(const Mat &src, Mat &dst)
         CV_Error(Error::StsUnsupportedFormat, "Function supports only floating point types");
 }
 
-static void sigmoid(const Mat &src, Mat &dst)
+static void sigmoid(const Mat& src, Mat& dst)
 {
     cv::exp(-src, dst);
     cv::pow(1 + dst, -1, dst);
@@ -85,8 +82,8 @@ class LSTMLayerImpl CV_FINAL : public LSTMLayer
     int numTimeStamps, numSamples;
     bool allocated;
 
-    MatShape outTailShape;                 //shape of single output sample
-    MatShape outTsShape;    //shape of N output samples
+    MatShape outTailShape; //shape of single output sample
+    MatShape outTsShape; //shape of N output samples
 
     bool useTimestampDim;
     bool produceCellOutput;
@@ -94,9 +91,7 @@ class LSTMLayerImpl CV_FINAL : public LSTMLayer
     bool useCellClip, usePeephole;
 
 public:
-
-    LSTMLayerImpl(const LayerParams& params)
-        : numTimeStamps(0), numSamples(0)
+    LSTMLayerImpl(const LayerParams& params) : numTimeStamps(0), numSamples(0)
     {
         setParamsFrom(params);
 
@@ -111,7 +106,7 @@ public:
             const Mat& bias = blobs[2];
             CV_Assert(Wh.dims == 2 && Wx.dims == 2);
             CV_Assert(Wh.rows == Wx.rows);
-            CV_Assert(Wh.rows == 4*Wh.cols);
+            CV_Assert(Wh.rows == 4 * Wh.cols);
             CV_Assert(Wh.rows == (int)bias.total());
             CV_Assert(Wh.type() == Wx.type() && Wx.type() == bias.type());
 
@@ -150,17 +145,17 @@ public:
         produceCellOutput = produce;
     }
 
-    void setOutShape(const MatShape &outTailShape_) CV_OVERRIDE
+    void setOutShape(const MatShape& outTailShape_) CV_OVERRIDE
     {
         CV_Assert(!allocated || total(outTailShape) == total(outTailShape_));
         outTailShape = outTailShape_;
     }
 
-    void setWeights(const Mat &Wh, const Mat &Wx, const Mat &bias) CV_OVERRIDE
+    void setWeights(const Mat& Wh, const Mat& Wx, const Mat& bias) CV_OVERRIDE
     {
         CV_Assert(Wh.dims == 2 && Wx.dims == 2);
         CV_Assert(Wh.rows == Wx.rows);
-        CV_Assert(Wh.rows == 4*Wh.cols);
+        CV_Assert(Wh.rows == 4 * Wh.cols);
         CV_Assert(Wh.rows == (int)bias.total());
         CV_Assert(Wh.type() == Wx.type() && Wx.type() == bias.type());
 
@@ -170,10 +165,8 @@ public:
         blobs[2] = Mat(bias.clone()).reshape(1, 1);
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(!usePeephole && blobs.size() == 3 || usePeephole && blobs.size() == 6);
         CV_Assert(inputs.size() == 1);
@@ -211,7 +204,7 @@ public:
         internals.assign(1, shape(_numSamples, _numOut)); // hInternal
         internals.push_back(shape(_numSamples, _numOut)); // cInternal
         internals.push_back(shape(_numSamples, 1)); // dummyOnes
-        internals.push_back(shape(_numSamples, 4*_numOut)); // gates
+        internals.push_back(shape(_numSamples, 4 * _numOut)); // gates
 
         return false;
     }
@@ -254,7 +247,8 @@ public:
         allocated = true;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -270,19 +264,18 @@ public:
         outputs_arr.getMatVector(output);
         internals_arr.getMatVector(internals);
 
-        const Mat &Wh = blobs[0];
-        const Mat &Wx = blobs[1];
-        const Mat &bias = blobs[2];
+        const Mat& Wh = blobs[0];
+        const Mat& Wx = blobs[1];
+        const Mat& bias = blobs[2];
 
         int numOut = Wh.size[1];
 
-        Mat hInternal = internals[0], cInternal = internals[1],
-                dummyOnes = internals[2], gates = internals[3];
+        Mat hInternal = internals[0], cInternal = internals[1], dummyOnes = internals[2], gates = internals[3];
         hInternal.setTo(0.);
         cInternal.setTo(0.);
         dummyOnes.setTo(1.);
 
-        int numSamplesTotal = numTimeStamps*numSamples;
+        int numSamplesTotal = numTimeStamps * numSamples;
         Mat xTs = input[0].reshape(1, numSamplesTotal);
 
         Mat hOutTs = output[0].reshape(1, numSamplesTotal);
@@ -290,40 +283,40 @@ public:
 
         for (int ts = 0; ts < numTimeStamps; ts++)
         {
-            Range curRowRange(ts*numSamples, (ts + 1)*numSamples);
+            Range curRowRange(ts * numSamples, (ts + 1) * numSamples);
             Mat xCurr = xTs.rowRange(curRowRange);
 
-            gemm(xCurr, Wx, 1, gates, 0, gates, GEMM_2_T);      // Wx * x_t
-            gemm(hInternal, Wh, 1, gates, 1, gates, GEMM_2_T);  //+Wh * h_{t-1}
-            gemm(dummyOnes, bias, 1, gates, 1, gates);          //+b
+            gemm(xCurr, Wx, 1, gates, 0, gates, GEMM_2_T); // Wx * x_t
+            gemm(hInternal, Wh, 1, gates, 1, gates, GEMM_2_T); //+Wh * h_{t-1}
+            gemm(dummyOnes, bias, 1, gates, 1, gates); //+b
 
-            Mat gateI = gates.colRange(0*numOut, 1*numOut);
-            Mat gateF = gates.colRange(1*numOut, 2*numOut);
-            Mat gateO = gates.colRange(2*numOut, 3*numOut);
-            Mat gateG = gates.colRange(3*numOut, 4*numOut);
+            Mat gateI = gates.colRange(0 * numOut, 1 * numOut);
+            Mat gateF = gates.colRange(1 * numOut, 2 * numOut);
+            Mat gateO = gates.colRange(2 * numOut, 3 * numOut);
+            Mat gateG = gates.colRange(3 * numOut, 4 * numOut);
 
             if (forgetBias)
                 add(gateF, forgetBias, gateF);
 
             if (usePeephole)
             {
-                Mat gatesIF = gates.colRange(0, 2*numOut);
+                Mat gatesIF = gates.colRange(0, 2 * numOut);
                 gemm(cInternal, blobs[3], 1, gateI, 1, gateI);
                 gemm(cInternal, blobs[4], 1, gateF, 1, gateF);
                 sigmoid(gatesIF, gatesIF);
             }
             else
             {
-                Mat gatesIFO = gates.colRange(0, 3*numOut);
+                Mat gatesIFO = gates.colRange(0, 3 * numOut);
                 sigmoid(gatesIFO, gatesIFO);
             }
 
             tanh(gateG, gateG);
 
             //compute c_t
-            multiply(gateF, cInternal, gateF);  // f_t (*) c_{t-1}
-            multiply(gateI, gateG, gateI);      // i_t (*) g_t
-            add(gateF, gateI, cInternal);       // c_t = f_t (*) c_{t-1} + i_t (*) g_t
+            multiply(gateF, cInternal, gateF); // f_t (*) c_{t-1}
+            multiply(gateI, gateG, gateI); // i_t (*) g_t
+            add(gateF, gateI, cInternal); // c_t = f_t (*) c_{t-1} + i_t (*) g_t
 
             if (useCellClip)
             {
@@ -348,10 +341,7 @@ public:
     }
 };
 
-Ptr<LSTMLayer> LSTMLayer::create(const LayerParams& params)
-{
-    return Ptr<LSTMLayer>(new LSTMLayerImpl(params));
-}
+Ptr<LSTMLayer> LSTMLayer::create(const LayerParams& params) { return Ptr<LSTMLayer>(new LSTMLayerImpl(params)); }
 
 int LSTMLayer::inputNameToIndex(String inputName)
 {
@@ -380,7 +370,6 @@ class RNNLayerImpl : public RNNLayer
     bool produceH;
 
 public:
-
     RNNLayerImpl(const LayerParams& params)
         : numX(0), numH(0), numO(0), numSamples(0), numTimestamps(0), numSamplesTotal(0), dtype(0)
     {
@@ -389,12 +378,9 @@ public:
         produceH = false;
     }
 
-    void setProduceHiddenOutput(bool produce = false) CV_OVERRIDE
-    {
-        produceH = produce;
-    }
+    void setProduceHiddenOutput(bool produce = false) CV_OVERRIDE { produceH = produce; }
 
-    void setWeights(const Mat &W_xh, const Mat &b_h, const Mat &W_hh, const Mat &W_ho, const Mat &b_o) CV_OVERRIDE
+    void setWeights(const Mat& W_xh, const Mat& b_h, const Mat& W_hh, const Mat& W_ho, const Mat& b_o) CV_OVERRIDE
     {
         CV_Assert(W_hh.dims == 2 && W_xh.dims == 2);
         CV_Assert(W_hh.size[0] == W_xh.size[0] && W_hh.size[0] == W_hh.size[1] && (int)b_h.total() == W_xh.size[0]);
@@ -409,10 +395,8 @@ public:
         blobs[4] = Mat(b_o.clone());
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() >= 1 && inputs.size() <= 2);
 
@@ -446,10 +430,10 @@ public:
         CV_Assert(input.size() >= 1 && input.size() <= 2);
 
         Wxh = blobs[0];
-        bh  = blobs[1];
+        bh = blobs[1];
         Whh = blobs[2];
         Who = blobs[3];
-        bo  = blobs[4];
+        bo = blobs[4];
 
         numH = Wxh.rows;
         numX = Wxh.cols;
@@ -469,19 +453,20 @@ public:
         bo = bo.reshape(1, 1); //is 1 x numO Mat
     }
 
-    void reshapeOutput(std::vector<Mat> &output)
+    void reshapeOutput(std::vector<Mat>& output)
     {
         output.resize(produceH ? 2 : 1);
-        int sz0[] = { numTimestamps, numSamples, numO };
+        int sz0[] = {numTimestamps, numSamples, numO};
         output[0].create(3, sz0, dtype);
         if (produceH)
         {
-            int sz1[] = { numTimestamps, numSamples, numH };
+            int sz1[] = {numTimestamps, numSamples, numH};
             output[1].create(3, sz1, dtype);
         }
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -514,12 +499,12 @@ public:
 
             gemm(hPrev, Whh, 1, hCurr, 0, hCurr, GEMM_2_T); // W_{hh} * h_{prev}
             gemm(xCurr, Wxh, 1, hCurr, 1, hCurr, GEMM_2_T); //+W_{xh} * x_{curr}
-            gemm(dummyBiasOnes, bh, 1, hCurr, 1, hCurr);    //+bh
+            gemm(dummyBiasOnes, bh, 1, hCurr, 1, hCurr); //+bh
             tanh(hCurr, hPrev);
 
             Mat oCurr = oTs.rowRange(curRowRange);
             gemm(hPrev, Who, 1, oCurr, 0, oCurr, GEMM_2_T); // W_{ho} * h_{prev}
-            gemm(dummyBiasOnes, bo, 1, oCurr, 1, oCurr);    //+b_o
+            gemm(dummyBiasOnes, bo, 1, oCurr, 1, oCurr); //+b_o
             tanh(oCurr, oCurr);
 
             if (produceH)
@@ -533,5 +518,4 @@ CV_EXPORTS_W Ptr<RNNLayer> RNNLayer::create(const LayerParams& params)
     return Ptr<RNNLayer>(new RNNLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

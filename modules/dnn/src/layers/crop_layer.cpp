@@ -44,10 +44,7 @@
 #include "../op_inf_engine.hpp"
 #include "layers_common.hpp"
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class CropLayerImpl CV_FINAL : public CropLayer
 {
@@ -56,7 +53,7 @@ public:
     {
         setParamsFrom(params);
         startAxis = params.get<int>("axis", 2);
-        const DictValue *paramOffset = params.ptr("offset");
+        const DictValue* paramOffset = params.ptr("offset");
 
         if (paramOffset)
         {
@@ -67,14 +64,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && crop_ranges.size() == 4;
+        return backendId == DNN_BACKEND_OPENCV
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && crop_ranges.size() == 4;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 2);
 
@@ -96,8 +91,8 @@ public:
         inputs_arr.getMatVector(inputs);
         CV_Assert(2 == inputs.size());
 
-        const Mat &inpBlob = inputs[0];
-        const Mat &inpSzBlob = inputs[1];
+        const Mat& inpBlob = inputs[0];
+        const Mat& inpSzBlob = inputs[1];
 
         int dims = inpBlob.dims;
         int start_axis = clamp(startAxis, dims);
@@ -132,7 +127,8 @@ public:
         }
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -141,11 +137,11 @@ public:
         inputs_arr.getMatVector(inputs);
         outputs_arr.getMatVector(outputs);
 
-        Mat &input = inputs[0];
+        Mat& input = inputs[0];
         input(&crop_ranges[0]).copyTo(outputs[0]);
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -156,24 +152,24 @@ public:
 
         CV_Assert(crop_ranges.size() == 4);
 
-        ieLayer->axis.push_back(0);  // batch
+        ieLayer->axis.push_back(0); // batch
         ieLayer->offset.push_back(crop_ranges[0].start);
         ieLayer->dim.push_back(crop_ranges[0].end - crop_ranges[0].start);
 
-        ieLayer->axis.push_back(1);  // channels
+        ieLayer->axis.push_back(1); // channels
         ieLayer->offset.push_back(crop_ranges[1].start);
         ieLayer->dim.push_back(crop_ranges[1].end - crop_ranges[1].start);
 
-        ieLayer->axis.push_back(3);  // height
+        ieLayer->axis.push_back(3); // height
         ieLayer->offset.push_back(crop_ranges[2].start);
         ieLayer->dim.push_back(crop_ranges[2].end - crop_ranges[2].start);
 
-        ieLayer->axis.push_back(2);  // width
+        ieLayer->axis.push_back(2); // width
         ieLayer->offset.push_back(crop_ranges[3].start);
         ieLayer->dim.push_back(crop_ranges[3].end - crop_ranges[3].start);
 
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -181,10 +177,6 @@ public:
 };
 
 
-Ptr<CropLayer> CropLayer::create(const LayerParams& params)
-{
-    return Ptr<CropLayer>(new CropLayerImpl(params));
-}
+Ptr<CropLayer> CropLayer::create(const LayerParams& params) { return Ptr<CropLayer>(new CropLayerImpl(params)); }
 
-}
-}
+}} // namespace cv::dnn

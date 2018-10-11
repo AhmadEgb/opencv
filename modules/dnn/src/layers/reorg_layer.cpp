@@ -46,19 +46,16 @@
 #include <opencv2/dnn/all_layers.hpp>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class ReorgLayerImpl CV_FINAL : public ReorgLayer
 {
     int reorgStride;
-public:
 
+public:
     ReorgLayerImpl(const LayerParams& params)
     {
         setParamsFrom(params);
@@ -67,17 +64,13 @@ public:
         CV_Assert(reorgStride > 0);
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() > 0);
-        outputs = std::vector<MatShape>(inputs.size(), shape(
-            inputs[0][0],
-            inputs[0][1] * reorgStride * reorgStride,
-            inputs[0][2] / reorgStride,
-            inputs[0][3] / reorgStride));
+        outputs = std::vector<MatShape>(inputs.size(),
+                                        shape(inputs[0][0], inputs[0][1] * reorgStride * reorgStride,
+                                              inputs[0][2] / reorgStride, inputs[0][3] / reorgStride));
 
         CV_Assert(outputs[0][0] > 0 && outputs[0][1] > 0 && outputs[0][2] > 0 && outputs[0][3] > 0);
         CV_Assert(total(outputs[0]) == total(inputs[0]));
@@ -102,9 +95,9 @@ public:
             permParams.set("order", DictValue::arrayInt(&order[0], 4));
 
             permuteInpShape.resize(4);
-            permuteInpShape[0] = inp.size[1] * inp.size[2] / (reorgStride * reorgStride);  // (channels*height)/(r*r)
+            permuteInpShape[0] = inp.size[1] * inp.size[2] / (reorgStride * reorgStride); // (channels*height)/(r*r)
             permuteInpShape[1] = reorgStride;
-            permuteInpShape[2] = inp.size[3];  // width
+            permuteInpShape[2] = inp.size[3]; // width
             permuteInpShape[3] = reorgStride;
 
             permuteOutShape.resize(4);
@@ -118,9 +111,9 @@ public:
 
             permuteInpShape.resize(5);
             permuteInpShape[0] = batchSize;
-            permuteInpShape[1] = inp.size[1] * inp.size[2] / (reorgStride * reorgStride);  // (channels*height)/(r*r)
+            permuteInpShape[1] = inp.size[1] * inp.size[2] / (reorgStride * reorgStride); // (channels*height)/(r*r)
             permuteInpShape[2] = reorgStride;
-            permuteInpShape[3] = inp.size[3];  // width
+            permuteInpShape[3] = inp.size[3]; // width
             permuteInpShape[4] = reorgStride;
 
             permuteOutShape.resize(5);
@@ -155,13 +148,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -178,7 +171,7 @@ public:
         permute->forward(inputs, outputs, internals_arr);
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -188,19 +181,18 @@ public:
         std::shared_ptr<InferenceEngine::CNNLayer> ieLayer(new InferenceEngine::CNNLayer(lp));
         ieLayer->params["stride"] = format("%d", reorgStride);
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(outputs); // suppress unused variable warning
 
         int64 flops = 0;
-        for(int i = 0; i < inputs.size(); i++)
+        for (int i = 0; i < inputs.size(); i++)
         {
-            flops += 21*total(inputs[i]);
+            flops += 21 * total(inputs[i]);
         }
         return flops;
     }
@@ -215,5 +207,4 @@ Ptr<ReorgLayer> ReorgLayer::create(const LayerParams& params)
     return Ptr<ReorgLayer>(new ReorgLayerImpl(params));
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

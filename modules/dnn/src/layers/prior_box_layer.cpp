@@ -48,20 +48,15 @@
 #include <cmath>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class PriorBoxLayerImpl CV_FINAL : public PriorBoxLayer
 {
 public:
-    static bool getParameterDict(const LayerParams &params,
-                                 const std::string &parameterName,
-                                 DictValue& result)
+    static bool getParameterDict(const LayerParams& params, const std::string& parameterName, DictValue& result)
     {
         if (!params.has(parameterName))
         {
@@ -73,17 +68,14 @@ public:
     }
 
     template<typename T>
-    T getParameter(const LayerParams &params,
-                   const std::string &parameterName,
-                   const size_t &idx=0,
-                   const bool required=true,
-                   const T& defaultValue=T())
+    T getParameter(const LayerParams& params, const std::string& parameterName, const size_t& idx = 0,
+                   const bool required = true, const T& defaultValue = T())
     {
         DictValue dictValue;
         bool success = getParameterDict(params, parameterName, dictValue);
-        if(!success)
+        if (!success)
         {
-            if(required)
+            if (required)
             {
                 std::string message = _layerName;
                 message += " layer parameter does not contain ";
@@ -99,7 +91,7 @@ public:
         return dictValue.get<T>(idx);
     }
 
-    void getAspectRatios(const LayerParams &params)
+    void getAspectRatios(const LayerParams& params)
     {
         DictValue aspectRatioParameter;
         bool aspectRatioRetieved = getParameterDict(params, "aspect_ratio", aspectRatioParameter);
@@ -120,14 +112,13 @@ public:
                 _aspectRatios.push_back(aspectRatio);
                 if (_flip)
                 {
-                    _aspectRatios.push_back(1./aspectRatio);
+                    _aspectRatios.push_back(1. / aspectRatio);
                 }
             }
         }
     }
 
-    static void getParams(const std::string& name, const LayerParams &params,
-                          std::vector<float>* values)
+    static void getParams(const std::string& name, const LayerParams& params, std::vector<float>* values)
     {
         DictValue dict;
         if (getParameterDict(params, name, dict))
@@ -142,7 +133,7 @@ public:
             values->clear();
     }
 
-    void getVariance(const LayerParams &params)
+    void getVariance(const LayerParams& params)
     {
         DictValue varianceParameter;
         bool varianceParameterRetrieved = getParameterDict(params, "variance", varianceParameter);
@@ -177,7 +168,7 @@ public:
         }
     }
 
-    PriorBoxLayerImpl(const LayerParams &params)
+    PriorBoxLayerImpl(const LayerParams& params)
     {
         setParamsFrom(params);
         _minSize = getParameter<float>(params, "min_size", 0, false, 0);
@@ -237,20 +228,25 @@ public:
         CV_Assert(_boxWidths.size() == _boxHeights.size());
         _numPriors = _boxWidths.size();
 
-        if (params.has("step_h") || params.has("step_w")) {
-          CV_Assert(!params.has("step"));
-          _stepY = getParameter<float>(params, "step_h");
-          CV_Assert(_stepY > 0.);
-          _stepX = getParameter<float>(params, "step_w");
-          CV_Assert(_stepX > 0.);
-        } else if (params.has("step")) {
-          const float step = getParameter<float>(params, "step");
-          CV_Assert(step > 0);
-          _stepY = step;
-          _stepX = step;
-        } else {
-          _stepY = 0;
-          _stepX = 0;
+        if (params.has("step_h") || params.has("step_w"))
+        {
+            CV_Assert(!params.has("step"));
+            _stepY = getParameter<float>(params, "step_h");
+            CV_Assert(_stepY > 0.);
+            _stepX = getParameter<float>(params, "step_w");
+            CV_Assert(_stepX > 0.);
+        }
+        else if (params.has("step"))
+        {
+            const float step = getParameter<float>(params, "step");
+            CV_Assert(step > 0);
+            _stepY = step;
+            _stepX = step;
+        }
+        else
+        {
+            _stepY = 0;
+            _stepX = 0;
         }
         if (params.has("offset_h") || params.has("offset_w"))
         {
@@ -270,14 +266,11 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(!inputs.empty());
 
@@ -291,8 +284,7 @@ public:
         // Second channel stores the variance of each prior coordinate.
         size_t outChannels = 2;
 
-        outputs.resize(1, shape(outNum, outChannels,
-                                layerHeight * layerWidth * _numPriors * 4));
+        outputs.resize(1, shape(outNum, outChannels, layerHeight * layerWidth * _numPriors * 4));
 
         return false;
     }
@@ -303,7 +295,8 @@ public:
         inputs_arr.getMatVector(inputs);
 
         CV_CheckGT(inputs.size(), (size_t)1, "");
-        CV_CheckEQ(inputs[0].dims, 4, ""); CV_CheckEQ(inputs[1].dims, 4, "");
+        CV_CheckEQ(inputs[0].dims, 4, "");
+        CV_CheckEQ(inputs[1].dims, 4, "");
         int layerWidth = inputs[0].size[3];
         int layerHeight = inputs[0].size[2];
 
@@ -375,8 +368,7 @@ public:
         {
             ocl::Kernel kernel("clip", ocl::dnn::prior_box_oclsrc, opts);
             size_t nthreads = _layerHeight * _layerWidth * _numPriors * 4;
-            if (!kernel.args((int)nthreads, ocl::KernelArg::PtrReadWrite(outputs[0]))
-                       .run(1, &nthreads, NULL, false))
+            if (!kernel.args((int)nthreads, ocl::KernelArg::PtrReadWrite(outputs[0])).run(1, &nthreads, NULL, false))
                 return false;
         }
 
@@ -397,13 +389,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -437,8 +429,8 @@ public:
                     {
                         float center_x = (w + _offsetsX[j]) * _stepX;
                         float center_y = (h + _offsetsY[j]) * _stepY;
-                        outputPtr = addPrior(center_x, center_y, _boxWidth, _boxHeight, _imageWidth,
-                                             _imageHeight, _bboxesNormalized, outputPtr);
+                        outputPtr = addPrior(center_x, center_y, _boxWidth, _boxHeight, _imageWidth, _imageHeight,
+                                             _bboxesNormalized, outputPtr);
                     }
                 }
             }
@@ -455,7 +447,7 @@ public:
         }
         // set the variance.
         outputPtr = outputs[0].ptr<float>(0, 1);
-        if(_variance.size() == 1)
+        if (_variance.size() == 1)
         {
             Mat secondChannel(1, outputs[0].size[2], CV_32F, outputPtr);
             secondChannel.setTo(Scalar::all(_variance[0]));
@@ -480,7 +472,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -491,7 +483,8 @@ public:
 
         if (_explicitSizes)
         {
-            CV_Assert(!_boxWidths.empty()); CV_Assert(!_boxHeights.empty());
+            CV_Assert(!_boxWidths.empty());
+            CV_Assert(!_boxHeights.empty());
             CV_Assert(_boxWidths.size() == _boxHeights.size());
             ieLayer->params["width"] = format("%f", _boxWidths[0]);
             ieLayer->params["height"] = format("%f", _boxHeights[0]);
@@ -514,7 +507,7 @@ public:
             }
         }
 
-        ieLayer->params["flip"] = "0";  // We already flipped aspect ratios.
+        ieLayer->params["flip"] = "0"; // We already flipped aspect ratios.
         ieLayer->params["clip"] = _clip ? "1" : "0";
 
         CV_Assert(!_variance.empty());
@@ -534,16 +527,17 @@ public:
             ieLayer->params["step_h"] = format("%f", _stepY);
             ieLayer->params["step_w"] = format("%f", _stepX);
         }
-        CV_CheckEQ(_offsetsX.size(), (size_t)1, ""); CV_CheckEQ(_offsetsY.size(), (size_t)1, ""); CV_CheckEQ(_offsetsX[0], _offsetsY[0], "");
+        CV_CheckEQ(_offsetsX.size(), (size_t)1, "");
+        CV_CheckEQ(_offsetsY.size(), (size_t)1, "");
+        CV_CheckEQ(_offsetsX[0], _offsetsY[0], "");
         ieLayer->params["offset"] = format("%f", _offsetsX[0]);
 
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(outputs); // suppress unused variable warning
         long flops = 0;
@@ -588,22 +582,22 @@ private:
     static const size_t _numAxes = 4;
     static const std::string _layerName;
 
-    static float* addPrior(float center_x, float center_y, float width, float height,
-                           float imgWidth, float imgHeight, bool normalized, float* dst)
+    static float* addPrior(float center_x, float center_y, float width, float height, float imgWidth,
+                           float imgHeight, bool normalized, float* dst)
     {
         if (normalized)
         {
-            dst[0] = (center_x - width * 0.5f) / imgWidth;    // xmin
-            dst[1] = (center_y - height * 0.5f) / imgHeight;  // ymin
-            dst[2] = (center_x + width * 0.5f) / imgWidth;    // xmax
-            dst[3] = (center_y + height * 0.5f) / imgHeight;  // ymax
+            dst[0] = (center_x - width * 0.5f) / imgWidth; // xmin
+            dst[1] = (center_y - height * 0.5f) / imgHeight; // ymin
+            dst[2] = (center_x + width * 0.5f) / imgWidth; // xmax
+            dst[3] = (center_y + height * 0.5f) / imgHeight; // ymax
         }
         else
         {
-            dst[0] = center_x - width * 0.5f;          // xmin
-            dst[1] = center_y - height * 0.5f;         // ymin
-            dst[2] = center_x + width * 0.5f - 1.0f;   // xmax
-            dst[3] = center_y + height * 0.5f - 1.0f;  // ymax
+            dst[0] = center_x - width * 0.5f; // xmin
+            dst[1] = center_y - height * 0.5f; // ymin
+            dst[2] = center_x + width * 0.5f - 1.0f; // xmax
+            dst[3] = center_y + height * 0.5f - 1.0f; // ymax
         }
         return dst + 4;
     }
@@ -611,10 +605,9 @@ private:
 
 const std::string PriorBoxLayerImpl::_layerName = std::string("PriorBox");
 
-Ptr<PriorBoxLayer> PriorBoxLayer::create(const LayerParams &params)
+Ptr<PriorBoxLayer> PriorBoxLayer::create(const LayerParams& params)
 {
     return Ptr<PriorBoxLayer>(new PriorBoxLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

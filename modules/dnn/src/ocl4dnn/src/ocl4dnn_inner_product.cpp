@@ -49,8 +49,8 @@ namespace cv { namespace dnn { namespace ocl4dnn {
 template<typename Dtype>
 OCL4DNNInnerProduct<Dtype>::OCL4DNNInnerProduct(OCL4DNNInnerProductConfig config)
 {
-    bias_term_  = config.bias_term;
-    transpose_  = config.transpose;
+    bias_term_ = config.bias_term;
+    transpose_ = config.transpose;
     N_ = num_output_ = config.num_output;
     M_ = config.M;
     K_ = config.K;
@@ -65,17 +65,13 @@ OCL4DNNInnerProduct<Dtype>::~OCL4DNNInnerProduct()
 }
 
 template<typename Dtype>
-bool OCL4DNNInnerProduct<Dtype>::Forward(const UMat& bottom,
-                                         const UMat& weight,
-                                         const UMat& bias,
-                                         UMat& top)
+bool OCL4DNNInnerProduct<Dtype>::Forward(const UMat& bottom, const UMat& weight, const UMat& bias, UMat& top)
 {
     bool ret;
 
     if (M_ == 1)
     {
-        ret = ocl4dnnGEMV<Dtype>(CblasNoTrans, N_, K_, (Dtype) 1.,
-                                 weight, 0, bottom, 0, (Dtype) 0., top, 0);
+        ret = ocl4dnnGEMV<Dtype>(CblasNoTrans, N_, K_, (Dtype)1., weight, 0, bottom, 0, (Dtype)0., top, 0);
 
         if (bias_term_ && ret)
             ret = ocl4dnnAXPY<Dtype>(N_, 1, bias, 0, top, 0);
@@ -87,14 +83,11 @@ bool OCL4DNNInnerProduct<Dtype>::Forward(const UMat& bottom,
         ret = false;
         size_t max_image_size = std::min(ocl::Device::getDefault().image2DMaxWidth(),
                                          ocl::Device::getDefault().image2DMaxHeight());
-        if (M_ <= max_image_size &&
-            N_ <= max_image_size &&
-            K_ <= max_image_size &&
-            ocl::Device::getDefault().intelSubgroupsSupport())
+        if (M_ <= max_image_size && N_ <= max_image_size && K_ <= max_image_size
+            && ocl::Device::getDefault().intelSubgroupsSupport())
         {
-            ret = ocl4dnnGEMMCommon<Dtype>(transpose_ ? CblasNoTrans : CblasTrans,
-                                           M_, N_, K_, bottom, weight, UMat(), top,
-                                           max_image_size);
+            ret = ocl4dnnGEMMCommon<Dtype>(transpose_ ? CblasNoTrans : CblasTrans, M_, N_, K_, bottom, weight,
+                                           UMat(), top, max_image_size);
         }
 
         if (use_half_ && bias_term_)

@@ -44,8 +44,7 @@
 
 #include <opencv2/dnn.hpp>
 
-namespace cv {
-namespace dnn {
+namespace cv { namespace dnn {
 CV__DNN_INLINE_NS_BEGIN
 
 template<typename TypeIter>
@@ -119,10 +118,7 @@ inline int DictValue::get<int>(int idx) const
     return (int)get<int64>(idx);
 }
 
-inline int DictValue::getIntValue(int idx) const
-{
-    return (int)get<int64>(idx);
-}
+inline int DictValue::getIntValue(int idx) const { return (int)get<int64>(idx); }
 
 template<>
 inline unsigned DictValue::get<unsigned>(int idx) const
@@ -161,10 +157,7 @@ inline double DictValue::get<double>(int idx) const
     }
 }
 
-inline double DictValue::getRealValue(int idx) const
-{
-    return get<double>(idx);
-}
+inline double DictValue::getRealValue(int idx) const { return get<double>(idx); }
 
 template<>
 inline float DictValue::get<float>(int idx) const
@@ -181,10 +174,7 @@ inline String DictValue::get<String>(int idx) const
 }
 
 
-inline String DictValue::getStringValue(int idx) const
-{
-    return get<String>(idx);
-}
+inline String DictValue::getStringValue(int idx) const { return get<String>(idx); }
 
 inline void DictValue::release()
 {
@@ -212,31 +202,28 @@ inline void DictValue::release()
     }
 }
 
-inline DictValue::~DictValue()
-{
-    release();
-}
+inline DictValue::~DictValue() { release(); }
 
-inline DictValue & DictValue::operator=(const DictValue &r)
+inline DictValue& DictValue::operator=(const DictValue& r)
 {
     if (&r == this)
         return *this;
 
     if (r.type == Param::INT)
     {
-        AutoBuffer<int64, 1> *tmp = new AutoBuffer<int64, 1>(*r.pi);
+        AutoBuffer<int64, 1>* tmp = new AutoBuffer<int64, 1>(*r.pi);
         release();
         pi = tmp;
     }
     else if (r.type == Param::STRING)
     {
-        AutoBuffer<String, 1> *tmp = new AutoBuffer<String, 1>(*r.ps);
+        AutoBuffer<String, 1>* tmp = new AutoBuffer<String, 1>(*r.ps);
         release();
         ps = tmp;
     }
     else if (r.type == Param::REAL)
     {
-        AutoBuffer<double, 1> *tmp = new AutoBuffer<double, 1>(*r.pd);
+        AutoBuffer<double, 1>* tmp = new AutoBuffer<double, 1>(*r.pd);
         release();
         pd = tmp;
     }
@@ -246,7 +233,7 @@ inline DictValue & DictValue::operator=(const DictValue &r)
     return *this;
 }
 
-inline DictValue::DictValue(const DictValue &r)
+inline DictValue::DictValue(const DictValue& r)
 {
     type = r.type;
 
@@ -258,20 +245,11 @@ inline DictValue::DictValue(const DictValue &r)
         pd = new AutoBuffer<double, 1>(*r.pd);
 }
 
-inline bool DictValue::isString() const
-{
-    return (type == Param::STRING);
-}
+inline bool DictValue::isString() const { return (type == Param::STRING); }
 
-inline bool DictValue::isInt() const
-{
-    return (type == Param::INT);
-}
+inline bool DictValue::isInt() const { return (type == Param::INT); }
 
-inline bool DictValue::isReal() const
-{
-    return (type == Param::REAL || type == Param::INT);
-}
+inline bool DictValue::isReal() const { return (type == Param::REAL || type == Param::INT); }
 
 inline int DictValue::size() const
 {
@@ -297,7 +275,7 @@ inline int DictValue::size() const
     CV_Error_(Error::StsInternal, ("Unhandled type (%d)", static_cast<int>(type)));
 }
 
-inline std::ostream &operator<<(std::ostream &stream, const DictValue &dictv)
+inline std::ostream& operator<<(std::ostream& stream, const DictValue& dictv)
 {
     int i;
 
@@ -325,24 +303,21 @@ inline std::ostream &operator<<(std::ostream &stream, const DictValue &dictv)
 
 /////////////////////////////////////////////////////////////////
 
-inline bool Dict::has(const String &key) const
-{
-    return dict.count(key) != 0;
-}
+inline bool Dict::has(const String& key) const { return dict.count(key) != 0; }
 
-inline DictValue *Dict::ptr(const String &key)
+inline DictValue* Dict::ptr(const String& key)
 {
     _Dict::iterator i = dict.find(key);
     return (i == dict.end()) ? NULL : &i->second;
 }
 
-inline const DictValue *Dict::ptr(const String &key) const
+inline const DictValue* Dict::ptr(const String& key) const
 {
     _Dict::const_iterator i = dict.find(key);
     return (i == dict.end()) ? NULL : &i->second;
 }
 
-inline const DictValue &Dict::get(const String &key) const
+inline const DictValue& Dict::get(const String& key) const
 {
     _Dict::const_iterator i = dict.find(key);
     if (i == dict.end())
@@ -350,14 +325,14 @@ inline const DictValue &Dict::get(const String &key) const
     return i->second;
 }
 
-template <typename T>
-inline T Dict::get(const String &key) const
+template<typename T>
+inline T Dict::get(const String& key) const
 {
     return this->get(key).get<T>();
 }
 
-template <typename T>
-inline T Dict::get(const String &key, const T &defaultValue) const
+template<typename T>
+inline T Dict::get(const String& key, const T& defaultValue) const
 {
     _Dict::const_iterator i = dict.find(key);
 
@@ -368,7 +343,7 @@ inline T Dict::get(const String &key, const T &defaultValue) const
 }
 
 template<typename T>
-inline const T &Dict::set(const String &key, const T &value)
+inline const T& Dict::set(const String& key, const T& value)
 {
     _Dict::iterator i = dict.find(key);
 
@@ -380,12 +355,9 @@ inline const T &Dict::set(const String &key, const T &value)
     return value;
 }
 
-inline void Dict::erase(const String &key)
-{
-    dict.erase(key);
-}
+inline void Dict::erase(const String& key) { dict.erase(key); }
 
-inline std::ostream &operator<<(std::ostream &stream, const Dict &dict)
+inline std::ostream& operator<<(std::ostream& stream, const Dict& dict)
 {
     Dict::_Dict::const_iterator it;
     for (it = dict.dict.begin(); it != dict.dict.end(); it++)
@@ -394,18 +366,11 @@ inline std::ostream &operator<<(std::ostream &stream, const Dict &dict)
     return stream;
 }
 
-inline std::map<String, DictValue>::const_iterator Dict::begin() const
-{
-    return dict.begin();
-}
+inline std::map<String, DictValue>::const_iterator Dict::begin() const { return dict.begin(); }
 
-inline std::map<String, DictValue>::const_iterator Dict::end() const
-{
-    return dict.end();
-}
+inline std::map<String, DictValue>::const_iterator Dict::end() const { return dict.end(); }
 
 CV__DNN_INLINE_NS_END
-}
-}
+}} // namespace cv::dnn
 
 #endif

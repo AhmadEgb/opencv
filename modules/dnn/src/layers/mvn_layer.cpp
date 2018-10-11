@@ -46,14 +46,11 @@
 #include <opencv2/dnn/shape_utils.hpp>
 
 #ifdef HAVE_OPENCL
-#include "../ocl4dnn/include/math_functions.hpp"
-#include "opencl_kernels_dnn.hpp"
+#    include "../ocl4dnn/include/math_functions.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class MVNLayerImpl CV_FINAL : public MVNLayer
 {
@@ -79,7 +76,7 @@ public:
     Ptr<ReLULayer> activ_relu;
     float relu_slope;
     bool fuse_relu;
-    bool zeroDev;  // TODO: Doesn't considered in Intel's Inference Engine backend.
+    bool zeroDev; // TODO: Doesn't considered in Intel's Inference Engine backend.
     bool setActivation(const Ptr<ActivationLayer>& layer) CV_OVERRIDE
     {
         if (!layer.empty() && !fuse_relu && !fuse_batch_norm)
@@ -92,7 +89,7 @@ public:
         if (!layer.empty() && preferableTarget == DNN_TARGET_OPENCL)
         {
             activ_relu = layer.dynamicCast<ReLULayer>();
-            if( !activ_relu.empty() )
+            if (!activ_relu.empty())
                 relu_slope = activ_relu->negativeSlope;
         }
         fuse_relu = !activ_relu.empty();
@@ -105,7 +102,7 @@ public:
         inputs_arr.getMatVector(inputs);
         int splitDim = (acrossChannels) ? 1 : 2;
         int i, newRows = 1;
-        for( i = 0; i < splitDim; i++ )
+        for (i = 0; i < splitDim; i++)
             newRows *= inputs[0].size[i];
         zeroDev = inputs[0].total() == newRows;
 #ifdef HAVE_OPENCL
@@ -123,7 +120,7 @@ public:
     }
 
 #ifdef HAVE_OPENCL
-    bool fast_forward_ocl(std::vector<UMat> &inputs, std::vector<UMat> &outputs)
+    bool fast_forward_ocl(std::vector<UMat>& inputs, std::vector<UMat>& outputs)
     {
         if (umat_scale.empty() && !scale.empty())
             scale.copyTo(umat_scale);
@@ -139,19 +136,19 @@ public:
         int splitDim = (acrossChannels) ? 1 : 2;
         for (size_t inpIdx = 0; inpIdx < inputs.size(); inpIdx++)
         {
-            UMat &inpMat = inputs[inpIdx];
-            UMat &outMat = outputs[inpIdx];
+            UMat& inpMat = inputs[inpIdx];
+            UMat& outMat = outputs[inpIdx];
             int newRows = total(shape(inpMat), 0, splitDim);
 
             MatShape s = shape(newRows, inpMat.total() / newRows);
             UMat meanMat = UMat(s[0], 1, (use_half) ? CV_16S : CV_32F);
-            UMat tmpMat  = UMat(s[0], s[1], CV_32F);
+            UMat tmpMat = UMat(s[0], s[1], CV_32F);
             float alpha = 1.0f / s[1];
 
             String buildopt = "-DNUM=4" + opts;
             ocl::Kernel k("mean_fuse4", ocl::dnn::mvn_oclsrc, buildopt);
-            size_t localsize[] = { 128 };
-            size_t globalsize[] = { (size_t)s[0] / 4 * localsize[0] };
+            size_t localsize[] = {128};
+            size_t globalsize[] = {(size_t)s[0] / 4 * localsize[0]};
 
             int argId = 0;
             k.set(argId++, ocl::KernelArg::PtrReadOnly(inpMat));
@@ -215,24 +212,24 @@ public:
 
         for (size_t inpIdx = 0; inpIdx < inputs.size(); inpIdx++)
         {
-            UMat &inpMat = inputs[inpIdx];
-            UMat &outMat = outputs[inpIdx];
+            UMat& inpMat = inputs[inpIdx];
+            UMat& outMat = outputs[inpIdx];
             int newRows = total(shape(inpMat), 0, splitDim);
 
             MatShape s = shape(newRows, inpMat.total() / newRows);
             UMat oneMat = UMat::ones(s[1], 1, CV_32F);
             UMat meanMat = UMat(s[0], 1, CV_32F);
-            UMat devMat  = UMat(s[0], 1, CV_32F);
-            UMat tmpMat  = UMat(s[0], s[1], CV_32F);
+            UMat devMat = UMat(s[0], 1, CV_32F);
+            UMat tmpMat = UMat(s[0], s[1], CV_32F);
             float alpha = 1.0f / s[1];
 
-            bool ret = ocl4dnn::ocl4dnnGEMV<float>(ocl4dnn::CblasNoTrans, s[0], s[1], alpha,
-                                                   inpMat, 0, oneMat, 0, 0.0f, meanMat, 0);
+            bool ret = ocl4dnn::ocl4dnnGEMV<float>(ocl4dnn::CblasNoTrans, s[0], s[1], alpha, inpMat, 0, oneMat, 0,
+                                                   0.0f, meanMat, 0);
             if (!ret)
                 return false;
 
             int number = (s[1] % 8 == 0) ? 8 : ((s[1] % 4 == 0) ? 4 : 1);
-            size_t global[] = { (size_t)s[0], (size_t)(s[1] / number) };
+            size_t global[] = {(size_t)s[0], (size_t)(s[1] / number)};
             String buildopt = format("-DNUM=%d", number) + opts;
             if (normVariance)
             {
@@ -250,16 +247,15 @@ public:
                 if (!ret)
                     return false;
 
-                ret = ocl4dnn::ocl4dnnGEMV<float>(ocl4dnn::CblasNoTrans, s[0], s[1], alpha,
-                                                  tmpMat, 0, oneMat, 0, 0.0f, devMat, 0);
+                ret = ocl4dnn::ocl4dnnGEMV<float>(ocl4dnn::CblasNoTrans, s[0], s[1], alpha, tmpMat, 0, oneMat, 0,
+                                                  0.0f, devMat, 0);
                 if (!ret)
                     return false;
             }
 
             String kname = format("mvn%d", number);
             buildopt += format("%s%s%s", (normVariance) ? " -DNORM_VARIANCE" : "",
-                               (fuse_batch_norm) ? " -DFUSE_BATCH_NORM" : "",
-                               (fuse_relu) ? " -DFUSE_RELU" : "");
+                               (fuse_batch_norm) ? " -DFUSE_BATCH_NORM" : "", (fuse_relu) ? " -DFUSE_RELU" : "");
             ocl::Kernel kernel1(kname.c_str(), ocl::dnn::mvn_oclsrc, buildopt);
             if (kernel1.empty())
                 return false;
@@ -282,13 +278,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -303,18 +299,18 @@ public:
 
         for (size_t inpIdx = 0; inpIdx < inputs.size(); inpIdx++)
         {
-            Mat &inpBlob = inputs[inpIdx];
-            Mat &outBlob = outputs[inpIdx];
+            Mat& inpBlob = inputs[inpIdx];
+            Mat& outBlob = outputs[inpIdx];
 
             int splitDim = (acrossChannels) ? 1 : 2;
             int i, newRows = 1;
-            for( i = 0; i < splitDim; i++ )
+            for (i = 0; i < splitDim; i++)
                 newRows *= inpBlob.size[i];
 
             Mat inpMat = inpBlob.reshape(1, newRows);
             Mat outMat = outBlob.reshape(1, newRows);
 
-            if ( inpBlob.total() == newRows )
+            if (inpBlob.total() == newRows)
             {
                 // MVN is applied to single values at an every row.
                 if (shift.empty())
@@ -323,7 +319,7 @@ public:
                 }
                 else
                 {
-                    for ( i = 0; i < newRows; i++ )
+                    for (i = 0; i < newRows; i++)
                     {
                         outMat.row(i).setTo(((float*)shift.data)[i]);
                     }
@@ -332,7 +328,7 @@ public:
             }
 
             Scalar mean, dev;
-            for ( i = 0; i < newRows; i++)
+            for (i = 0; i < newRows; i++)
             {
                 Mat inpRow = inpMat.row(i);
                 Mat outRow = outMat.row(i);
@@ -344,7 +340,7 @@ public:
                     bias = i < shift.cols ? ((float*)shift.data)[i] : bias;
                 }
                 cv::meanStdDev(inpRow, mean, (normVariance) ? dev : noArray());
-                double alpha = (normVariance) ? 1/(eps + dev[0]) : 1;
+                double alpha = (normVariance) ? 1 / (eps + dev[0]) : 1;
                 double normalizationScale = 1.0;
                 double normalizationShift = 0.0;
                 if (fuse_batch_norm)
@@ -362,7 +358,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -374,27 +370,22 @@ public:
         ieLayer->params["normalize_variance"] = normVariance ? "1" : "0";
         ieLayer->params["eps"] = format("%f", eps);
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(outputs); // suppress unused variable warning
         long flops = 0;
-        for(int i = 0; i < inputs.size(); i++)
+        for (int i = 0; i < inputs.size(); i++)
         {
-            flops += 6*total(inputs[i]) + 3*total(inputs[i], 0, normVariance ? 2 : 1);
+            flops += 6 * total(inputs[i]) + 3 * total(inputs[i], 0, normVariance ? 2 : 1);
         }
         return flops;
     }
 };
 
-Ptr<MVNLayer> MVNLayer::create(const LayerParams& params)
-{
-    return Ptr<MVNLayer>(new MVNLayerImpl(params));
-}
+Ptr<MVNLayer> MVNLayer::create(const LayerParams& params) { return Ptr<MVNLayer>(new MVNLayerImpl(params)); }
 
-}
-}
+}} // namespace cv::dnn

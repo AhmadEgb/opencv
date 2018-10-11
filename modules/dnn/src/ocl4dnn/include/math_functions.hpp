@@ -44,43 +44,30 @@
 #define _OPENCV_GREENTEA_MATH_FUNCTIONS_HPP_
 #include "common.hpp"
 
-namespace cv
+namespace cv { namespace dnn { namespace ocl4dnn {
+
+enum CBLAS_TRANSPOSE
 {
-namespace dnn
-{
-namespace ocl4dnn
-{
-
-enum CBLAS_TRANSPOSE {CblasNoTrans=111, CblasTrans=112, CblasConjTrans=113};
+    CblasNoTrans = 111,
+    CblasTrans = 112,
+    CblasConjTrans = 113
+};
 
 template<typename Dtype>
-bool ocl4dnnGEMMCommon(const CBLAS_TRANSPOSE TransB,
-                       const int32_t M, const int32_t N, const int32_t K,
-                       const UMat A, const UMat B,
-                       const UMat B_image, UMat C,
-                       const size_t max_image_size);
+bool ocl4dnnGEMMCommon(const CBLAS_TRANSPOSE TransB, const int32_t M, const int32_t N, const int32_t K,
+                       const UMat A, const UMat B, const UMat B_image, UMat C, const size_t max_image_size);
 
 template<typename Dtype>
-ocl::Image2D ocl4dnnGEMMCopyBufferToImage(UMat buffer, int offset,
-                                          bool is_matrix_a, bool transpose,
-                                          bool padding, int padded_height,
-                                          int padded_width, int height,
-                                          int width,  int ld);
+ocl::Image2D ocl4dnnGEMMCopyBufferToImage(UMat buffer, int offset, bool is_matrix_a, bool transpose, bool padding,
+                                          int padded_height, int padded_width, int height, int width, int ld);
 
 template<typename Dtype>
-bool ocl4dnnGEMV(const CBLAS_TRANSPOSE TransA,
-                 const int32_t M, const int32_t N, const Dtype alpha,
-                 const UMat A, const int32_t offA, const UMat x,
-                 const int32_t offx, const Dtype beta, UMat y,
-                 const int32_t offy);
+bool ocl4dnnGEMV(const CBLAS_TRANSPOSE TransA, const int32_t M, const int32_t N, const Dtype alpha, const UMat A,
+                 const int32_t offA, const UMat x, const int32_t offx, const Dtype beta, UMat y, const int32_t offy);
 
 template<typename Dtype>
-bool ocl4dnnAXPY(const int32_t N, const Dtype alpha,
-                 const UMat x, const int32_t offx, UMat y,
-                 const int32_t offy);
+bool ocl4dnnAXPY(const int32_t N, const Dtype alpha, const UMat x, const int32_t offx, UMat y, const int32_t offy);
 
-} // namespace ocl4dnn
-} // namespace dnn
-} // namespce cv
+}}} // namespace cv::dnn::ocl4dnn
 
 #endif

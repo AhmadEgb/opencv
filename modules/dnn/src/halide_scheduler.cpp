@@ -9,14 +9,10 @@
 #include "halide_scheduler.hpp"
 #include "op_halide.hpp"
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 #ifdef HAVE_HALIDE
-static void applySplit(const FileNode& directive, Halide::Func& func,
-                       const FileNode& params)
+static void applySplit(const FileNode& directive, Halide::Func& func, const FileNode& params)
 {
     for (const auto& varNode : directive)
     {
@@ -26,8 +22,7 @@ static void applySplit(const FileNode& directive, Halide::Func& func,
         Halide::Var outerVar(varName + "o");
         Halide::Var innerVar(varName + "i");
         // If split factor is integer or parameters map has parameter value.
-        CV_Assert(varNode.isString() && !params[factorName].empty() ||
-                  varNode.isInt());
+        CV_Assert(varNode.isString() && !params[factorName].empty() || varNode.isInt());
         int factor = (int)(varNode.isInt() ? varNode : params[factorName]);
         func.split(var, outerVar, innerVar, factor);
     }
@@ -88,16 +83,14 @@ static void applyUnroll(const FileNode& directive, Halide::Func& func)
     }
 }
 
-static void applyVectorize(const FileNode& directive, Halide::Func& func,
-                           const FileNode& params)
+static void applyVectorize(const FileNode& directive, Halide::Func& func, const FileNode& params)
 {
     for (const auto& varNode : directive)
     {
         const std::string varName = varNode.name();
         const std::string factorName = (std::string)varNode;
         // If split factor is integer or parameters map has parameter value.
-        CV_Assert(varNode.isString() && !params[factorName].empty() ||
-                  varNode.isInt());
+        CV_Assert(varNode.isString() && !params[factorName].empty() || varNode.isInt());
         int factor = (int)(varNode.isInt() ? varNode : params[factorName]);
         Halide::Var var(varName);
         Halide::Var inner(varName + "v");
@@ -106,15 +99,14 @@ static void applyVectorize(const FileNode& directive, Halide::Func& func,
     }
 }
 
-static void applyStoreAt(const FileNode& directive, Halide::Func& func,
-                         std::map<std::string, Halide::Func>& funcsMap)
+static void applyStoreAt(const FileNode& directive, Halide::Func& func, std::map<std::string, Halide::Func>& funcsMap)
 {
     for (const auto& funcNode : directive)
     {
         const std::string targetFuncName = funcNode.name();
         if (funcsMap.find(targetFuncName) == funcsMap.end())
-            CV_Error(cv::Error::StsParseError, "Function " + targetFuncName +
-                     " is not represented in Halide pipeline");
+            CV_Error(cv::Error::StsParseError,
+                     "Function " + targetFuncName + " is not represented in Halide pipeline");
         Halide::Func targetFunc = funcsMap[targetFuncName];
         func.store_at(targetFunc, (std::string)funcNode);
         break;
@@ -128,8 +120,8 @@ static void applyComputeAt(const FileNode& directive, Halide::Func& func,
     {
         const std::string targetFuncName = funcNode.name();
         if (funcsMap.find(targetFuncName) == funcsMap.end())
-            CV_Error(cv::Error::StsParseError, "Function " + targetFuncName +
-                     " is not represented in Halide pipeline");
+            CV_Error(cv::Error::StsParseError,
+                     "Function " + targetFuncName + " is not represented in Halide pipeline");
         Halide::Func targetFunc = funcsMap[targetFuncName];
         func.compute_at(targetFunc, (std::string)funcNode);
         break;
@@ -164,8 +156,7 @@ static void applyGpuThreads(const FileNode& directive, Halide::Func& func)
     }
 }
 
-static void apply(const FileNode& directives, Halide::Func& func,
-                  std::map<std::string, Halide::Func>& funcsMap,
+static void apply(const FileNode& directives, Halide::Func& func, std::map<std::string, Halide::Func>& funcsMap,
                   const FileNode& params)
 {
     for (const auto& directive : directives)
@@ -193,8 +184,7 @@ static void apply(const FileNode& directives, Halide::Func& func,
         else if (directive.name() == "gpu_threads")
             applyGpuThreads(directive, func);
         else
-            CV_Error(Error::StsNotImplemented, "Scheduling directive " +
-                     directive.name() + " is not implemented.");
+            CV_Error(Error::StsNotImplemented, "Scheduling directive " + directive.name() + " is not implemented.");
     }
 }
 
@@ -210,11 +200,10 @@ static std::string Deunique(std::string str)
             int len = str.find_first_not_of("0123456789", pos + 1) - pos;
             str = str.replace(pos, len, "");
         }
-    }
-    while (pos != -1);
+    } while (pos != -1);
     return str;
 }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 HalideScheduler::HalideScheduler(const std::string& configFile)
 {
@@ -239,7 +228,7 @@ bool HalideScheduler::process(Ptr<BackendNode>& node)
         CV_Error(cv::Error::StsParseError, "Scheduling file should has scheduling node");
 
     std::string str;
-    std::map<std::string, Halide::Func> funcsMap;  // Scheduled functions.
+    std::map<std::string, Halide::Func> funcsMap; // Scheduled functions.
     // For every function, from top to bottom, we try to find a scheduling node.
     // Scheduling is successful (return true) if for the first function (top)
     // node is represented.
@@ -260,8 +249,7 @@ bool HalideScheduler::process(Ptr<BackendNode>& node)
             {
                 funcNode["pattern"] >> str;
                 if (fs["patterns"][str].empty())
-                    CV_Error(cv::Error::StsParseError, "Scheduling pattern " + str +
-                                                       " is not defined");
+                    CV_Error(cv::Error::StsParseError, "Scheduling pattern " + str + " is not defined");
                 apply(fs["patterns"][str], func, funcsMap, funcNode["params"]);
             }
             else
@@ -277,9 +265,8 @@ bool HalideScheduler::process(Ptr<BackendNode>& node)
         funcsMap[funcName] = func;
     }
     return true;
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
     return false;
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

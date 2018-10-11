@@ -52,7 +52,7 @@ OCL4DNNLRN<Dtype>::OCL4DNNLRN(OCL4DNNLRNConfig config)
     lrn_type_ = config.lrn_type;
     phase_test_ = config.phase_test;
     size_ = config.local_size;
-    CHECK_EQ(size_ % 2, 1)<< "LRN only supports odd values for local_size";
+    CHECK_EQ(size_ % 2, 1) << "LRN only supports odd values for local_size";
     alpha_ = config.alpha;
     beta_ = config.beta;
     k_ = config.k;
@@ -81,7 +81,7 @@ bool OCL4DNNLRN<Dtype>::Forward(const UMat& bottom, UMat& top)
         break;
     default:
         ret = false;
-        LOG(FATAL)<< "Unknown normalization region.";
+        LOG(FATAL) << "Unknown normalization region.";
     }
     return ret;
 }

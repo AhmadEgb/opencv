@@ -14,15 +14,12 @@ Implementation of padding layer, which adds paddings to input blob.
 #include "../op_halide.hpp"
 #include <vector>
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class PaddingLayerImpl CV_FINAL : public PaddingLayer
 {
 public:
-    PaddingLayerImpl(const LayerParams &params)
+    PaddingLayerImpl(const LayerParams& params)
     {
         setParamsFrom(params);
         paddingValue = params.get<float>("value", 0);
@@ -36,16 +33,14 @@ public:
         paddings.resize(paddingsParam.size() / 2);
         for (int i = 0; i < paddings.size(); ++i)
         {
-            paddings[i].first = paddingsParam.get<int>(i * 2);  // Pad before.
-            paddings[i].second = paddingsParam.get<int>(i * 2 + 1);  // Pad after.
+            paddings[i].first = paddingsParam.get<int>(i * 2); // Pad before.
+            paddings[i].second = paddingsParam.get<int>(i * 2 + 1); // Pad after.
             CV_Assert_N(paddings[i].first >= 0, paddings[i].second >= 0);
         }
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 1);
         const MatShape& inpShape = inputs[0];
@@ -90,11 +85,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_HALIDE && haveHalide() && dstRanges.size() == 4;
+        return backendId == DNN_BACKEND_OPENCV
+               || backendId == DNN_BACKEND_HALIDE && haveHalide() && dstRanges.size() == 4;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -134,17 +130,17 @@ public:
             const int padBottom = outHeight - dstRanges[2].end;
             const int padLeft = dstRanges[3].start;
             const int padRight = outWidth - dstRanges[3].end;
-            CV_CheckLT(padTop, inpHeight, ""); CV_CheckLT(padBottom, inpHeight, "");
-            CV_CheckLT(padLeft, inpWidth, ""); CV_CheckLT(padRight, inpWidth, "");
+            CV_CheckLT(padTop, inpHeight, "");
+            CV_CheckLT(padBottom, inpHeight, "");
+            CV_CheckLT(padLeft, inpWidth, "");
+            CV_CheckLT(padRight, inpWidth, "");
 
             for (size_t n = 0; n < inputs[0].size[0]; ++n)
             {
                 for (size_t ch = 0; ch < inputs[0].size[1]; ++ch)
                 {
-                    copyMakeBorder(getPlane(inputs[0], n, ch),
-                                   getPlane(outputs[0], n, ch),
-                                   padTop, padBottom, padLeft, padRight,
-                                   BORDER_REFLECT_101);
+                    copyMakeBorder(getPlane(inputs[0], n, ch), getPlane(outputs[0], n, ch), padTop, padBottom,
+                                   padLeft, padRight, BORDER_REFLECT_101);
                 }
             }
         }
@@ -152,7 +148,7 @@ public:
             CV_Error(Error::StsNotImplemented, "Unknown padding type: " + paddingType);
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         int inW, inH, inC, inN;
@@ -165,26 +161,24 @@ public:
 
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = (name.empty() ? Halide::Func() : Halide::Func(name));
-        Halide::Func padded =
-            Halide::BoundaryConditions::constant_exterior(inputBuffer, paddingValue);
+        Halide::Func padded = Halide::BoundaryConditions::constant_exterior(inputBuffer, paddingValue);
         top(x, y, c, n) = padded(x - minX, y - minY, c - minC, n - minN);
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
 private:
-    std::vector<std::pair<int, int> > paddings;  // Pairs pad before, pad after.
+    std::vector<std::pair<int, int>> paddings; // Pairs pad before, pad after.
     std::vector<Range> dstRanges;
     int inputDims;
     float paddingValue;
     std::string paddingType;
 };
 
-Ptr<PaddingLayer> PaddingLayer::create(const LayerParams &params)
+Ptr<PaddingLayer> PaddingLayer::create(const LayerParams& params)
 {
     return Ptr<PaddingLayer>(new PaddingLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

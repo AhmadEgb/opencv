@@ -42,28 +42,19 @@
 #include "../precomp.hpp"
 #include "../op_inf_engine.hpp"
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 class BlankLayerImpl CV_FINAL : public BlankLayer
 {
 public:
-    BlankLayerImpl(const LayerParams& params)
-    {
-        setParamsFrom(params);
-    }
+    BlankLayerImpl(const LayerParams& params) { setParamsFrom(params); }
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         Layer::getMemoryShapes(inputs, requiredOutputs, outputs, internals);
         return true;
@@ -80,8 +71,8 @@ public:
 
         for (int i = 0, n = outputs.size(); i < n; ++i)
         {
-            void *src_handle = inputs[i].handle(ACCESS_READ);
-            void *dst_handle = outputs[i].handle(ACCESS_WRITE);
+            void* src_handle = inputs[i].handle(ACCESS_READ);
+            void* dst_handle = outputs[i].handle(ACCESS_WRITE);
             if (src_handle != dst_handle)
                 inputs[i].copyTo(outputs[i]);
         }
@@ -90,13 +81,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         std::vector<Mat> inputs, outputs;
         inputs_arr.getMatVector(inputs);
@@ -107,7 +98,7 @@ public:
                 inputs[i].copyTo(outputs[i]);
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -116,7 +107,7 @@ public:
         lp.precision = InferenceEngine::Precision::FP32;
         std::shared_ptr<InferenceEngine::SplitLayer> ieLayer(new InferenceEngine::SplitLayer(lp));
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 };
@@ -142,5 +133,4 @@ Ptr<Layer> BlankLayer::create(const LayerParams& params)
         return Ptr<BlankLayer>(new BlankLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

@@ -47,22 +47,22 @@
 #include <opencv2/dnn/shape_utils.hpp>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 using namespace cv::dnn::ocl4dnn;
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class FullyConnectedLayerImpl CV_FINAL : public InnerProductLayer
 {
 public:
-    enum { VEC_ALIGN = 8 };
+    enum
+    {
+        VEC_ALIGN = 8
+    };
 
 #ifdef HAVE_OPENCL
-    Ptr<OCL4DNNInnerProduct<float> > innerProductOp;
+    Ptr<OCL4DNNInnerProduct<float>> innerProductOp;
     std::vector<UMat> umat_blobs;
     std::vector<UMat> half_blobs;
 #endif
@@ -82,7 +82,7 @@ public:
 
         weightsMat = blobs[0] = blobs[0].reshape(1, numOutput);
         int vecsize = weightsMat.cols;
-        if( vecsize % VEC_ALIGN != 0 )
+        if (vecsize % VEC_ALIGN != 0)
         {
             int vecsize_aligned = (int)alignSize(vecsize, VEC_ALIGN);
             Mat weightsBuf(weightsMat.rows, vecsize_aligned, weightsMat.type());
@@ -98,10 +98,8 @@ public:
             biasMat = Mat::zeros(1, numOutput, weightsMat.type());
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>&) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 1);
         CV_Assert(1 <= blobs.size() && blobs.size() <= 2);
@@ -122,9 +120,8 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_HALIDE && haveHalide() && axis == 1 ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine() && axis == 1;
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE && haveHalide() && axis == 1
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine() && axis == 1;
     }
 
     virtual bool setActivation(const Ptr<ActivationLayer>& layer) CV_OVERRIDE
@@ -141,17 +138,21 @@ public:
     class FullyConnected : public ParallelLoopBody
     {
     public:
-        FullyConnected() : srcMat(0), weights(0), biasMat(0), activ(0), dstMat(0), nstripes(0), useAVX(false), useAVX2(false), useAVX512(false) {}
-
-        static void run(const Mat& srcMat, const Mat& weights, const Mat& biasMat,
-                        Mat& dstMat, const ActivationLayer* activ, int nstripes)
+        FullyConnected()
+            : srcMat(0), weights(0), biasMat(0), activ(0), dstMat(0), nstripes(0), useAVX(false), useAVX2(false),
+              useAVX512(false)
         {
-            CV_Assert( srcMat.dims == 2 && srcMat.cols == weights.cols &&
-                       dstMat.rows == srcMat.rows && dstMat.cols == weights.rows &&
-                       srcMat.type() == weights.type() && weights.type() == dstMat.type() &&
-                       srcMat.type() == CV_32F &&
-                       (biasMat.empty() || (biasMat.type() == srcMat.type() &&
-                                           biasMat.isContinuous() && (int)biasMat.total() == dstMat.cols)) );
+        }
+
+        static void run(const Mat& srcMat, const Mat& weights, const Mat& biasMat, Mat& dstMat,
+                        const ActivationLayer* activ, int nstripes)
+        {
+            CV_Assert(srcMat.dims == 2 && srcMat.cols == weights.cols && dstMat.rows == srcMat.rows
+                      && dstMat.cols == weights.rows && srcMat.type() == weights.type()
+                      && weights.type() == dstMat.type() && srcMat.type() == CV_32F
+                      && (biasMat.empty()
+                          || (biasMat.type() == srcMat.type() && biasMat.isContinuous()
+                              && (int)biasMat.total() == dstMat.cols)));
 
             FullyConnected p;
 
@@ -175,82 +176,82 @@ public:
             int nw0 = weights->rows;
             int k, vecsize = srcMat->cols;
             int vecsize_aligned = (int)alignSize(vecsize, VEC_ALIGN);
-            size_t total = (size_t)nsamples*nw0;
-            size_t stripeSize = (total + nstripes - 1)/nstripes;
-            size_t stripeStart = r.start*stripeSize;
-            size_t stripeEnd = r.end == nstripes ? total : std::min(r.end*stripeSize, total);
+            size_t total = (size_t)nsamples * nw0;
+            size_t stripeSize = (total + nstripes - 1) / nstripes;
+            size_t stripeStart = r.start * stripeSize;
+            size_t stripeEnd = r.end == nstripes ? total : std::min(r.end * stripeSize, total);
             size_t wstep = weights->step1();
             AutoBuffer<float> srcbuf(vecsize_aligned + valign);
-            float* sptr = alignPtr(srcbuf.data(), (int)(valign*sizeof(float)));
+            float* sptr = alignPtr(srcbuf.data(), (int)(valign * sizeof(float)));
 
-            for( k = vecsize; k < vecsize_aligned; k++ )
+            for (k = vecsize; k < vecsize_aligned; k++)
                 sptr[k] = 0.f;
 
-            for( size_t ofs = stripeStart; ofs < stripeEnd; )
+            for (size_t ofs = stripeStart; ofs < stripeEnd;)
             {
                 int sampleIdx = (int)(ofs / nw0);
-                int delta = (int)(ofs - (size_t)sampleIdx*nw0);
+                int delta = (int)(ofs - (size_t)sampleIdx * nw0);
                 const float* sptr_ = srcMat->ptr<float>(sampleIdx);
                 const float* wptr = weights->ptr<float>(delta);
                 float* dptr = dstMat->ptr<float>(sampleIdx) + delta;
                 const float* biasptr = biasMat->ptr<float>() + delta;
                 int nw = std::min(nw0 - delta, (int)(stripeEnd - ofs));
 
-                memcpy(sptr, sptr_, vecsize*sizeof(sptr[0]));
+                memcpy(sptr, sptr_, vecsize * sizeof(sptr[0]));
 
-            #if CV_TRY_AVX512_SKX
-                if( useAVX512 )
-                    opt_AVX512_SKX::fastGEMM1T( sptr, wptr, wstep, biasptr, dptr, nw, vecsize);
+#if CV_TRY_AVX512_SKX
+                if (useAVX512)
+                    opt_AVX512_SKX::fastGEMM1T(sptr, wptr, wstep, biasptr, dptr, nw, vecsize);
                 else
-            #endif
-            #if CV_TRY_AVX2
-                if( useAVX2 )
-                    opt_AVX2::fastGEMM1T( sptr, wptr, wstep, biasptr, dptr, nw, vecsize);
+#endif
+#if CV_TRY_AVX2
+                    if (useAVX2)
+                    opt_AVX2::fastGEMM1T(sptr, wptr, wstep, biasptr, dptr, nw, vecsize);
                 else
-            #endif
-            #if CV_TRY_AVX
-                if( useAVX )
-                    opt_AVX::fastGEMM1T( sptr, wptr, wstep, biasptr, dptr, nw, vecsize);
+#endif
+#if CV_TRY_AVX
+                    if (useAVX)
+                    opt_AVX::fastGEMM1T(sptr, wptr, wstep, biasptr, dptr, nw, vecsize);
                 else
-            #endif
+#endif
                 {
                     int i = 0;
 
-            #if CV_SIMD128
-                    for( ; i <= nw - 4; i += 4, wptr += 4*wstep )
+#if CV_SIMD128
+                    for (; i <= nw - 4; i += 4, wptr += 4 * wstep)
                     {
                         v_float32x4 vs0 = v_setall_f32(0.f), vs1 = v_setall_f32(0.f);
                         v_float32x4 vs2 = v_setall_f32(0.f), vs3 = v_setall_f32(0.f);
 
-                        for( k = 0; k < vecsize; k += 4 )
+                        for (k = 0; k < vecsize; k += 4)
                         {
                             v_float32x4 v = v_load_aligned(sptr + k);
-                            vs0 += v*v_load_aligned(wptr + k);
-                            vs1 += v*v_load_aligned(wptr + wstep + k);
-                            vs2 += v*v_load_aligned(wptr + wstep*2 + k);
-                            vs3 += v*v_load_aligned(wptr + wstep*3 + k);
+                            vs0 += v * v_load_aligned(wptr + k);
+                            vs1 += v * v_load_aligned(wptr + wstep + k);
+                            vs2 += v * v_load_aligned(wptr + wstep * 2 + k);
+                            vs3 += v * v_load_aligned(wptr + wstep * 3 + k);
                         }
 
                         v_float32x4 s = v_reduce_sum4(vs0, vs1, vs2, vs3);
                         s += v_load(biasptr + i);
                         v_store(dptr + i, s);
                     }
-            #endif
+#endif
 
-                    for( ; i < nw; i++, wptr += wstep )
+                    for (; i < nw; i++, wptr += wstep)
                     {
-                        float s0=biasptr[i];
+                        float s0 = biasptr[i];
 
-                        for( k = 0; k < vecsize; k++ )
+                        for (k = 0; k < vecsize; k++)
                         {
                             float v = sptr[k];
-                            s0 += v*wptr[k];
+                            s0 += v * wptr[k];
                         }
                         dptr[i] = s0;
                     }
                 }
 
-                if(activ)
+                if (activ)
                     activ->forwardSlice(dptr, dptr, 1, 1, delta, delta + nw);
 
                 ofs += nw;
@@ -293,7 +294,8 @@ public:
         {
             size_t n = blobs.size();
             umat_blobs.resize(n);
-            for (int i = 0; i < n; i++) blobs[i].copyTo(umat_blobs[i]);
+            for (int i = 0; i < n; i++)
+                blobs[i].copyTo(umat_blobs[i]);
 
             OCL4DNNInnerProductConfig config;
             config.num_output = numOutput;
@@ -312,7 +314,7 @@ public:
                 }
             }
 
-            innerProductOp = Ptr<OCL4DNNInnerProduct<float> >(new OCL4DNNInnerProduct<float>(config));
+            innerProductOp = Ptr<OCL4DNNInnerProduct<float>>(new OCL4DNNInnerProduct<float>(config));
         }
 
         for (size_t i = 0; i < inputs.size(); i++)
@@ -326,8 +328,7 @@ public:
             dstMat = outputs[i].reshape(1, outshape.size(), &outshape[0]);
 
             if (!innerProductOp->Forward(srcMat, (use_half) ? half_blobs[0] : umat_blobs[0],
-                                         (bias) ? (use_half ? half_blobs[1] : umat_blobs[1]) : UMat(),
-                                         dstMat))
+                                         (bias) ? (use_half ? half_blobs[1] : umat_blobs[1]) : UMat(), dstMat))
             {
                 ret = false;
                 break;
@@ -341,7 +342,8 @@ public:
             }
         }
 
-        if (ret) return true;
+        if (ret)
+            return true;
 
         UMat& weights = umat_blobs[0];
         for (size_t i = 0; i < inputs.size(); i++)
@@ -384,13 +386,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -415,7 +417,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         int inW, inH, inC, inN, outC = blobs[0].size[0];
@@ -426,8 +428,7 @@ public:
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = (name.empty() ? Halide::Func() : Halide::Func(name));
         Halide::RDom r(0, inW, 0, inH, 0, inC);
-        Halide::Expr topExpr = sum(inputBuffer(r.x, r.y, r.z, n) *
-                                   weights(r.x, r.y, r.z, c));
+        Halide::Expr topExpr = sum(inputBuffer(r.x, r.y, r.z, n) * weights(r.x, r.y, r.z, c));
         if (bias)
         {
             Halide::Buffer<float> bias = wrapToHalideBuffer(blobs[1], {outC});
@@ -435,11 +436,11 @@ public:
         }
         top(x, y, c, n) = topExpr;
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -449,28 +450,28 @@ public:
         std::shared_ptr<InferenceEngine::FullyConnectedLayer> ieLayer(new InferenceEngine::FullyConnectedLayer(lp));
 
         ieLayer->_out_num = blobs[0].size[0];
-        ieLayer->_weights = wrapToInfEngineBlob(blobs[0], {(size_t)blobs[0].size[0], (size_t)blobs[0].size[1], 1, 1}, InferenceEngine::Layout::OIHW);
+        ieLayer->_weights = wrapToInfEngineBlob(blobs[0], {(size_t)blobs[0].size[0], (size_t)blobs[0].size[1], 1, 1},
+                                                InferenceEngine::Layout::OIHW);
         if (blobs.size() > 1)
-            ieLayer->_biases = wrapToInfEngineBlob(blobs[1], {(size_t)ieLayer->_out_num}, InferenceEngine::Layout::C);
+            ieLayer->_biases = wrapToInfEngineBlob(blobs[1], {(size_t)ieLayer->_out_num},
+                                                   InferenceEngine::Layout::C);
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(inputs); // suppress unused variable warning
         long flops = 0;
 
         int innerSize = blobs[0].size[1];
-        for(int i = 0; i < outputs.size(); i++)
+        for (int i = 0; i < outputs.size(); i++)
         {
-            flops += CV_BIG_INT(3)*innerSize*total(outputs[i]);
+            flops += CV_BIG_INT(3) * innerSize * total(outputs[i]);
         }
 
         return flops;
-
     }
 
     bool bias;
@@ -483,5 +484,4 @@ Ptr<InnerProductLayer> InnerProductLayer::create(const LayerParams& params)
     return Ptr<InnerProductLayer>(new FullyConnectedLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

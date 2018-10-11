@@ -51,18 +51,12 @@ using std::max;
 using std::min;
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 using namespace cv::dnn::ocl4dnn;
 #endif
 
-namespace cv
-{
-namespace dnn
-{
-static inline int roundRoiSize(float v)
-{
-    return (int)(v + (v >= 0.f ? 0.5f : -0.5f));
-}
+namespace cv { namespace dnn {
+static inline int roundRoiSize(float v) { return (int)(v + (v >= 0.f ? 0.5f : -0.5f)); }
 
 class PoolingLayerImpl CV_FINAL : public PoolingLayer
 {
@@ -73,8 +67,7 @@ public:
         globalPooling = false;
         stride = Size(1, 1);
 
-        if (params.has("pool") || params.has("kernel_size") ||
-            params.has("kernel_w") || params.has("kernel_h"))
+        if (params.has("pool") || params.has("kernel_size") || params.has("kernel_w") || params.has("kernel_h"))
         {
             String pool = toLowerCase(params.get<String>("pool", "max"));
             if (pool == "max")
@@ -86,8 +79,8 @@ public:
             else
                 CV_Error(Error::StsBadArg, "Unknown pooling type \"" + pool + "\"");
 
-            getPoolingKernelParams(params, kernel.height, kernel.width, globalPooling,
-                                   pad_t, pad_l, pad_b, pad_r, stride.height, stride.width, padMode);
+            getPoolingKernelParams(params, kernel.height, kernel.width, globalPooling, pad_t, pad_l, pad_b, pad_r,
+                                   stride.height, stride.width, padMode);
 
             pad.width = pad_l;
             pad.height = pad_t;
@@ -115,7 +108,7 @@ public:
     }
 
 #ifdef HAVE_OPENCL
-    Ptr<OCL4DNNPool<float> > poolOp;
+    Ptr<OCL4DNNPool<float>> poolOp;
 #endif
 
     void finalize(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr) CV_OVERRIDE
@@ -126,10 +119,9 @@ public:
 
         CV_Assert(!inputs.empty());
 
-        cv::Size inp(inputs[0].size[3], inputs[0].size[2]),
-                out(outputs[0].size[3], outputs[0].size[2]);
+        cv::Size inp(inputs[0].size[3], inputs[0].size[2]), out(outputs[0].size[3], outputs[0].size[2]);
 
-        if(globalPooling)
+        if (globalPooling)
         {
             kernel = inp;
         }
@@ -153,9 +145,9 @@ public:
                 return type != STOCHASTIC;
         }
         else
-            return backendId == DNN_BACKEND_OPENCV ||
-                   backendId == DNN_BACKEND_HALIDE && haveHalide() &&
-                   (type == MAX || type == AVE && !pad_t && !pad_l && !pad_b && !pad_r);
+            return backendId == DNN_BACKEND_OPENCV
+                   || backendId == DNN_BACKEND_HALIDE && haveHalide()
+                          && (type == MAX || type == AVE && !pad_t && !pad_l && !pad_b && !pad_r);
     }
 
 #ifdef HAVE_OPENCL
@@ -181,13 +173,13 @@ public:
             config.pad_b = pad_b;
             config.stride = stride;
             config.channels = inputs[0].size[1];
-            config.pool_method = type == MAX ? LIBDNN_POOLING_METHOD_MAX :
-                                (type == AVE ? LIBDNN_POOLING_METHOD_AVE :
-                                               LIBDNN_POOLING_METHOD_STO);
+            config.pool_method = type == MAX
+                                     ? LIBDNN_POOLING_METHOD_MAX
+                                     : (type == AVE ? LIBDNN_POOLING_METHOD_AVE : LIBDNN_POOLING_METHOD_STO);
             config.avePoolPaddedArea = avePoolPaddedArea;
             config.computeMaxIdx = computeMaxIdx;
             config.use_half = use_half;
-            poolOp = Ptr<OCL4DNNPool<float> >(new OCL4DNNPool<float>(config));
+            poolOp = Ptr<OCL4DNNPool<float>>(new OCL4DNNPool<float>(config));
         }
 
         for (size_t ii = 0; ii < inputs.size(); ii++)
@@ -206,15 +198,15 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
         if (type == MAX || type == AVE || type == STOCHASTIC)
         {
-            CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                       forward_ocl(inputs_arr, outputs_arr, internals_arr))
+            CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
         }
         if (inputs_arr.depth() == CV_16S)
         {
@@ -228,25 +220,26 @@ public:
 
         switch (type)
         {
-            case MAX:
-                CV_Assert_N(inputs.size() == 1, outputs.size() == 2);
-                maxPooling(inputs[0], outputs[0], outputs[1]);
-                break;
-            case AVE:
-                CV_Assert_N(inputs.size() == 1, outputs.size() == 1);
-                avePooling(inputs[0], outputs[0]);
-                break;
-            case ROI: case PSROI:
-                CV_Assert_N(inputs.size() == 2, outputs.size() == 1);
-                roiPooling(inputs[0], inputs[1], outputs[0]);
-                break;
-            default:
-                CV_Error(Error::StsNotImplemented, "Not implemented");
-                break;
+        case MAX:
+            CV_Assert_N(inputs.size() == 1, outputs.size() == 2);
+            maxPooling(inputs[0], outputs[0], outputs[1]);
+            break;
+        case AVE:
+            CV_Assert_N(inputs.size() == 1, outputs.size() == 1);
+            avePooling(inputs[0], outputs[0]);
+            break;
+        case ROI:
+        case PSROI:
+            CV_Assert_N(inputs.size() == 2, outputs.size() == 1);
+            roiPooling(inputs[0], inputs[1], outputs[0]);
+            break;
+        default:
+            CV_Error(Error::StsNotImplemented, "Not implemented");
+            break;
         }
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
         if (type == MAX)
             return initMaxPoolingHalide(inputs);
@@ -256,7 +249,7 @@ public:
             return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -278,8 +271,8 @@ public:
             poolLayer->params["pad-b"] = format("%d", pad_b);
             poolLayer->_exclude_pad = type == AVE && padMode == "SAME";
             poolLayer->params["rounding-type"] = ceilMode ? "ceil" : "floor";
-            poolLayer->_type = type == MAX ? InferenceEngine::PoolingLayer::PoolType::MAX :
-                                             InferenceEngine::PoolingLayer::PoolType::AVG;
+            poolLayer->_type = type == MAX ? InferenceEngine::PoolingLayer::PoolType::MAX
+                                           : InferenceEngine::PoolingLayer::PoolType::AVG;
             ieLayer = std::shared_ptr<InferenceEngine::CNNLayer>(poolLayer);
         }
         else if (type == ROI)
@@ -302,7 +295,7 @@ public:
             CV_Error(Error::StsNotImplemented, "Unsupported pooling type");
 
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -310,7 +303,7 @@ public:
     class PoolingInvoker : public ParallelLoopBody
     {
     public:
-        const Mat* src, *rois;
+        const Mat *src, *rois;
         Mat *dst, *mask;
         Size kernel, stride;
         int pad_l, pad_t, pad_r, pad_b;
@@ -321,20 +314,22 @@ public:
         int poolingType;
         float spatialScale;
 
-        PoolingInvoker() : src(0), rois(0), dst(0), mask(0), avePoolPaddedArea(false), nstripes(0),
-                           computeMaxIdx(0), poolingType(MAX), spatialScale(0) {}
-
-        static void run(const Mat& src, const Mat& rois, Mat& dst, Mat& mask, Size kernel,
-                        Size stride, int pad_l, int pad_t, int pad_r, int pad_b, bool avePoolPaddedArea, int poolingType, float spatialScale,
-                        bool computeMaxIdx, int nstripes)
+        PoolingInvoker()
+            : src(0), rois(0), dst(0), mask(0), avePoolPaddedArea(false), nstripes(0), computeMaxIdx(0),
+              poolingType(MAX), spatialScale(0)
         {
-            CV_Assert_N(
-                      src.isContinuous(), dst.isContinuous(),
-                      src.type() == CV_32F, src.type() == dst.type(),
-                      src.dims == 4, dst.dims == 4,
-                      ((poolingType == ROI || poolingType == PSROI) && dst.size[0] ==rois.size[0] || src.size[0] == dst.size[0]),
-                       poolingType == PSROI || src.size[1] == dst.size[1],
-                      (mask.empty() || (mask.type() == src.type() && mask.size == dst.size)));
+        }
+
+        static void run(const Mat& src, const Mat& rois, Mat& dst, Mat& mask, Size kernel, Size stride, int pad_l,
+                        int pad_t, int pad_r, int pad_b, bool avePoolPaddedArea, int poolingType,
+                        float spatialScale, bool computeMaxIdx, int nstripes)
+        {
+            CV_Assert_N(src.isContinuous(), dst.isContinuous(), src.type() == CV_32F, src.type() == dst.type(),
+                        src.dims == 4, dst.dims == 4,
+                        ((poolingType == ROI || poolingType == PSROI) && dst.size[0] == rois.size[0]
+                         || src.size[0] == dst.size[0]),
+                        poolingType == PSROI || src.size[1] == dst.size[1],
+                        (mask.empty() || (mask.type() == src.type() && mask.size == dst.size)));
 
             PoolingInvoker p;
 
@@ -354,12 +349,12 @@ public:
             p.poolingType = poolingType;
             p.spatialScale = spatialScale;
 
-            if( !computeMaxIdx )
+            if (!computeMaxIdx)
             {
-                p.ofsbuf.resize(kernel.width*kernel.height);
-                for( int i = 0; i < kernel.height; i++ )
-                    for( int j = 0; j < kernel.width; j++ )
-                        p.ofsbuf[i*kernel.width + j] = src.size[3]*i + j;
+                p.ofsbuf.resize(kernel.width * kernel.height);
+                for (int i = 0; i < kernel.height; i++)
+                    for (int j = 0; j < kernel.width; j++)
+                        p.ofsbuf[i * kernel.width + j] = src.size[3] * i + j;
             }
 
             parallel_for_(Range(0, nstripes), p, nstripes);
@@ -370,9 +365,9 @@ public:
             int channels = dst->size[1], width = dst->size[3], height = dst->size[2];
             int inp_width = src->size[3], inp_height = src->size[2];
             size_t total = dst->total();
-            size_t stripeSize = (total + nstripes - 1)/nstripes;
-            size_t stripeStart = r.start*stripeSize;
-            size_t stripeEnd = std::min(r.end*stripeSize, total);
+            size_t stripeSize = (total + nstripes - 1) / nstripes;
+            size_t stripeStart = r.start * stripeSize;
+            size_t stripeEnd = std::min(r.end * stripeSize, total);
             int kernel_w = kernel.width, kernel_h = kernel.height;
             int stride_w = stride.width, stride_h = stride.height;
             bool compMaxIdx = computeMaxIdx;
@@ -381,12 +376,12 @@ public:
             const int* ofsptr = ofsbuf.empty() ? 0 : (const int*)&ofsbuf[0];
             if (poolingType == MAX && !compMaxIdx && !ofsptr)
                 CV_Error(Error::StsBadArg, "ofsbuf should be initialized in this mode");
-            v_float32x4 idx00(0.f, (float)stride_w, (float)(stride_w*2), (float)(stride_w*3));
+            v_float32x4 idx00(0.f, (float)stride_w, (float)(stride_w * 2), (float)(stride_w * 3));
             v_float32x4 ones = v_setall_f32(1.f);
             v_float32x4 idx_delta = v_setall_f32((float)(inp_width - kernel_w));
 #endif
 
-            for( size_t ofs0 = stripeStart; ofs0 < stripeEnd; )
+            for (size_t ofs0 = stripeStart; ofs0 < stripeEnd;)
             {
                 size_t ofs = ofs0;
                 int x0 = (int)(ofs % width);
@@ -397,10 +392,10 @@ public:
                 int n = (int)(ofs / channels);
                 int ystart, yend;
 
-                const float *srcData = 0;
+                const float* srcData = 0;
                 if (poolingType == ROI)
                 {
-                    const float *roisData = rois->ptr<float>(n);
+                    const float* roisData = rois->ptr<float>(n);
                     int ystartROI = roundRoiSize(roisData[2] * spatialScale);
                     int yendROI = roundRoiSize(roisData[4] * spatialScale);
                     int roiHeight = std::max(yendROI - ystartROI + 1, 1);
@@ -414,7 +409,7 @@ public:
                 }
                 else if (poolingType == PSROI)
                 {
-                    const float *roisData = rois->ptr<float>(n);
+                    const float* roisData = rois->ptr<float>(n);
                     float ystartROI = roundRoiSize(roisData[2]) * spatialScale;
                     float yendROI = roundRoiSize(roisData[4] + 1) * spatialScale;
                     float roiHeight = std::max(yendROI - ystartROI, 0.1f);
@@ -432,15 +427,15 @@ public:
                 int ydelta = yend - ystart;
                 ystart = max(ystart, 0);
                 yend = min(yend, inp_height);
-                float *dstData = dst->ptr<float>(n, c, y0);
-                float *dstMaskData = mask->data ? mask->ptr<float>(n, c, y0) : 0;
+                float* dstData = dst->ptr<float>(n, c, y0);
+                float* dstMaskData = mask->data ? mask->ptr<float>(n, c, y0) : 0;
 
                 int delta = std::min((int)(stripeEnd - ofs0), width - x0);
                 ofs0 += delta;
                 int x1 = x0 + delta;
 
-                if( poolingType == MAX)
-                    for( ; x0 < x1; x0++ )
+                if (poolingType == MAX)
+                    for (; x0 < x1; x0++)
                     {
                         int xstart = x0 * stride_w - pad_l;
                         int xend = min(xstart + kernel_w, inp_width);
@@ -453,9 +448,9 @@ public:
                             continue;
                         }
 #if CV_SIMD128
-                        if( xstart > 0 && x0 + 7 < x1 && (x0 + 7) * stride_w - pad_l + kernel_w < inp_width )
+                        if (xstart > 0 && x0 + 7 < x1 && (x0 + 7) * stride_w - pad_l + kernel_w < inp_width)
                         {
-                            if( compMaxIdx )
+                            if (compMaxIdx)
                             {
                                 v_float32x4 max_val0 = v_setall_f32(-FLT_MAX);
                                 v_float32x4 max_val1 = max_val0;
@@ -463,7 +458,7 @@ public:
                                 v_float32x4 max_idx1 = max_idx0;
                                 int index0 = ystart * inp_width + xstart;
                                 v_float32x4 idx0 = idx00 + v_setall_f32((float)index0);
-                                v_float32x4 idx1 = idx0 + v_setall_f32((float)(stride_w*4));
+                                v_float32x4 idx1 = idx0 + v_setall_f32((float)(stride_w * 4));
 
                                 for (int y = ystart; y < yend; ++y)
                                 {
@@ -471,9 +466,9 @@ public:
                                     {
                                         const int index = y * inp_width + x;
                                         v_float32x4 v0(srcData[index], srcData[index + stride_w],
-                                                       srcData[index + stride_w*2], srcData[index + stride_w*3]);
-                                        v_float32x4 v1(srcData[index + stride_w*4], srcData[index + stride_w*5],
-                                                       srcData[index + stride_w*6], srcData[index + stride_w*7]);
+                                                       srcData[index + stride_w * 2], srcData[index + stride_w * 3]);
+                                        v_float32x4 v1(srcData[index + stride_w * 4], srcData[index + stride_w * 5],
+                                                       srcData[index + stride_w * 6], srcData[index + stride_w * 7]);
                                         max_idx0 = v_select(v0 > max_val0, idx0, max_idx0);
                                         max_idx1 = v_select(v1 > max_val1, idx1, max_idx1);
                                         max_val0 = v_max(max_val0, v0);
@@ -496,11 +491,11 @@ public:
                                 v_float32x4 max_val0 = v_setall_f32(-FLT_MAX);
                                 v_float32x4 max_val1 = max_val0;
 
-                                if( yend - ystart == kernel_h )
+                                if (yend - ystart == kernel_h)
                                 {
-                                    const float* srcData1 = srcData + ystart*inp_width + xstart;
-                                    if( stride_w == 1 )
-                                        for (int k = 0; k < kernel_w*kernel_h; k++)
+                                    const float* srcData1 = srcData + ystart * inp_width + xstart;
+                                    if (stride_w == 1)
+                                        for (int k = 0; k < kernel_w * kernel_h; k++)
                                         {
                                             int index = ofsptr[k];
                                             v_float32x4 v0 = v_load(srcData1 + index);
@@ -508,24 +503,29 @@ public:
                                             max_val0 = v_max(max_val0, v0);
                                             max_val1 = v_max(max_val1, v1);
                                         }
-                                    else if( stride_w == 2 )
-                                        for (int k = 0; k < kernel_w*kernel_h; k++)
+                                    else if (stride_w == 2)
+                                        for (int k = 0; k < kernel_w * kernel_h; k++)
                                         {
                                             int index = ofsptr[k];
                                             v_float32x4 v0, v1, dummy;
-                                            v_load_deinterleave(srcData1 + index, v0, dummy);     // f0  f2  f4  f6  ,f1  f3  f5  f7
-                                            v_load_deinterleave(srcData1 + index + 8, v1, dummy); // f8  f10 f12 f14 ,f9  f11 f13 f15
+                                            v_load_deinterleave(srcData1 + index, v0,
+                                                                dummy); // f0  f2  f4  f6  ,f1  f3  f5  f7
+                                            v_load_deinterleave(srcData1 + index + 8, v1,
+                                                                dummy); // f8  f10 f12 f14 ,f9  f11 f13 f15
                                             max_val0 = v_max(max_val0, v0);
                                             max_val1 = v_max(max_val1, v1);
                                         }
                                     else
-                                        for (int k = 0; k < kernel_w*kernel_h; k++)
+                                        for (int k = 0; k < kernel_w * kernel_h; k++)
                                         {
                                             int index = ofsptr[k];
                                             v_float32x4 v0(srcData1[index], srcData1[index + stride_w],
-                                                           srcData1[index + stride_w*2], srcData1[index + stride_w*3]);
-                                            v_float32x4 v1(srcData1[index + stride_w*4], srcData1[index + stride_w*5],
-                                                           srcData1[index + stride_w*6], srcData1[index + stride_w*7]);
+                                                           srcData1[index + stride_w * 2],
+                                                           srcData1[index + stride_w * 3]);
+                                            v_float32x4 v1(srcData1[index + stride_w * 4],
+                                                           srcData1[index + stride_w * 5],
+                                                           srcData1[index + stride_w * 6],
+                                                           srcData1[index + stride_w * 7]);
                                             max_val0 = v_max(max_val0, v0);
                                             max_val1 = v_max(max_val1, v1);
                                         }
@@ -538,9 +538,12 @@ public:
                                         {
                                             const int index = y * inp_width + x;
                                             v_float32x4 v0(srcData[index], srcData[index + stride_w],
-                                                           srcData[index + stride_w*2], srcData[index + stride_w*3]);
-                                            v_float32x4 v1(srcData[index + stride_w*4], srcData[index + stride_w*5],
-                                                           srcData[index + stride_w*6], srcData[index + stride_w*7]);
+                                                           srcData[index + stride_w * 2],
+                                                           srcData[index + stride_w * 3]);
+                                            v_float32x4 v1(srcData[index + stride_w * 4],
+                                                           srcData[index + stride_w * 5],
+                                                           srcData[index + stride_w * 6],
+                                                           srcData[index + stride_w * 7]);
                                             max_val0 = v_max(max_val0, v0);
                                             max_val1 = v_max(max_val1, v1);
                                         }
@@ -555,7 +558,7 @@ public:
 #endif
                         {
                             float max_val = -FLT_MAX;
-                            if( compMaxIdx )
+                            if (compMaxIdx)
                             {
                                 int max_index = -1;
                                 for (int y = ystart; y < yend; ++y)
@@ -590,17 +593,18 @@ public:
                     }
                 else if (poolingType == AVE)
                 {
-                    for( ; x0 < x1; x0++ )
+                    for (; x0 < x1; x0++)
                     {
                         int xstart = x0 * stride_w - pad_l;
                         int xend = min(xstart + kernel_w, inp_width + pad_r);
                         int xdelta = xend - xstart;
                         xstart = max(xstart, 0);
                         xend = min(xend, inp_width);
-                        float inv_kernel_area = avePoolPaddedArea ? xdelta * ydelta : ((yend - ystart) * (xend - xstart));
+                        float inv_kernel_area = avePoolPaddedArea ? xdelta * ydelta
+                                                                  : ((yend - ystart) * (xend - xstart));
                         inv_kernel_area = 1.0 / inv_kernel_area;
 #if CV_SIMD128
-                        if( xstart > 0 && x0 + 7 < x1 && (x0 + 7) * stride_w - pad_l + kernel_w < inp_width )
+                        if (xstart > 0 && x0 + 7 < x1 && (x0 + 7) * stride_w - pad_l + kernel_w < inp_width)
                         {
                             v_float32x4 sum_val0 = v_setzero_f32(), sum_val1 = v_setzero_f32();
                             v_float32x4 ikarea = v_setall_f32(inv_kernel_area);
@@ -611,15 +615,15 @@ public:
                                 {
                                     const int index = y * inp_width + x;
                                     v_float32x4 v0(srcData[index], srcData[index + stride_w],
-                                                   srcData[index + stride_w*2], srcData[index + stride_w*3]);
-                                    v_float32x4 v1(srcData[index + stride_w*4], srcData[index + stride_w*5],
-                                                   srcData[index + stride_w*6], srcData[index + stride_w*7]);
+                                                   srcData[index + stride_w * 2], srcData[index + stride_w * 3]);
+                                    v_float32x4 v1(srcData[index + stride_w * 4], srcData[index + stride_w * 5],
+                                                   srcData[index + stride_w * 6], srcData[index + stride_w * 7]);
                                     sum_val0 += v0;
                                     sum_val1 += v1;
                                 }
                             }
-                            v_store(dstData + x0, sum_val0*ikarea);
-                            v_store(dstData + x0 + 4, sum_val1*ikarea);
+                            v_store(dstData + x0, sum_val0 * ikarea);
+                            v_store(dstData + x0 + 4, sum_val1 * ikarea);
                             x0 += 7;
                         }
                         else
@@ -634,18 +638,18 @@ public:
                                     sum_val += val;
                                 }
 
-                            dstData[x0] = sum_val*inv_kernel_area;
+                            dstData[x0] = sum_val * inv_kernel_area;
                         }
                     }
                 }
                 else if (poolingType == ROI)
                 {
-                    const float *roisData = rois->ptr<float>(n);
+                    const float* roisData = rois->ptr<float>(n);
                     int xstartROI = roundRoiSize(roisData[1] * spatialScale);
                     int xendROI = roundRoiSize(roisData[3] * spatialScale);
                     int roiWidth = std::max(xendROI - xstartROI + 1, 1);
                     float roiRatio = (float)roiWidth / width;
-                    for( ; x0 < x1; x0++ )
+                    for (; x0 < x1; x0++)
                     {
                         int xstart = xstartROI + x0 * roiRatio;
                         int xend = xstartROI + std::ceil((x0 + 1) * roiRatio);
@@ -669,15 +673,15 @@ public:
                         dstData[x0] = max_val;
                     }
                 }
-                else  // PSROI
+                else // PSROI
                 {
-                    const float *roisData = rois->ptr<float>(n);
+                    const float* roisData = rois->ptr<float>(n);
                     CV_Assert(roisData[0] < src->size[0]);
                     float xstartROI = roundRoiSize(roisData[1]) * spatialScale;
                     float xendROI = roundRoiSize(roisData[3] + 1) * spatialScale;
                     float roiWidth = std::max(xendROI - xstartROI, 0.1f);
                     float roiRatio = roiWidth / width;
-                    for( ; x0 < x1; x0++ )
+                    for (; x0 < x1; x0++)
                     {
                         int xstart = (int)std::floor(xstartROI + x0 * roiRatio);
                         int xend = (int)std::ceil(xstartROI + (x0 + 1) * roiRatio);
@@ -705,28 +709,31 @@ public:
         }
     };
 
-    void maxPooling(Mat &src, Mat &dst, Mat &mask)
+    void maxPooling(Mat& src, Mat& dst, Mat& mask)
     {
         const int nstripes = getNumThreads();
         Mat rois;
-        PoolingInvoker::run(src, rois, dst, mask, kernel, stride, pad_l, pad_t, pad_r, pad_b,  avePoolPaddedArea, type, spatialScale, computeMaxIdx, nstripes);
+        PoolingInvoker::run(src, rois, dst, mask, kernel, stride, pad_l, pad_t, pad_r, pad_b, avePoolPaddedArea,
+                            type, spatialScale, computeMaxIdx, nstripes);
     }
 
-    void avePooling(Mat &src, Mat &dst)
+    void avePooling(Mat& src, Mat& dst)
     {
         const int nstripes = getNumThreads();
         Mat rois, mask;
-        PoolingInvoker::run(src, rois, dst, mask, kernel, stride, pad_l, pad_t, pad_r, pad_b, avePoolPaddedArea, type, spatialScale, computeMaxIdx, nstripes);
+        PoolingInvoker::run(src, rois, dst, mask, kernel, stride, pad_l, pad_t, pad_r, pad_b, avePoolPaddedArea,
+                            type, spatialScale, computeMaxIdx, nstripes);
     }
 
-    void roiPooling(const Mat &src, const Mat &rois, Mat &dst)
+    void roiPooling(const Mat& src, const Mat& rois, Mat& dst)
     {
         const int nstripes = getNumThreads();
         Mat mask;
-        PoolingInvoker::run(src, rois, dst, mask, kernel, stride, pad_l, pad_t, pad_r, pad_b, avePoolPaddedArea, type, spatialScale, computeMaxIdx, nstripes);
+        PoolingInvoker::run(src, rois, dst, mask, kernel, stride, pad_l, pad_t, pad_r, pad_b, avePoolPaddedArea,
+                            type, spatialScale, computeMaxIdx, nstripes);
     }
 
-    virtual Ptr<BackendNode> initMaxPoolingHalide(const std::vector<Ptr<BackendWrapper> > &inputs)
+    virtual Ptr<BackendNode> initMaxPoolingHalide(const std::vector<Ptr<BackendWrapper>>& inputs)
     {
 #ifdef HAVE_HALIDE
         Halide::Buffer<float> inputBuffer = halideBuffer(inputs[0]);
@@ -737,7 +744,7 @@ public:
         Halide::Func top = (name.empty() ? Halide::Func() : Halide::Func(name));
         Halide::RDom r(0, kernel.width, 0, kernel.height);
         Halide::Expr kx, ky;
-        if(pad_l || pad_t)
+        if (pad_l || pad_t)
         {
             kx = clamp(x * stride.width + r.x - pad_l, 0, inWidth - 1);
             ky = clamp(y * stride.height + r.y - pad_t, 0, inHeight - 1);
@@ -753,25 +760,23 @@ public:
 
         // Compute offset from argmax in range [0, kernel_size).
         Halide::Expr max_index;
-        if(pad_l || pad_t)
+        if (pad_l || pad_t)
         {
-            max_index = clamp(y * stride.height + res[1] - pad_t,
-                              0, inHeight - 1) * inWidth +
-                        clamp(x * stride.width + res[0] - pad_l,
-                              0, inWidth - 1);
+            max_index = clamp(y * stride.height + res[1] - pad_t, 0, inHeight - 1) * inWidth
+                        + clamp(x * stride.width + res[0] - pad_l, 0, inWidth - 1);
         }
         else
         {
-            max_index = min(y * stride.height + res[1], inHeight - 1) * inWidth +
-                        min(x * stride.width + res[0], inWidth - 1);
+            max_index = min(y * stride.height + res[1], inHeight - 1) * inWidth
+                        + min(x * stride.width + res[0], inWidth - 1);
         }
-        top(x, y, c, n) = { res[2], Halide::cast<float>(max_index) };
+        top(x, y, c, n) = {res[2], Halide::cast<float>(max_index)};
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initAvePoolingHalide(const std::vector<Ptr<BackendWrapper> > &inputs)
+    virtual Ptr<BackendNode> initAvePoolingHalide(const std::vector<Ptr<BackendWrapper>>& inputs)
     {
 #ifdef HAVE_HALIDE
         Halide::Buffer<float> inputBuffer = halideBuffer(inputs[0]);
@@ -779,9 +784,8 @@ public:
         const int inW = inputBuffer.width(), inH = inputBuffer.height();
         if ((inW - kernel.width) % stride.width || (inH - kernel.height) % stride.height)
         {
-            CV_Error(cv::Error::StsNotImplemented,
-                     "Halide backend for average pooling with partial "
-                     "kernels is not implemented");
+            CV_Error(cv::Error::StsNotImplemented, "Halide backend for average pooling with partial "
+                                                   "kernels is not implemented");
         }
 
         const float norm = 1.0f / (kernel.width * kernel.height);
@@ -789,27 +793,23 @@ public:
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = (name.empty() ? Halide::Func() : Halide::Func(name));
         Halide::RDom r(0, kernel.width, 0, kernel.height);
-        top(x, y, c, n) = sum(
-            inputBuffer(x * stride.width + r.x,
-                        y * stride.height + r.y, c, n)) * norm;
+        top(x, y, c, n) = sum(inputBuffer(x * stride.width + r.x, y * stride.height + r.y, c, n)) * norm;
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
-    virtual void applyHalideScheduler(Ptr<BackendNode>& node,
-                                      const std::vector<Mat*> &inputs,
-                                      const std::vector<Mat> &outputs,
-                                      int targetId) const CV_OVERRIDE
+    virtual void applyHalideScheduler(Ptr<BackendNode>& node, const std::vector<Mat*>& inputs,
+                                      const std::vector<Mat>& outputs, int targetId) const CV_OVERRIDE
     {
-#ifdef  HAVE_HALIDE
+#ifdef HAVE_HALIDE
         if (targetId != DNN_TARGET_CPU)
         {
             Layer::applyHalideScheduler(node, inputs, outputs, targetId);
             return;
         }
-        Halide::Var x("x"), y("y"), c("c"), n("n"), tile("tile"),
-                    xi("xi"), yi("yi"), ci("ci"), xo("xo"), yo("yo"), co("co");
+        Halide::Var x("x"), y("y"), c("c"), n("n"), tile("tile"), xi("xi"), yi("yi"), ci("ci"), xo("xo"), yo("yo"),
+            co("co");
         Halide::Func& top = node.dynamicCast<HalideBackendNode>()->funcs.back();
 
         int outW, outH, outC, outN;
@@ -819,13 +819,14 @@ public:
         {
             if (outC > 8)
                 top.split(c, co, ci, 8)
-                   .fuse(x, y, tile).fuse(co, tile, tile).fuse(n, tile, tile)
-                   .parallel(tile)
-                   .vectorize(ci);
+                    .fuse(x, y, tile)
+                    .fuse(co, tile, tile)
+                    .fuse(n, tile, tile)
+                    .parallel(tile)
+                    .vectorize(ci);
             else
             {
-                top.fuse(y, c, tile).fuse(n, tile, tile)
-                   .parallel(tile);
+                top.fuse(y, c, tile).fuse(n, tile, tile).parallel(tile);
                 if (outW > 1)
                     top.vectorize(x);
             }
@@ -833,23 +834,28 @@ public:
         else
         {
             if (outC > 8)
-                top.split(x, xo, xi, 8).split(y, yo, yi, 8).split(c, co, ci, 8)
-                   .fuse(xo, yo, tile).fuse(co, tile, tile).fuse(n, tile, tile)
-                   .parallel(tile)
-                   .vectorize(xi);
+                top.split(x, xo, xi, 8)
+                    .split(y, yo, yi, 8)
+                    .split(c, co, ci, 8)
+                    .fuse(xo, yo, tile)
+                    .fuse(co, tile, tile)
+                    .fuse(n, tile, tile)
+                    .parallel(tile)
+                    .vectorize(xi);
             else
-                top.split(x, xo, xi, 8).split(y, yo, yi, 8)
-                   .fuse(xo, yo, tile).fuse(c, tile, tile).fuse(n, tile, tile)
-                   .parallel(tile)
-                   .vectorize(xi);
+                top.split(x, xo, xi, 8)
+                    .split(y, yo, yi, 8)
+                    .fuse(xo, yo, tile)
+                    .fuse(c, tile, tile)
+                    .fuse(n, tile, tile)
+                    .parallel(tile)
+                    .vectorize(xi);
         }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() != 0);
         Size in(inputs[0][3], inputs[0][2]), out;
@@ -892,13 +898,13 @@ public:
         if (type == ROI)
         {
             CV_Assert(inputs.size() == 2);
-            dims[0] = inputs[1][0];  // Number of proposals;
+            dims[0] = inputs[1][0]; // Number of proposals;
         }
         else if (type == PSROI)
         {
             CV_Assert(inputs.size() == 2);
             CV_Assert(psRoiOutChannels * pooledSize.width * pooledSize.height == inputs[0][1]);
-            dims[0] = inputs[1][0];  // Number of proposals;
+            dims[0] = inputs[1][0]; // Number of proposals;
             dims[1] = psRoiOutChannels;
         }
         outputs.assign(type == MAX ? 2 : 1, shape(dims, 4));
@@ -906,34 +912,34 @@ public:
         return false;
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(inputs); // suppress unused variable warning
         long flops = 0;
 
-        for(int i = 0; i < outputs.size(); i++)
+        for (int i = 0; i < outputs.size(); i++)
         {
             if (type == MAX)
             {
-                if (i%2 == 0)
-                    flops += total(outputs[i])*kernel.area();
+                if (i % 2 == 0)
+                    flops += total(outputs[i]) * kernel.area();
             }
             else
             {
-                flops += total(outputs[i])*(kernel.area() + 1);
+                flops += total(outputs[i]) * (kernel.area() + 1);
             }
         }
         return flops;
     }
+
 private:
     enum Type
     {
         MAX,
         AVE,
         STOCHASTIC,
-        ROI,   // RoI pooling, https://arxiv.org/pdf/1504.08083.pdf
-        PSROI  // Position-sensitive RoI pooling, https://arxiv.org/pdf/1605.06409.pdf
+        ROI, // RoI pooling, https://arxiv.org/pdf/1504.08083.pdf
+        PSROI // Position-sensitive RoI pooling, https://arxiv.org/pdf/1605.06409.pdf
     };
 };
 
@@ -942,5 +948,4 @@ Ptr<PoolingLayer> PoolingLayer::create(const LayerParams& params)
     return Ptr<PoolingLayer>(new PoolingLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

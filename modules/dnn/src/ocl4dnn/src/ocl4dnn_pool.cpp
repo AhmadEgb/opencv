@@ -94,125 +94,86 @@ OCL4DNNPool<Dtype>::~OCL4DNNPool()
 }
 
 template<typename Dtype>
-bool OCL4DNNPool<Dtype>::Forward(const UMat& bottom,
-                                 UMat& top,
-                                 UMat& top_mask)
+bool OCL4DNNPool<Dtype>::Forward(const UMat& bottom, UMat& top, UMat& top_mask)
 {
     bool ret = true;
-    size_t global[] = { (size_t)count_ };
-    size_t local[] = { 128 };
+    size_t global[] = {(size_t)count_};
+    size_t local[] = {128};
 
     // support 2D case
     switch (pool_method_)
     {
     case LIBDNN_POOLING_METHOD_MAX:
-        {
-            String kname = computeMaxIdx ? "max_pool_forward_mask" : "max_pool_forward";
-            kname += (use_half) ? "_half" : "_float";
-            ocl::Kernel oclk_max_pool_forward(
-                kname.c_str(),
-                ocl::dnn::ocl4dnn_pooling_oclsrc,
-                format(" -D Dtype=%s -D KERNEL_MAX_POOL=1 -D KERNEL_W=%d -D KERNEL_H=%d"
-                       " -D STRIDE_W=%d -D STRIDE_H=%d"
-                       " -D PAD_L=%d -D PAD_T=%d -D PAD_R=%d -D PAD_B=%d%s",
-                       (use_half) ? "half" : "float",
-                       kernel_w_, kernel_h_,
-                       stride_w_, stride_h_,
-                       pad_l_, pad_t_, pad_r_, pad_b_,
-                       computeMaxIdx ? " -D HAVE_MASK=1" : ""
-                ));
-            if (oclk_max_pool_forward.empty())
-                return false;
+    {
+        String kname = computeMaxIdx ? "max_pool_forward_mask" : "max_pool_forward";
+        kname += (use_half) ? "_half" : "_float";
+        ocl::Kernel oclk_max_pool_forward(kname.c_str(), ocl::dnn::ocl4dnn_pooling_oclsrc,
+                                          format(" -D Dtype=%s -D KERNEL_MAX_POOL=1 -D KERNEL_W=%d -D KERNEL_H=%d"
+                                                 " -D STRIDE_W=%d -D STRIDE_H=%d"
+                                                 " -D PAD_L=%d -D PAD_T=%d -D PAD_R=%d -D PAD_B=%d%s",
+                                                 (use_half) ? "half" : "float", kernel_w_, kernel_h_, stride_w_,
+                                                 stride_h_, pad_l_, pad_t_, pad_r_, pad_b_,
+                                                 computeMaxIdx ? " -D HAVE_MASK=1" : ""));
+        if (oclk_max_pool_forward.empty())
+            return false;
 
-            oclk_max_pool_forward.args(
-                count_,
-                ocl::KernelArg::PtrReadOnly(bottom),
-                channels_,
-                height_,
-                width_,
-                pooled_height_,
-                pooled_width_,
-                ocl::KernelArg::PtrWriteOnly(top)
-            );
-            if (computeMaxIdx)
-                oclk_max_pool_forward.set(8, ocl::KernelArg::PtrWriteOnly(top_mask));  // TODO remove magic number. Extend cv::ocl::Kernel API
+        oclk_max_pool_forward.args(count_, ocl::KernelArg::PtrReadOnly(bottom), channels_, height_, width_,
+                                   pooled_height_, pooled_width_, ocl::KernelArg::PtrWriteOnly(top));
+        if (computeMaxIdx)
+            oclk_max_pool_forward.set(8, ocl::KernelArg::PtrWriteOnly(
+                                             top_mask)); // TODO remove magic number. Extend cv::ocl::Kernel API
 
-            ret = oclk_max_pool_forward.run(1, global, local, false);
-        }
-        break;
+        ret = oclk_max_pool_forward.run(1, global, local, false);
+    }
+    break;
     case LIBDNN_POOLING_METHOD_AVE:
-        {
-            CV_Assert(top_mask.empty());
+    {
+        CV_Assert(top_mask.empty());
 
-            String kname = format("ave_pool_forward_%s", (use_half) ? "half" : "float");
-            ocl::Kernel oclk_ave_pool_forward(
-                kname.c_str(),
-                ocl::dnn::ocl4dnn_pooling_oclsrc,
-                format(" -D Dtype=%s -D KERNEL_AVE_POOL=1 -D KERNEL_W=%d -D KERNEL_H=%d"
-                       " -D STRIDE_W=%d -D STRIDE_H=%d"
-                       " -D PAD_L=%d -D PAD_T=%d -D PAD_R=%d -D PAD_B=%d%s",
-                       (use_half) ? "half" : "float",
-                       kernel_w_, kernel_h_,
-                       stride_w_, stride_h_,
-                       pad_l_, pad_t_, pad_r_, pad_b_,
-                       avePoolPaddedArea ? " -D AVE_POOL_PADDING_AREA" : ""
-                ));
+        String kname = format("ave_pool_forward_%s", (use_half) ? "half" : "float");
+        ocl::Kernel oclk_ave_pool_forward(kname.c_str(), ocl::dnn::ocl4dnn_pooling_oclsrc,
+                                          format(" -D Dtype=%s -D KERNEL_AVE_POOL=1 -D KERNEL_W=%d -D KERNEL_H=%d"
+                                                 " -D STRIDE_W=%d -D STRIDE_H=%d"
+                                                 " -D PAD_L=%d -D PAD_T=%d -D PAD_R=%d -D PAD_B=%d%s",
+                                                 (use_half) ? "half" : "float", kernel_w_, kernel_h_, stride_w_,
+                                                 stride_h_, pad_l_, pad_t_, pad_r_, pad_b_,
+                                                 avePoolPaddedArea ? " -D AVE_POOL_PADDING_AREA" : ""));
 
-            if (oclk_ave_pool_forward.empty())
-                return false;
+        if (oclk_ave_pool_forward.empty())
+            return false;
 
-            oclk_ave_pool_forward.args(
-                count_,
-                ocl::KernelArg::PtrReadOnly(bottom),
-                channels_,
-                height_,
-                width_,
-                pooled_height_,
-                pooled_width_,
-                ocl::KernelArg::PtrWriteOnly(top)
-            );
+        oclk_ave_pool_forward.args(count_, ocl::KernelArg::PtrReadOnly(bottom), channels_, height_, width_,
+                                   pooled_height_, pooled_width_, ocl::KernelArg::PtrWriteOnly(top));
 
-            ret = oclk_ave_pool_forward.run(1, global, local, false);
-        }
-        break;
+        ret = oclk_ave_pool_forward.run(1, global, local, false);
+    }
+    break;
     case LIBDNN_POOLING_METHOD_STO:
-        {
-            CV_Assert(top_mask.empty());
+    {
+        CV_Assert(top_mask.empty());
 
-            String kname = format("sto_pool_forward_test_%s", (use_half) ? "half" : "float");
-            ocl::Kernel oclk_sto_pool_forward(
-                kname.c_str(),
-                ocl::dnn::ocl4dnn_pooling_oclsrc,
-                format(" -D Dtype=%s -D KERNEL_STO_POOL=1 -D KERNEL_W=%d -D KERNEL_H=%d"
-                       " -D STRIDE_W=%d -D STRIDE_H=%d",
-                       (use_half) ? "half" : "float",
-                       kernel_w_, kernel_h_,
-                       stride_w_, stride_h_
-                ));
+        String kname = format("sto_pool_forward_test_%s", (use_half) ? "half" : "float");
+        ocl::Kernel oclk_sto_pool_forward(kname.c_str(), ocl::dnn::ocl4dnn_pooling_oclsrc,
+                                          format(" -D Dtype=%s -D KERNEL_STO_POOL=1 -D KERNEL_W=%d -D KERNEL_H=%d"
+                                                 " -D STRIDE_W=%d -D STRIDE_H=%d",
+                                                 (use_half) ? "half" : "float", kernel_w_, kernel_h_, stride_w_,
+                                                 stride_h_));
 
 
-            if (oclk_sto_pool_forward.empty())
-                return false;
+        if (oclk_sto_pool_forward.empty())
+            return false;
 
-            oclk_sto_pool_forward.args(
-                count_,
-                ocl::KernelArg::PtrReadOnly(bottom),
-                channels_,
-                height_,
-                width_,
-                pooled_height_,
-                pooled_width_,
-                ocl::KernelArg::PtrWriteOnly(top)
-            );
+        oclk_sto_pool_forward.args(count_, ocl::KernelArg::PtrReadOnly(bottom), channels_, height_, width_,
+                                   pooled_height_, pooled_width_, ocl::KernelArg::PtrWriteOnly(top));
 
-            ret = oclk_sto_pool_forward.run(1, global, local, false);
-        }
-        break;
+        ret = oclk_sto_pool_forward.run(1, global, local, false);
+    }
+    break;
     default:
-        {
-            ret = false;
-            LOG(FATAL)<< "Unknown pooling method.";
-        }
+    {
+        ret = false;
+        LOG(FATAL) << "Unknown pooling method.";
+    }
     }
     return ret;
 }

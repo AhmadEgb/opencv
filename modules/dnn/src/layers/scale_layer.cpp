@@ -15,10 +15,7 @@ Implementation of Scale layer.
 #include "../op_inf_engine.hpp"
 #include <opencv2/dnn/shape_utils.hpp>
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class ScaleLayerImpl CV_FINAL : public ScaleLayer
 {
@@ -31,10 +28,8 @@ public:
         hasWeights = false;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         outputs.assign(1, inputs[0]);
         return true;
@@ -50,11 +45,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && axis == 1;
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && axis == 1;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -71,8 +67,8 @@ public:
 
         CV_Assert_N(outputs.size() == 1, !blobs.empty() || inputs.size() == 2);
 
-        Mat &inpBlob = inputs[0];
-        Mat &outBlob = outputs[0];
+        Mat& inpBlob = inputs[0];
+        Mat& outBlob = outputs[0];
         // There is a mode when we multiply a first blob by a second one
         // instead of trainable weights.
         Mat weights = blobs.empty() ? inputs[1] : (hasWeights ? blobs[0] : Mat());
@@ -93,7 +89,8 @@ public:
         }
         CV_Assert(total(inpShape, axis, endAxis) == numWeights);
         CV_Assert(!hasBias || numWeights == bias.total());
-        CV_CheckTypeEQ(inpBlob.type(), CV_32FC1, ""); CV_CheckTypeEQ(outBlob.type(), CV_32FC1, "");
+        CV_CheckTypeEQ(inpBlob.type(), CV_32FC1, "");
+        CV_CheckTypeEQ(outBlob.type(), CV_32FC1, "");
 
         int numSlices = total(inpShape, 0, axis);
         float* inpData = (float*)inpBlob.data;
@@ -103,7 +100,7 @@ public:
         {
             float* weightsData = !weights.empty() ? (float*)weights.data : 0;
             float* biasesData = hasBias ? (float*)bias.data : 0;
-            int spatialSize = total(inpShape, endAxis);  // spatialSize != 1
+            int spatialSize = total(inpShape, endAxis); // spatialSize != 1
             for (int i = 0; i < numSlices; ++i)
             {
                 for (int j = 0; j < numWeights; ++j)
@@ -142,29 +139,29 @@ public:
     {
         switch (node->backendId)
         {
-            case DNN_BACKEND_HALIDE:
-            {
+        case DNN_BACKEND_HALIDE:
+        {
 #ifdef HAVE_HALIDE
-                auto base = node.dynamicCast<HalideBackendNode>();
-                Halide::Func& input = base->funcs.back();
-                Halide::Var x("x"), y("y"), c("c"), n("n");
-                Halide::Func top = attachHalide(input(x, y, c, n));
-                return Ptr<BackendNode>(new HalideBackendNode(base, top));
-#endif  // HAVE_HALIDE
-                break;
-            }
+            auto base = node.dynamicCast<HalideBackendNode>();
+            Halide::Func& input = base->funcs.back();
+            Halide::Var x("x"), y("y"), c("c"), n("n");
+            Halide::Func top = attachHalide(input(x, y, c, n));
+            return Ptr<BackendNode>(new HalideBackendNode(base, top));
+#endif // HAVE_HALIDE
+            break;
+        }
         }
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         Halide::Buffer<float> input = halideBuffer(inputs[0]);
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = attachHalide(input(x, y, c, n));
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
@@ -192,9 +189,9 @@ public:
         top(x, y, c, n) = topExpr;
         return top;
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -211,8 +208,7 @@ public:
         }
         else
         {
-            auto weights = InferenceEngine::make_shared_blob<float>(InferenceEngine::Precision::FP32,
-                                                                    {numChannels});
+            auto weights = InferenceEngine::make_shared_blob<float>(InferenceEngine::Precision::FP32, {numChannels});
             weights->allocate();
 
             std::vector<float> ones(numChannels, 1);
@@ -223,7 +219,7 @@ public:
             ieLayer->_biases = wrapToInfEngineBlob(blobs.back(), {numChannels}, InferenceEngine::Layout::C);
 
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -233,14 +229,13 @@ public:
         shift = hasBias ? blobs.back() : Mat();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(outputs); // suppress unused variable warning
         long flops = 0;
-        for(int i = 0; i < inputs.size(); i++)
+        for (int i = 0; i < inputs.size(); i++)
         {
-            flops += 2*total(inputs[i]);
+            flops += 2 * total(inputs[i]);
         }
         return flops;
     }
@@ -266,5 +261,4 @@ Ptr<Layer> ShiftLayer::create(const LayerParams& params)
     return Ptr<ScaleLayer>(new ScaleLayerImpl(scaleParams));
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

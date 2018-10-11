@@ -17,10 +17,8 @@ public:
         setParamsFrom(params);
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 1 && inputs[0].size() == 4);
         CV_Assert(inputs[0][1] % group == 0);
@@ -48,7 +46,7 @@ public:
             permuteInpShape[0] = inp.size[0];
             permuteInpShape[1] = group;
             permuteInpShape[2] = inp.size[1] / group;
-            permuteInpShape[3] = inp.size[2]*inp.size[3];
+            permuteInpShape[3] = inp.size[2] * inp.size[3];
 
             permuteOutShape.resize(4);
             permuteOutShape[0] = permuteInpShape[0];
@@ -87,13 +85,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -133,5 +131,4 @@ Ptr<Layer> ShuffleChannelLayer::create(const LayerParams& params)
     return Ptr<Layer>(new ShuffleChannelLayerImpl(params));
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

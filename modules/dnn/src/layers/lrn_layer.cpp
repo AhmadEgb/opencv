@@ -50,14 +50,11 @@
 #include <algorithm>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 using namespace cv::dnn::ocl4dnn;
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class LRNLayerImpl CV_FINAL : public LRNLayer
 {
@@ -85,21 +82,18 @@ public:
     }
 
 #ifdef HAVE_OPENCL
-    Ptr<OCL4DNNLRN<float> > lrnOp;
+    Ptr<OCL4DNNLRN<float>> lrnOp;
 #endif
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && (preferableTarget != DNN_TARGET_MYRIAD || type == CHANNEL_NRM);
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE
+                      && (preferableTarget != DNN_TARGET_MYRIAD || type == CHANNEL_NRM);
     }
 
 #ifdef HAVE_OPENCL
-    virtual void finalize(InputArrayOfArrays, OutputArrayOfArrays) CV_OVERRIDE
-    {
-        lrnOp.release();
-    }
+    virtual void finalize(InputArrayOfArrays, OutputArrayOfArrays) CV_OVERRIDE { lrnOp.release(); }
 
     bool forward_ocl(InputArrayOfArrays inps, OutputArrayOfArrays outs, OutputArrayOfArrays internals)
     {
@@ -113,17 +107,16 @@ public:
         if (lrnOp.empty())
         {
             OCL4DNNLRNConfig config;
-            config.lrn_type = type == CHANNEL_NRM ?
-                              LRNParameter_NormRegion_ACROSS_CHANNELS :
-                              LRNParameter_NormRegion_WITHIN_CHANNEL;
+            config.lrn_type = type == CHANNEL_NRM ? LRNParameter_NormRegion_ACROSS_CHANNELS
+                                                  : LRNParameter_NormRegion_WITHIN_CHANNEL;
 
-            CHECK_EQ(size % 2, 1)<< "LRN only supports odd values for local_size";
+            CHECK_EQ(size % 2, 1) << "LRN only supports odd values for local_size";
             config.local_size = size;
             config.alpha = alpha;
             config.beta = beta;
             config.k = bias;
             CHECK_EQ(4, inputs[0].dims) << "Input must have 4 axes, "
-                     << "corresponding to (num, channels, height, width)";
+                                        << "corresponding to (num, channels, height, width)";
             config.batch_size = inputs[0].size[0];
             config.channels = inputs[0].size[1];
             config.height = inputs[0].size[2];
@@ -131,7 +124,7 @@ public:
             config.norm_by_size = normBySize;
             config.use_half = use_half;
 
-            lrnOp = Ptr<OCL4DNNLRN<float> >(new OCL4DNNLRN<float>(config));
+            lrnOp = Ptr<OCL4DNNLRN<float>>(new OCL4DNNLRN<float>(config));
         }
 
         if (!lrnOp->Forward(inputs[0], outputs[0]))
@@ -141,15 +134,15 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
         CV_Assert(inputs_arr.total() == outputs_arr.total());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -167,20 +160,20 @@ public:
         {
             CV_Assert(inputs[i].dims == 4);
 
-            Mat &src = inputs[i];
-            Mat &dst = outputs[i];
+            Mat& src = inputs[i];
+            Mat& dst = outputs[i];
 
             switch (type)
             {
-                case CHANNEL_NRM:
-                    channelNormalization(src, dst);
-                    break;
-                case SPATIAL_NRM:
-                    spatialNormalization(src, dst);
-                    break;
-                default:
-                    CV_Error(Error::StsNotImplemented, "Unimplemented mode of LRN layer");
-                    break;
+            case CHANNEL_NRM:
+                channelNormalization(src, dst);
+                break;
+            case SPATIAL_NRM:
+                spatialNormalization(src, dst);
+                break;
+            default:
+                CV_Error(Error::StsNotImplemented, "Unimplemented mode of LRN layer");
+                break;
             }
         }
     }
@@ -188,67 +181,71 @@ public:
     class ChannelLRN : public ParallelLoopBody
     {
     public:
-        ChannelLRN(const float* src, float* dst, int channels, int ksize,
-                   float alpha1, float bias1, float beta1,
+        ChannelLRN(const float* src, float* dst, int channels, int ksize, float alpha1, float bias1, float beta1,
                    size_t planeSize, int nsamples, int nstripes)
         {
-            src_ = src; dst_ = dst;
+            src_ = src;
+            dst_ = dst;
             channels_ = channels;
             ksize_ = ksize;
-            alpha1_ = alpha1; bias1_ = bias1; beta1_ = beta1;
-            planeSize_ = planeSize; nsamples_ = nsamples; nstripes_ = nstripes;
+            alpha1_ = alpha1;
+            bias1_ = bias1;
+            beta1_ = beta1;
+            planeSize_ = planeSize;
+            nsamples_ = nsamples;
+            nstripes_ = nstripes;
         }
 
         void operator()(const Range& r) const CV_OVERRIDE
         {
             int nsamples = nsamples_, nstripes = nstripes_;
             size_t planeSize = planeSize_, planeSize_n = planeSize * nsamples;
-            size_t elemsPerStripe = (planeSize_n + nstripes - 1)/nstripes;
-            size_t rstart = r.start*elemsPerStripe;
-            size_t rend = r.end == nstripes ? planeSize_n : r.end*elemsPerStripe;
+            size_t elemsPerStripe = (planeSize_n + nstripes - 1) / nstripes;
+            size_t rstart = r.start * elemsPerStripe;
+            size_t rend = r.end == nstripes ? planeSize_n : r.end * elemsPerStripe;
             rstart = std::min(rstart, planeSize_n);
             rend = std::min(rend, planeSize_n);
             float alpha1 = alpha1_, bias1 = bias1_, beta1 = beta1_;
             int k, channels = channels_, ksize = ksize_;
 
-            AutoBuffer<float> buf_((channels + ksize + 1)*2);
+            AutoBuffer<float> buf_((channels + ksize + 1) * 2);
             float* acc = buf_.data();
             float* buf = acc + channels + ksize + 1;
-            for( k = 0; k <= ksize; k++ )
-                buf[-k-1] = buf[channels + k] = 0.f;
+            for (k = 0; k <= ksize; k++)
+                buf[-k - 1] = buf[channels + k] = 0.f;
 
-            for( size_t ofs = rstart; ofs < rend; )
+            for (size_t ofs = rstart; ofs < rend;)
             {
-                int sampleIdx = (int)(ofs/planeSize);
-                if( sampleIdx >= nsamples )
+                int sampleIdx = (int)(ofs / planeSize);
+                if (sampleIdx >= nsamples)
                     break;
-                size_t ofs0 = ofs - sampleIdx*planeSize;
+                size_t ofs0 = ofs - sampleIdx * planeSize;
                 size_t ofs1 = std::min(planeSize - ofs0, rend - ofs) + ofs;
-                const float* src = src_ + sampleIdx*planeSize*channels + ofs0;
-                float* dst = dst_ + sampleIdx*planeSize*channels + ofs0;
+                const float* src = src_ + sampleIdx * planeSize * channels + ofs0;
+                float* dst = dst_ + sampleIdx * planeSize * channels + ofs0;
 
-                for( ; ofs < ofs1; ofs++, src++, dst++ )
+                for (; ofs < ofs1; ofs++, src++, dst++)
                 {
-                    for( k = 0; k < channels; k++ )
-                        buf[k] = src[k*planeSize];
+                    for (k = 0; k < channels; k++)
+                        buf[k] = src[k * planeSize];
                     float s = 0;
-                    for( k = 0; k < ksize; k++ )
-                        s += buf[k]*buf[k];
-                    for( k = 0; k < channels; k++ )
+                    for (k = 0; k < ksize; k++)
+                        s += buf[k] * buf[k];
+                    for (k = 0; k < channels; k++)
                     {
                         float x1 = buf[k + ksize];
                         float x0 = buf[k - ksize - 1];
-                        s = std::max(s + (x1 + x0)*(x1 - x0), 0.f);
-                        acc[k] = (float)(alpha1*s + bias1);
+                        s = std::max(s + (x1 + x0) * (x1 - x0), 0.f);
+                        acc[k] = (float)(alpha1 * s + bias1);
                     }
 
                     hal::log32f(acc, acc, channels);
-                    for( k = 0; k < channels; k++ )
+                    for (k = 0; k < channels; k++)
                         acc[k] *= beta1;
                     hal::exp32f(acc, acc, channels);
 
-                    for( k = 0; k < channels; k++ )
-                        dst[k*planeSize] = buf[k]*acc[k];
+                    for (k = 0; k < channels; k++)
+                        dst[k * planeSize] = buf[k] * acc[k];
                 }
             }
         }
@@ -260,32 +257,32 @@ public:
         int channels_, ksize_, nsamples_, nstripes_;
     };
 
-    void channelNormalization(Mat &srcBlob, Mat &dstBlob)
+    void channelNormalization(Mat& srcBlob, Mat& dstBlob)
     {
         int num = srcBlob.size[0];
         int channels = srcBlob.size[1];
         int ksize = (size - 1) / 2;
         int sizeNormFactor = normBySize ? size : 1;
-        size_t planeSize = srcBlob.size[2]*srcBlob.size[3];
+        size_t planeSize = srcBlob.size[2] * srcBlob.size[3];
 
         int nstripes = std::max(getNumThreads(), 1);
 
-        ChannelLRN clrn(srcBlob.ptr<float>(), dstBlob.ptr<float>(), channels,
-                        ksize, alpha/sizeNormFactor, bias, -beta, planeSize, num, nstripes);
+        ChannelLRN clrn(srcBlob.ptr<float>(), dstBlob.ptr<float>(), channels, ksize, alpha / sizeNormFactor, bias,
+                        -beta, planeSize, num, nstripes);
         parallel_for_(Range(0, nstripes), clrn, nstripes);
     }
 
-    void sqrBoxFilter_(const Mat &src, Mat &dst)
+    void sqrBoxFilter_(const Mat& src, Mat& dst)
     {
         Mat srcRawWrapper(src.rows, src.cols, src.type(), src.data, src.step[0]);
         cv::sqrBoxFilter(srcRawWrapper, dst, dst.depth(), Size(size, size), Point(-1, -1), false, BORDER_CONSTANT);
     }
 
-    void spatialNormalization(Mat &srcBlob, Mat &dstBlob)
+    void spatialNormalization(Mat& srcBlob, Mat& dstBlob)
     {
         int num = srcBlob.size[0];
         int channels = srcBlob.size[1];
-        int sizeNormFactor = normBySize ? size*size : 1;
+        int sizeNormFactor = normBySize ? size * size : 1;
 
         Mat srcMat = srcBlob;
         Mat dstMat = dstBlob;
@@ -299,14 +296,14 @@ public:
 
                 sqrBoxFilter_(src, dst);
 
-                dst.convertTo(dst, dst.type(), alpha/sizeNormFactor, bias);
+                dst.convertTo(dst, dst.type(), alpha / sizeNormFactor, bias);
                 cv::pow(dst, beta, dst);
                 cv::divide(src, dst, dst);
             }
         }
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         float alphaSize = alpha;
@@ -322,11 +319,8 @@ public:
         Halide::Func sq("sq");
         sq(x, y, c, n) = inputBuffer(x, y, c, n) * inputBuffer(x, y, c, n);
 
-        Halide::Func bounded =
-            Halide::BoundaryConditions::constant_exterior(sq, 0, 0, width,
-                                                          0, height,
-                                                          0, channels,
-                                                          0, numImgs);
+        Halide::Func bounded = Halide::BoundaryConditions::constant_exterior(sq, 0, 0, width, 0, height, 0,
+                                                                             channels, 0, numImgs);
         padded_sq(x, y, c, n) = bounded(x, y, c, n);
 
         Halide::Expr base;
@@ -335,24 +329,22 @@ public:
             Halide::RDom r((1 - size) / 2, size);
             base = alphaSize * sum(padded_sq(x, y, c + r, n));
         }
-        else  // SPATIAL_NRM
+        else // SPATIAL_NRM
         {
             Halide::RDom r((1 - size) / 2, size, (1 - size) / 2, size);
             base = alphaSize * sum(padded_sq(x + r.x, y + r.y, c, n));
         }
         base += static_cast<float>(bias);
         top(x, y, c, n) = inputBuffer(x, y, c, n) / pow(base, beta);
-        return Ptr<BackendNode>(new HalideBackendNode({ padded_sq, top }));
-#endif  // HAVE_HALIDE
+        return Ptr<BackendNode>(new HalideBackendNode({padded_sq, top}));
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
-    virtual void applyHalideScheduler(Ptr<BackendNode>& node,
-                                      const std::vector<Mat*> &inputs,
-                                      const std::vector<Mat> &outputs,
-                                      int targetId) const CV_OVERRIDE
+    virtual void applyHalideScheduler(Ptr<BackendNode>& node, const std::vector<Mat*>& inputs,
+                                      const std::vector<Mat>& outputs, int targetId) const CV_OVERRIDE
     {
-#ifdef  HAVE_HALIDE
+#ifdef HAVE_HALIDE
         if (targetId != DNN_TARGET_CPU)
         {
             Layer::applyHalideScheduler(node, inputs, outputs, targetId);
@@ -368,18 +360,12 @@ public:
         if (outW < 8 || outH <= 2)
             return;
 
-        top.reorder(x, c, y, n)
-           .split(y, yo, yi, 2)
-           .fuse(yo, n, tile)
-           .parallel(tile)
-           .unroll(yi)
-           .vectorize(x, 8);
-        padded_sq.store_at(top, tile)
-                 .compute_at(top, yi);
-#endif  // HAVE_HALIDE
+        top.reorder(x, c, y, n).split(y, yo, yi, 2).fuse(yo, n, tile).parallel(tile).unroll(yi).vectorize(x, 8);
+        padded_sq.store_at(top, tile).compute_at(top, yi);
+#endif // HAVE_HALIDE
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -394,34 +380,34 @@ public:
         ieLayer->_alpha = alpha;
         ieLayer->_isAcrossMaps = (type == CHANNEL_NRM);
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(outputs); // suppress unused variable warning
         CV_Assert(inputs.size() > 0);
         long flops = 0;
 
-        for(int i = 0; i < inputs.size(); i++)
+        for (int i = 0; i < inputs.size(); i++)
         {
             if (type == CHANNEL_NRM)
             {
                 int channels = inputs[i][1];
                 int ksize = (size - 1) / 2;
 
-                flops += inputs[i][0]*(std::min(ksize, channels)*2*total(inputs[i], 2) + channels*4*total(inputs[i], 2));
+                flops += inputs[i][0]
+                         * (std::min(ksize, channels) * 2 * total(inputs[i], 2) + channels * 4 * total(inputs[i], 2));
 
                 if (ksize < channels)
                 {
-                    flops += (size + 2*(channels - size))*total(inputs[i], 2);
+                    flops += (size + 2 * (channels - size)) * total(inputs[i], 2);
                 }
             }
             else
             {
-                flops += total(inputs[i])*(2*size*size + 2);
+                flops += total(inputs[i]) * (2 * size * size + 2);
             }
         }
         return flops;
@@ -435,10 +421,6 @@ private:
     };
 };
 
-Ptr<LRNLayer> LRNLayer::create(const LayerParams& params)
-{
-    return Ptr<LRNLayer>(new LRNLayerImpl(params));
-}
+Ptr<LRNLayer> LRNLayer::create(const LayerParams& params) { return Ptr<LRNLayer>(new LRNLayerImpl(params)); }
 
-}
-}
+}} // namespace cv::dnn

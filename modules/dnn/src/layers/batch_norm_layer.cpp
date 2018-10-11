@@ -15,13 +15,10 @@ Implementation of Batch Normalization layer.
 #include <opencv2/dnn/shape_utils.hpp>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class BatchNormLayerImpl CV_FINAL : public BatchNormLayer
 {
@@ -37,34 +34,35 @@ public:
         hasWeights = params.get<bool>("has_weight", false);
         hasBias = params.get<bool>("has_bias", false);
         useGlobalStats = params.get<bool>("use_global_stats", true);
-        if(params.get<bool>("scale_bias", false))
+        if (params.get<bool>("scale_bias", false))
             hasWeights = hasBias = true;
         epsilon = params.get<float>("eps", 1E-5);
 
         size_t n = blobs[0].total();
-        CV_Assert(blobs[1].total() == n &&
-                  blobs[0].isContinuous() && blobs[1].isContinuous() &&
-                  blobs[0].type() == CV_32F && blobs[1].type() == CV_32F);
+        CV_Assert(blobs[1].total() == n && blobs[0].isContinuous() && blobs[1].isContinuous()
+                  && blobs[0].type() == CV_32F && blobs[1].type() == CV_32F);
 
         float varMeanScale = 1.f;
-        if (!hasWeights && !hasBias && blobs.size() > 2 && useGlobalStats) {
-            CV_Assert(blobs.size() == 3); CV_CheckTypeEQ(blobs[2].type(), CV_32FC1, "");
+        if (!hasWeights && !hasBias && blobs.size() > 2 && useGlobalStats)
+        {
+            CV_Assert(blobs.size() == 3);
+            CV_CheckTypeEQ(blobs[2].type(), CV_32FC1, "");
             varMeanScale = blobs[2].at<float>(0);
             if (varMeanScale != 0)
-                varMeanScale = 1/varMeanScale;
+                varMeanScale = 1 / varMeanScale;
         }
 
         const int biasBlobIndex = blobs.size() - 1;
         const int weightsBlobIndex = biasBlobIndex - hasBias;
 
-        if( hasWeights )
+        if (hasWeights)
         {
             CV_Assert((size_t)weightsBlobIndex < blobs.size());
             const Mat& w = blobs[weightsBlobIndex];
             CV_Assert(w.isContinuous() && w.type() == CV_32F && w.total() == (size_t)n);
         }
 
-        if( hasBias )
+        if (hasBias)
         {
             CV_Assert((size_t)biasBlobIndex < blobs.size());
             const Mat& b = blobs[weightsBlobIndex];
@@ -107,8 +105,8 @@ public:
         const int numFusedWeights = w.total();
         const int numFusedBias = b.total();
 
-        if ((numFusedWeights != numChannels && numFusedWeights != 1 && !w.empty()) ||
-            (numFusedBias != numChannels && numFusedBias != 1 && !b.empty()))
+        if ((numFusedWeights != numChannels && numFusedWeights != 1 && !w.empty())
+            || (numFusedBias != numChannels && numFusedBias != 1 && !b.empty()))
             return false;
 
         if (!w.empty())
@@ -136,10 +134,8 @@ public:
         return true;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         if (!useGlobalStats && inputs[0][0] != 1)
             CV_Error(Error::StsNotImplemented, "Batch normalization in training mode with batch size > 1");
@@ -149,9 +145,8 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_HALIDE && haveHalide() ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE && haveHalide()
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
     }
 
 #ifdef HAVE_OPENCL
@@ -176,7 +171,7 @@ public:
             bias_.copyTo(umat_bias);
         }
 
-        UMat &inpBlob = inputs[0];
+        UMat& inpBlob = inputs[0];
         CV_Assert(inpBlob.dims == 2 || inpBlob.dims == 4);
         int groups = inpBlob.size[0];
         int channels = inpBlob.size[1];
@@ -208,7 +203,7 @@ public:
                 ocl::Kernel kernel(kname.c_str(), ocl::dnn::batchnorm_oclsrc, buildopt);
                 if (kernel.empty())
                     return false;
-                size_t global[] = { (size_t)s[0], (size_t)(s[1] / number) };
+                size_t global[] = {(size_t)s[0], (size_t)(s[1] / number)};
                 kernel.set(0, ocl::KernelArg::PtrReadOnly(src));
                 kernel.set(1, (int)s[0]);
                 kernel.set(2, (int)s[1]);
@@ -225,13 +220,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -246,16 +241,16 @@ public:
         CV_Assert(blobs.size() >= 2);
         CV_Assert(inputs.size() == 1);
 
-        Mat &inpBlob = inputs[0];
+        Mat& inpBlob = inputs[0];
         CV_Assert(inpBlob.dims == 2 || inpBlob.dims == 4);
         int rows = inpBlob.dims > 2 ? inpBlob.size[2] : 1;
         int cols = inpBlob.dims > 2 ? inpBlob.size[3] : 1;
 
         for (size_t ii = 0; ii < outputs.size(); ii++)
         {
-            Mat &outBlob = outputs[ii];
+            Mat& outBlob = outputs[ii];
 
-            for(int num = 0; num < outBlob.size[0]; num++)
+            for (int num = 0; num < outBlob.size[0]; num++)
             {
                 for (int n = 0; n < outBlob.size[1]; n++)
                 {
@@ -271,14 +266,14 @@ public:
 
     void forwardSlice(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const CV_OVERRIDE
     {
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
             int i = 0;
             float w = weights_.at<float>(cn);
             float b = bias_.at<float>(cn);
 #if CV_SIMD128
             v_float32x4 wV = v_setall_f32(w), bV = v_setall_f32(b);
-            for( ; i <= len - 16; i += 16 )
+            for (; i <= len - 16; i += 16)
             {
                 v_float32x4 x0 = v_load(srcptr + i);
                 v_float32x4 x1 = v_load(srcptr + i + 4);
@@ -294,7 +289,7 @@ public:
                 v_store(dstptr + i + 12, x3);
             }
 #endif
-            for( ; i < len; i++ )
+            for (; i < len; i++)
                 dstptr[i] = w * srcptr[i] + b;
         }
     }
@@ -303,29 +298,29 @@ public:
     {
         switch (node->backendId)
         {
-            case DNN_BACKEND_HALIDE:
-            {
+        case DNN_BACKEND_HALIDE:
+        {
 #ifdef HAVE_HALIDE
-                auto base = node.dynamicCast<HalideBackendNode>();
-                Halide::Func& input = base->funcs.back();
-                Halide::Var x("x"), y("y"), c("c"), n("n");
-                Halide::Func top = attachHalide(input(x, y, c, n));
-                return Ptr<BackendNode>(new HalideBackendNode(base, top));
-#endif  // HAVE_HALIDE
-                break;
-            }
+            auto base = node.dynamicCast<HalideBackendNode>();
+            Halide::Func& input = base->funcs.back();
+            Halide::Var x("x"), y("y"), c("c"), n("n");
+            Halide::Func top = attachHalide(input(x, y, c, n));
+            return Ptr<BackendNode>(new HalideBackendNode(base, top));
+#endif // HAVE_HALIDE
+            break;
+        }
         }
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         Halide::Buffer<float> input = halideBuffer(inputs[0]);
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = attachHalide(input(x, y, c, n));
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
@@ -343,9 +338,9 @@ public:
         top(x, y, c, n) = input * weights(c) + bias(c);
         return top;
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -359,19 +354,18 @@ public:
         ieLayer->_biases = wrapToInfEngineBlob(bias_, {numChannels}, InferenceEngine::Layout::C);
 
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         CV_UNUSED(outputs); // suppress unused variable warning
 
         int64 flops = 0;
-        for(int i = 0; i < inputs.size(); i++)
+        for (int i = 0; i < inputs.size(); i++)
         {
-            flops += 3*total(inputs[i]);
+            flops += 3 * total(inputs[i]);
         }
         return flops;
     }
@@ -385,5 +379,4 @@ Ptr<BatchNormLayer> BatchNormLayer::create(const LayerParams& params)
     return Ptr<BatchNormLayer>(new BatchNormLayerImpl(params));
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

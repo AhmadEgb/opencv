@@ -19,23 +19,22 @@ public:
         outHeight = params.get<float>("height");
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert_N(inputs.size() == 2, inputs[0].size() == 4);
         if (inputs[0][0] != 1)
             CV_Error(Error::StsNotImplemented, "");
         outputs.resize(1, MatShape(4));
-        outputs[0][0] = inputs[1][2];  // Number of bounding boxes.
-        outputs[0][1] = inputs[0][1];  // Number of channels.
+        outputs[0][0] = inputs[1][2]; // Number of bounding boxes.
+        outputs[0][1] = inputs[0][1]; // Number of channels.
         outputs[0][2] = outHeight;
         outputs[0][3] = outWidth;
         return false;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -89,10 +88,12 @@ public:
                     const float* inpData_row1_c = inpData_row1;
                     for (int c = 0; c < numChannels; ++c)
                     {
-                        *outData = inpData_row0_c[x0] +
-                            (input_y - y0) * (inpData_row1_c[x0] - inpData_row0_c[x0]) +
-                            (input_x - x0) * (inpData_row0_c[x1] - inpData_row0_c[x0] +
-                            (input_y - y0) * (inpData_row1_c[x1] - inpData_row0_c[x1] - inpData_row1_c[x0] + inpData_row0_c[x0]));
+                        *outData = inpData_row0_c[x0] + (input_y - y0) * (inpData_row1_c[x0] - inpData_row0_c[x0])
+                                   + (input_x - x0)
+                                         * (inpData_row0_c[x1] - inpData_row0_c[x0]
+                                            + (input_y - y0)
+                                                  * (inpData_row1_c[x1] - inpData_row0_c[x1] - inpData_row1_c[x0]
+                                                     + inpData_row0_c[x0]));
 
                         inpData_row0_c += inpSpatialSize;
                         inpData_row1_c += inpSpatialSize;
@@ -119,5 +120,4 @@ Ptr<Layer> CropAndResizeLayer::create(const LayerParams& params)
     return Ptr<CropAndResizeLayer>(new CropAndResizeLayerImpl(params));
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

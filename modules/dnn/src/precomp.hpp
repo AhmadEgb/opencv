@@ -43,15 +43,15 @@
 #include "cvconfig.h"
 
 #ifndef CV_OCL4DNN
-#define CV_OCL4DNN 0
+#    define CV_OCL4DNN 0
 #endif
 
 #if CV_OCL4DNN
-#ifndef HAVE_OPENCL
-#error "Configuration error: re-run CMake from clean build directory"
-#endif
+#    ifndef HAVE_OPENCL
+#        error "Configuration error: re-run CMake from clean build directory"
+#    endif
 #else
-#undef HAVE_OPENCL
+#    undef HAVE_OPENCL
 #endif
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/core/opencl/ocl_defs.hpp>
@@ -68,4 +68,4 @@ CV__DNN_INLINE_NS_BEGIN
 Mutex& getInitializationMutex();
 void initializeLayerFactory();
 CV__DNN_INLINE_NS_END
-}} // namespace
+}} // namespace cv::dnn

@@ -9,13 +9,17 @@
 #define OPENCV_DNN_API_VERSION 20180917
 
 #if !defined CV_DOXYGEN && !defined CV_DNN_DONT_ADD_INLINE_NS
-#define CV__DNN_INLINE_NS __CV_CAT(dnn4_v, OPENCV_DNN_API_VERSION)
-#define CV__DNN_INLINE_NS_BEGIN namespace CV__DNN_INLINE_NS {
-#define CV__DNN_INLINE_NS_END }
-namespace cv { namespace dnn { namespace CV__DNN_INLINE_NS { } using namespace CV__DNN_INLINE_NS; }}
+#    define CV__DNN_INLINE_NS __CV_CAT(dnn4_v, OPENCV_DNN_API_VERSION)
+#    define CV__DNN_INLINE_NS_BEGIN namespace CV__DNN_INLINE_NS {
+#    define CV__DNN_INLINE_NS_END }
+namespace cv { namespace dnn {
+namespace CV__DNN_INLINE_NS {
+}
+using namespace CV__DNN_INLINE_NS;
+}} // namespace cv::dnn
 #else
-#define CV__DNN_INLINE_NS_BEGIN
-#define CV__DNN_INLINE_NS_END
+#    define CV__DNN_INLINE_NS_BEGIN
+#    define CV__DNN_INLINE_NS_END
 #endif
 
-#endif  // OPENCV_DNN_VERSION_HPP
+#endif // OPENCV_DNN_VERSION_HPP

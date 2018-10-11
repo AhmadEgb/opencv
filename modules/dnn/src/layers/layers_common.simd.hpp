@@ -42,56 +42,51 @@
 
 #include "opencv2/core/hal/intrin.hpp"
 
-namespace cv {
-namespace dnn {
+namespace cv { namespace dnn {
 CV_CPU_OPTIMIZATION_NAMESPACE_BEGIN
 
-void fastConv( const float* weights, size_t wstep, const float* bias,
-               const float* rowbuf, float* output, const int* outShape,
-               int blockSize, int vecsize, int vecsize_aligned,
-               const float* relu, bool initOutput );
-void fastGEMM1T( const float* vec, const float* weights,
-                 size_t wstep, const float* bias,
-                 float* dst, int nvecs, int vecsize );
-void fastGEMM( const float* aptr, size_t astep, const float* bptr,
-               size_t bstep, float* cptr, size_t cstep,
-               int ma, int na, int nb );
+void fastConv(const float* weights, size_t wstep, const float* bias, const float* rowbuf, float* output,
+              const int* outShape, int blockSize, int vecsize, int vecsize_aligned, const float* relu,
+              bool initOutput);
+void fastGEMM1T(const float* vec, const float* weights, size_t wstep, const float* bias, float* dst, int nvecs,
+                int vecsize);
+void fastGEMM(const float* aptr, size_t astep, const float* bptr, size_t bstep, float* cptr, size_t cstep, int ma,
+              int na, int nb);
 
 #if !defined(CV_CPU_OPTIMIZATION_DECLARATIONS_ONLY) && CV_AVX
 
-#if !CV_FMA3 // AVX workaround
-#undef _mm256_fmadd_ps
-#define _mm256_fmadd_ps(a, b, c) _mm256_add_ps(c, _mm256_mul_ps(a, b))
-#endif
+#    if !CV_FMA3 // AVX workaround
+#        undef _mm256_fmadd_ps
+#        define _mm256_fmadd_ps(a, b, c) _mm256_add_ps(c, _mm256_mul_ps(a, b))
+#    endif
 
-void fastConv( const float* weights, size_t wstep, const float* bias,
-               const float* rowbuf, float* output, const int* outShape,
-               int blockSize, int vecsize, int vecsize_aligned,
-               const float* relu, bool initOutput )
+void fastConv(const float* weights, size_t wstep, const float* bias, const float* rowbuf, float* output,
+              const int* outShape, int blockSize, int vecsize, int vecsize_aligned, const float* relu,
+              bool initOutput)
 {
     int outCn = outShape[1];
-    size_t outPlaneSize = outShape[2]*outShape[3];
+    size_t outPlaneSize = outShape[2] * outShape[3];
     float r0 = 1.f, r1 = 1.f, r2 = 1.f;
     __m128 vr0 = _mm_set1_ps(1.f), vr1 = vr0, vr2 = vr0, z = _mm_setzero_ps();
 
     // now compute dot product of the weights
     // and im2row-transformed part of the tensor
-    for( int i = 0; i < outCn; i += 3 )
+    for (int i = 0; i < outCn; i += 3)
     {
-        const float* wptr0 = weights + i*wstep;
+        const float* wptr0 = weights + i * wstep;
         const float* wptr1 = wptr0 + wstep;
         const float* wptr2 = wptr1 + wstep;
-        float* outptr0 = output + i*outPlaneSize;
+        float* outptr0 = output + i * outPlaneSize;
         float* outptr1 = outptr0 + outPlaneSize;
         float* outptr2 = outptr1 + outPlaneSize;
-        float bias0 = bias[i], bias1 = bias[i+1], bias2 = bias[i+2];
+        float bias0 = bias[i], bias1 = bias[i + 1], bias2 = bias[i + 2];
 
-        if( i+2 >= outCn )
+        if (i + 2 >= outCn)
         {
             wptr2 = wptr1;
             outptr2 = outptr1;
             bias2 = bias1;
-            if( i+1 >= outCn )
+            if (i + 1 >= outCn)
             {
                 wptr2 = wptr1 = wptr0;
                 outptr2 = outptr1 = outptr0;
@@ -99,13 +94,15 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
             }
         }
 
-        if( relu )
+        if (relu)
         {
-            r0 = relu[i]; r1 = relu[i+1]; r2 = relu[i+2];
-            if( i+2 >= outCn )
+            r0 = relu[i];
+            r1 = relu[i + 1];
+            r2 = relu[i + 2];
+            if (i + 2 >= outCn)
             {
                 r2 = r1;
-                if( i+1 >= outCn )
+                if (i + 1 >= outCn)
                     r2 = r1 = r0;
             }
             vr0 = _mm_set1_ps(r0);
@@ -114,27 +111,23 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
         }
 
         int j = 0;
-        for( ; j <= blockSize - 4; j += 4 )
+        for (; j <= blockSize - 4; j += 4)
         {
             int k = 0;
-            const float* rptr = rowbuf + j*vecsize_aligned;
+            const float* rptr = rowbuf + j * vecsize_aligned;
 
-            __m256 vs00 = _mm256_setzero_ps(), vs01 = _mm256_setzero_ps(),
-                   vs02 = _mm256_setzero_ps(), vs03 = _mm256_setzero_ps(),
-                   vs10 = _mm256_setzero_ps(), vs11 = _mm256_setzero_ps(),
-                   vs12 = _mm256_setzero_ps(), vs13 = _mm256_setzero_ps(),
-                   vs20 = _mm256_setzero_ps(), vs21 = _mm256_setzero_ps(),
-                   vs22 = _mm256_setzero_ps(), vs23 = _mm256_setzero_ps();
+            __m256 vs00 = _mm256_setzero_ps(), vs01 = _mm256_setzero_ps(), vs02 = _mm256_setzero_ps(),
+                   vs03 = _mm256_setzero_ps(), vs10 = _mm256_setzero_ps(), vs11 = _mm256_setzero_ps(),
+                   vs12 = _mm256_setzero_ps(), vs13 = _mm256_setzero_ps(), vs20 = _mm256_setzero_ps(),
+                   vs21 = _mm256_setzero_ps(), vs22 = _mm256_setzero_ps(), vs23 = _mm256_setzero_ps();
 
-#if CV_AVX512_SKX // AVX512VL is necessary to avoid register spilling
+#    if CV_AVX512_SKX // AVX512VL is necessary to avoid register spilling
             if (vecsize >= 32)
             {
-                __m512 vs00_5 = _mm512_setzero_ps(), vs01_5 = _mm512_setzero_ps(),
-                       vs02_5 = _mm512_setzero_ps(), vs03_5 = _mm512_setzero_ps(),
-                       vs10_5 = _mm512_setzero_ps(), vs11_5 = _mm512_setzero_ps(),
-                       vs12_5 = _mm512_setzero_ps(), vs13_5 = _mm512_setzero_ps(),
-                       vs20_5 = _mm512_setzero_ps(), vs21_5 = _mm512_setzero_ps(),
-                       vs22_5 = _mm512_setzero_ps(), vs23_5 = _mm512_setzero_ps();
+                __m512 vs00_5 = _mm512_setzero_ps(), vs01_5 = _mm512_setzero_ps(), vs02_5 = _mm512_setzero_ps(),
+                       vs03_5 = _mm512_setzero_ps(), vs10_5 = _mm512_setzero_ps(), vs11_5 = _mm512_setzero_ps(),
+                       vs12_5 = _mm512_setzero_ps(), vs13_5 = _mm512_setzero_ps(), vs20_5 = _mm512_setzero_ps(),
+                       vs21_5 = _mm512_setzero_ps(), vs22_5 = _mm512_setzero_ps(), vs23_5 = _mm512_setzero_ps();
 
                 for (; k <= vecsize - 16; k += 16, rptr += 16)
                 {
@@ -152,12 +145,12 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
                     vs11_5 = _mm512_fmadd_ps(w1, r0, vs11_5);
                     vs21_5 = _mm512_fmadd_ps(w2, r0, vs21_5);
 
-                    r0 = _mm512_loadu_ps(rptr + vecsize_aligned*2);
+                    r0 = _mm512_loadu_ps(rptr + vecsize_aligned * 2);
                     vs02_5 = _mm512_fmadd_ps(w0, r0, vs02_5);
                     vs12_5 = _mm512_fmadd_ps(w1, r0, vs12_5);
                     vs22_5 = _mm512_fmadd_ps(w2, r0, vs22_5);
 
-                    r0 = _mm512_loadu_ps(rptr + vecsize_aligned*3);
+                    r0 = _mm512_loadu_ps(rptr + vecsize_aligned * 3);
                     vs03_5 = _mm512_fmadd_ps(w0, r0, vs03_5);
                     vs13_5 = _mm512_fmadd_ps(w1, r0, vs13_5);
                     vs23_5 = _mm512_fmadd_ps(w2, r0, vs23_5);
@@ -166,25 +159,25 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
                  * now fold the 512 bit accumulator vectors into 256 bit vectors so that the AVX2 code can finish
                  * the tail of the vector
                  */
-                vs00 = _mm256_add_ps( _mm512_extractf32x8_ps(vs00_5, 0), _mm512_extractf32x8_ps(vs00_5, 1));
-                vs10 = _mm256_add_ps( _mm512_extractf32x8_ps(vs10_5, 0), _mm512_extractf32x8_ps(vs10_5, 1));
-                vs20 = _mm256_add_ps( _mm512_extractf32x8_ps(vs20_5, 0), _mm512_extractf32x8_ps(vs20_5, 1));
+                vs00 = _mm256_add_ps(_mm512_extractf32x8_ps(vs00_5, 0), _mm512_extractf32x8_ps(vs00_5, 1));
+                vs10 = _mm256_add_ps(_mm512_extractf32x8_ps(vs10_5, 0), _mm512_extractf32x8_ps(vs10_5, 1));
+                vs20 = _mm256_add_ps(_mm512_extractf32x8_ps(vs20_5, 0), _mm512_extractf32x8_ps(vs20_5, 1));
 
-                vs01 = _mm256_add_ps( _mm512_extractf32x8_ps(vs01_5, 0), _mm512_extractf32x8_ps(vs01_5, 1));
-                vs11 = _mm256_add_ps( _mm512_extractf32x8_ps(vs11_5, 0), _mm512_extractf32x8_ps(vs11_5, 1));
-                vs21 = _mm256_add_ps( _mm512_extractf32x8_ps(vs21_5, 0), _mm512_extractf32x8_ps(vs21_5, 1));
+                vs01 = _mm256_add_ps(_mm512_extractf32x8_ps(vs01_5, 0), _mm512_extractf32x8_ps(vs01_5, 1));
+                vs11 = _mm256_add_ps(_mm512_extractf32x8_ps(vs11_5, 0), _mm512_extractf32x8_ps(vs11_5, 1));
+                vs21 = _mm256_add_ps(_mm512_extractf32x8_ps(vs21_5, 0), _mm512_extractf32x8_ps(vs21_5, 1));
 
-                vs02 = _mm256_add_ps( _mm512_extractf32x8_ps(vs02_5, 0), _mm512_extractf32x8_ps(vs02_5, 1));
-                vs12 = _mm256_add_ps( _mm512_extractf32x8_ps(vs12_5, 0), _mm512_extractf32x8_ps(vs12_5, 1));
-                vs22 = _mm256_add_ps( _mm512_extractf32x8_ps(vs22_5, 0), _mm512_extractf32x8_ps(vs22_5, 1));
+                vs02 = _mm256_add_ps(_mm512_extractf32x8_ps(vs02_5, 0), _mm512_extractf32x8_ps(vs02_5, 1));
+                vs12 = _mm256_add_ps(_mm512_extractf32x8_ps(vs12_5, 0), _mm512_extractf32x8_ps(vs12_5, 1));
+                vs22 = _mm256_add_ps(_mm512_extractf32x8_ps(vs22_5, 0), _mm512_extractf32x8_ps(vs22_5, 1));
 
-                vs03 = _mm256_add_ps( _mm512_extractf32x8_ps(vs03_5, 0), _mm512_extractf32x8_ps(vs03_5, 1));
-                vs13 = _mm256_add_ps( _mm512_extractf32x8_ps(vs13_5, 0), _mm512_extractf32x8_ps(vs13_5, 1));
-                vs23 = _mm256_add_ps( _mm512_extractf32x8_ps(vs23_5, 0), _mm512_extractf32x8_ps(vs23_5, 1));
+                vs03 = _mm256_add_ps(_mm512_extractf32x8_ps(vs03_5, 0), _mm512_extractf32x8_ps(vs03_5, 1));
+                vs13 = _mm256_add_ps(_mm512_extractf32x8_ps(vs13_5, 0), _mm512_extractf32x8_ps(vs13_5, 1));
+                vs23 = _mm256_add_ps(_mm512_extractf32x8_ps(vs23_5, 0), _mm512_extractf32x8_ps(vs23_5, 1));
             }
-#endif
+#    endif
 
-            for (; k < vecsize; k += 8, rptr += 8 )
+            for (; k < vecsize; k += 8, rptr += 8)
             {
                 __m256 w0 = _mm256_load_ps(wptr0 + k);
                 __m256 w1 = _mm256_load_ps(wptr1 + k);
@@ -200,12 +193,12 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
                 vs11 = _mm256_fmadd_ps(w1, r0, vs11);
                 vs21 = _mm256_fmadd_ps(w2, r0, vs21);
 
-                r0 = _mm256_load_ps(rptr + vecsize_aligned*2);
+                r0 = _mm256_load_ps(rptr + vecsize_aligned * 2);
                 vs02 = _mm256_fmadd_ps(w0, r0, vs02);
                 vs12 = _mm256_fmadd_ps(w1, r0, vs12);
                 vs22 = _mm256_fmadd_ps(w2, r0, vs22);
 
-                r0 = _mm256_load_ps(rptr + vecsize_aligned*3);
+                r0 = _mm256_load_ps(rptr + vecsize_aligned * 3);
                 vs03 = _mm256_fmadd_ps(w0, r0, vs03);
                 vs13 = _mm256_fmadd_ps(w1, r0, vs13);
                 vs23 = _mm256_fmadd_ps(w2, r0, vs23);
@@ -221,7 +214,7 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
 
             __m128 s0, s1, s2;
 
-            if( initOutput )
+            if (initOutput)
             {
                 s0 = _mm_set1_ps(bias0);
                 s1 = _mm_set1_ps(bias1);
@@ -238,7 +231,7 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
             s1 = _mm_add_ps(s1, _mm256_castps256_ps128(t1));
             s2 = _mm_add_ps(s2, _mm256_castps256_ps128(t2));
 
-            if( relu )
+            if (relu)
             {
                 __m128 m0 = _mm_cmp_ps(s0, z, _CMP_GT_OS);
                 __m128 m1 = _mm_cmp_ps(s1, z, _CMP_GT_OS);
@@ -253,12 +246,12 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
             _mm_storeu_ps(outptr2 + j, s2);
         }
 
-        for( ; j < blockSize; j++ )
+        for (; j < blockSize; j++)
         {
-            const float* rptr = rowbuf + j*vecsize_aligned;
+            const float* rptr = rowbuf + j * vecsize_aligned;
             float s00, s10, s20;
 
-            if( initOutput )
+            if (initOutput)
             {
                 s00 = bias0;
                 s10 = bias1;
@@ -271,19 +264,19 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
                 s20 = outptr2[j];
             }
 
-            for( int k = 0; k < vecsize; k++ )
+            for (int k = 0; k < vecsize; k++)
             {
                 float r0 = rptr[k];
-                s00 += wptr0[k]*r0;
-                s10 += wptr1[k]*r0;
-                s20 += wptr2[k]*r0;
+                s00 += wptr0[k] * r0;
+                s10 += wptr1[k] * r0;
+                s20 += wptr2[k] * r0;
             }
 
-            if( relu )
+            if (relu)
             {
-                s00 = s00 > 0.f ? s00 : s00*r0;
-                s10 = s10 > 0.f ? s10 : s10*r1;
-                s20 = s20 > 0.f ? s20 : s20*r2;
+                s00 = s00 > 0.f ? s00 : s00 * r0;
+                s10 = s10 > 0.f ? s10 : s10 * r1;
+                s20 = s20 > 0.f ? s20 : s20 * r2;
             }
 
             outptr0[j] = s00;
@@ -295,32 +288,30 @@ void fastConv( const float* weights, size_t wstep, const float* bias,
 }
 
 // dst = vec * weights^t + bias
-void fastGEMM1T( const float* vec, const float* weights,
-                 size_t wstep, const float* bias,
-                 float* dst, int nvecs, int vecsize )
+void fastGEMM1T(const float* vec, const float* weights, size_t wstep, const float* bias, float* dst, int nvecs,
+                int vecsize)
 {
     int i = 0;
 
-    for( ; i <= nvecs - 8; i += 8 )
+    for (; i <= nvecs - 8; i += 8)
     {
-        const float* wptr = weights + i*wstep;
-        __m256 vs0 = _mm256_setzero_ps(), vs1 = _mm256_setzero_ps(),
-               vs2 = _mm256_setzero_ps(), vs3 = _mm256_setzero_ps(),
-               vs4 = _mm256_setzero_ps(), vs5 = _mm256_setzero_ps(),
+        const float* wptr = weights + i * wstep;
+        __m256 vs0 = _mm256_setzero_ps(), vs1 = _mm256_setzero_ps(), vs2 = _mm256_setzero_ps(),
+               vs3 = _mm256_setzero_ps(), vs4 = _mm256_setzero_ps(), vs5 = _mm256_setzero_ps(),
                vs6 = _mm256_setzero_ps(), vs7 = _mm256_setzero_ps();
 
-        for( int k = 0; k < vecsize; k += 8, wptr += 8 )
+        for (int k = 0; k < vecsize; k += 8, wptr += 8)
         {
             __m256 v = _mm256_load_ps(vec + k);
 
             vs0 = _mm256_fmadd_ps(_mm256_load_ps(wptr), v, vs0);
             vs1 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep), v, vs1);
-            vs2 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep*2), v, vs2);
-            vs3 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep*3), v, vs3);
-            vs4 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep*4), v, vs4);
-            vs5 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep*5), v, vs5);
-            vs6 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep*6), v, vs6);
-            vs7 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep*7), v, vs7);
+            vs2 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep * 2), v, vs2);
+            vs3 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep * 3), v, vs3);
+            vs4 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep * 4), v, vs4);
+            vs5 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep * 5), v, vs5);
+            vs6 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep * 6), v, vs6);
+            vs7 = _mm256_fmadd_ps(_mm256_load_ps(wptr + wstep * 7), v, vs7);
         }
 
         __m256 s0 = _mm256_hadd_ps(_mm256_hadd_ps(vs0, vs1), _mm256_hadd_ps(vs2, vs3));
@@ -337,12 +328,12 @@ void fastGEMM1T( const float* vec, const float* weights,
     }
 
     float temp = 0.f;
-    for( ; i < nvecs; i++ )
+    for (; i < nvecs; i++)
     {
-        const float* wptr = weights + i*wstep;
+        const float* wptr = weights + i * wstep;
         __m256 vs0 = _mm256_setzero_ps();
 
-        for( int k = 0; k < vecsize; k += 8, wptr += 8 )
+        for (int k = 0; k < vecsize; k += 8, wptr += 8)
         {
             __m256 v = _mm256_load_ps(vec + k);
             vs0 = _mm256_fmadd_ps(_mm256_load_ps(wptr), v, vs0);
@@ -358,40 +349,39 @@ void fastGEMM1T( const float* vec, const float* weights,
 }
 
 
-void fastGEMM( const float* aptr, size_t astep, const float* bptr,
-               size_t bstep, float* cptr, size_t cstep,
-               int ma, int na, int nb )
+void fastGEMM(const float* aptr, size_t astep, const float* bptr, size_t bstep, float* cptr, size_t cstep, int ma,
+              int na, int nb)
 {
     int n = 0;
 
-#if CV_AVX512_SKX // AVX512VL is necessary to avoid register spilling
-    for( ; n <= nb - 32; n += 32 )
+#    if CV_AVX512_SKX // AVX512VL is necessary to avoid register spilling
+    for (; n <= nb - 32; n += 32)
     {
-        for( int m = 0; m < ma; m += 4 )
+        for (int m = 0; m < ma; m += 4)
         {
-            const float* aptr0 = aptr + astep*m;
-            const float* aptr1 = aptr + astep*std::min(m+1, ma-1);
-            const float* aptr2 = aptr + astep*std::min(m+2, ma-1);
-            const float* aptr3 = aptr + astep*std::min(m+3, ma-1);
+            const float* aptr0 = aptr + astep * m;
+            const float* aptr1 = aptr + astep * std::min(m + 1, ma - 1);
+            const float* aptr2 = aptr + astep * std::min(m + 2, ma - 1);
+            const float* aptr3 = aptr + astep * std::min(m + 3, ma - 1);
 
-            float* cptr0 = cptr + cstep*m;
-            float* cptr1 = cptr + cstep*std::min(m+1, ma-1);
-            float* cptr2 = cptr + cstep*std::min(m+2, ma-1);
-            float* cptr3 = cptr + cstep*std::min(m+3, ma-1);
+            float* cptr0 = cptr + cstep * m;
+            float* cptr1 = cptr + cstep * std::min(m + 1, ma - 1);
+            float* cptr2 = cptr + cstep * std::min(m + 2, ma - 1);
+            float* cptr3 = cptr + cstep * std::min(m + 3, ma - 1);
 
             __m512 d00 = _mm512_setzero_ps(), d01 = _mm512_setzero_ps();
             __m512 d10 = _mm512_setzero_ps(), d11 = _mm512_setzero_ps();
             __m512 d20 = _mm512_setzero_ps(), d21 = _mm512_setzero_ps();
             __m512 d30 = _mm512_setzero_ps(), d31 = _mm512_setzero_ps();
 
-            for( int k = 0; k < na; k++ )
+            for (int k = 0; k < na; k++)
             {
                 __m512 a0 = _mm512_set1_ps(aptr0[k]);
                 __m512 a1 = _mm512_set1_ps(aptr1[k]);
                 __m512 a2 = _mm512_set1_ps(aptr2[k]);
                 __m512 a3 = _mm512_set1_ps(aptr3[k]);
-                __m512 b0 = _mm512_loadu_ps(bptr + k*bstep + n);
-                __m512 b1 = _mm512_loadu_ps(bptr + k*bstep + n + 16);
+                __m512 b0 = _mm512_loadu_ps(bptr + k * bstep + n);
+                __m512 b1 = _mm512_loadu_ps(bptr + k * bstep + n + 16);
                 d00 = _mm512_fmadd_ps(a0, b0, d00);
                 d01 = _mm512_fmadd_ps(a0, b1, d01);
                 d10 = _mm512_fmadd_ps(a1, b0, d10);
@@ -412,35 +402,35 @@ void fastGEMM( const float* aptr, size_t astep, const float* bptr,
             _mm512_storeu_ps(cptr3 + n + 16, d31);
         }
     }
-#endif
+#    endif
 
-    for( ; n <= nb - 16; n += 16 )
+    for (; n <= nb - 16; n += 16)
     {
-        for( int m = 0; m < ma; m += 4 )
+        for (int m = 0; m < ma; m += 4)
         {
-            const float* aptr0 = aptr + astep*m;
-            const float* aptr1 = aptr + astep*std::min(m+1, ma-1);
-            const float* aptr2 = aptr + astep*std::min(m+2, ma-1);
-            const float* aptr3 = aptr + astep*std::min(m+3, ma-1);
+            const float* aptr0 = aptr + astep * m;
+            const float* aptr1 = aptr + astep * std::min(m + 1, ma - 1);
+            const float* aptr2 = aptr + astep * std::min(m + 2, ma - 1);
+            const float* aptr3 = aptr + astep * std::min(m + 3, ma - 1);
 
-            float* cptr0 = cptr + cstep*m;
-            float* cptr1 = cptr + cstep*std::min(m+1, ma-1);
-            float* cptr2 = cptr + cstep*std::min(m+2, ma-1);
-            float* cptr3 = cptr + cstep*std::min(m+3, ma-1);
+            float* cptr0 = cptr + cstep * m;
+            float* cptr1 = cptr + cstep * std::min(m + 1, ma - 1);
+            float* cptr2 = cptr + cstep * std::min(m + 2, ma - 1);
+            float* cptr3 = cptr + cstep * std::min(m + 3, ma - 1);
 
             __m256 d00 = _mm256_setzero_ps(), d01 = _mm256_setzero_ps();
             __m256 d10 = _mm256_setzero_ps(), d11 = _mm256_setzero_ps();
             __m256 d20 = _mm256_setzero_ps(), d21 = _mm256_setzero_ps();
             __m256 d30 = _mm256_setzero_ps(), d31 = _mm256_setzero_ps();
 
-            for( int k = 0; k < na; k++ )
+            for (int k = 0; k < na; k++)
             {
                 __m256 a0 = _mm256_set1_ps(aptr0[k]);
                 __m256 a1 = _mm256_set1_ps(aptr1[k]);
                 __m256 a2 = _mm256_set1_ps(aptr2[k]);
                 __m256 a3 = _mm256_set1_ps(aptr3[k]);
-                __m256 b0 = _mm256_loadu_ps(bptr + k*bstep + n);
-                __m256 b1 = _mm256_loadu_ps(bptr + k*bstep + n + 8);
+                __m256 b0 = _mm256_loadu_ps(bptr + k * bstep + n);
+                __m256 b1 = _mm256_loadu_ps(bptr + k * bstep + n + 8);
                 d00 = _mm256_fmadd_ps(a0, b0, d00);
                 d01 = _mm256_fmadd_ps(a0, b1, d01);
                 d10 = _mm256_fmadd_ps(a1, b0, d10);
@@ -462,16 +452,16 @@ void fastGEMM( const float* aptr, size_t astep, const float* bptr,
         }
     }
 
-    for( ; n < nb; n++ )
+    for (; n < nb; n++)
     {
-        for( int m = 0; m < ma; m++ )
+        for (int m = 0; m < ma; m++)
         {
-            const float* aptr0 = aptr + astep*m;
-            float* cptr0 = cptr + cstep*m;
+            const float* aptr0 = aptr + astep * m;
+            float* cptr0 = cptr + cstep * m;
             float d0 = 0.f;
 
-            for( int k = 0; k < na; k++ )
-                d0 += aptr0[k]*bptr[k*bstep + n];
+            for (int k = 0; k < na; k++)
+                d0 += aptr0[k] * bptr[k * bstep + n];
 
             cptr0[n] = d0;
         }
@@ -482,4 +472,4 @@ void fastGEMM( const float* aptr, size_t astep, const float* bptr,
 #endif // CV_CPU_OPTIMIZATION_DECLARATIONS_ONLY
 
 CV_CPU_OPTIMIZATION_NAMESPACE_END
-}} // namespace
+}} // namespace cv::dnn

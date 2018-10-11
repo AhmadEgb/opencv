@@ -45,15 +45,10 @@
 #include "../op_inf_engine.hpp"
 #include <opencv2/dnn/shape_utils.hpp>
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
-static void computeShapeByReshapeMask(const MatShape &srcShape,
-                                      const MatShape &maskShape,
-                                      Range srcRange /*= Range::all()*/,
-                                      MatShape& dstShape)
+static void computeShapeByReshapeMask(const MatShape& srcShape, const MatShape& maskShape,
+                                      Range srcRange /*= Range::all()*/, MatShape& dstShape)
 {
     int srcShapeSize = (int)srcShape.size();
     int maskShapeSize = (int)maskShape.size();
@@ -67,7 +62,7 @@ static void computeShapeByReshapeMask(const MatShape &srcShape,
         srcRange.end = srcRange.end == INT_MAX ? srcShapeSize : srcRange.start + sz;
     }
 
-    bool explicitMask = !maskShape.empty();  // All mask values are positive.
+    bool explicitMask = !maskShape.empty(); // All mask values are positive.
     for (int i = 0, n = maskShape.size(); i < n && explicitMask; ++i)
     {
         explicitMask = maskShape[i] > 0;
@@ -110,7 +105,8 @@ static void computeShapeByReshapeMask(const MatShape &srcShape,
     dstShape.resize(dstShapeSize);
 
     std::copy(srcShape.begin(), srcShape.begin() + srcRange.start, dstShape.begin());
-    std::copy(srcShape.begin() + srcRange.end, srcShape.begin() + srcShapeSize, dstShape.begin() + srcRange.start + maskShapeSize);
+    std::copy(srcShape.begin() + srcRange.end, srcShape.begin() + srcShapeSize,
+              dstShape.begin() + srcRange.start + maskShapeSize);
 
     int inferDim = -1;
     for (int i = 0; i < maskShapeSize; i++)
@@ -122,7 +118,9 @@ static void computeShapeByReshapeMask(const MatShape &srcShape,
         else if (maskShape[i] == 0)
         {
             if (srcRange.start + i >= srcShapeSize)
-                CV_Error(Error::StsBadArg, format("Copy dim[%d] (which has zero size) is out of the source shape bounds", srcRange.start + i));
+                CV_Error(Error::StsBadArg,
+                         format("Copy dim[%d] (which has zero size) is out of the source shape bounds",
+                                srcRange.start + i));
             dstShape[srcRange.start + i] = srcShape[srcRange.start + i];
         }
         else if (maskShape[i] == -1)
@@ -167,7 +165,7 @@ public:
         newShapeDesc.clear();
         if (params.has("dim"))
         {
-            const DictValue &paramShape = params.get("dim");
+            const DictValue& paramShape = params.get("dim");
             int i, dims = paramShape.size();
             newShapeDesc.resize(dims);
             for (i = 0; i < dims; i++)
@@ -177,14 +175,11 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         if (inputs.size() == 1 || inputs.size() == requiredOutputs)
         {
@@ -214,8 +209,8 @@ public:
         for (size_t i = 0; i < outputs.size(); i++)
         {
             UMat srcBlob = inputs[i];
-            void *src_handle = inputs[i].handle(ACCESS_READ);
-            void *dst_handle = outputs[i].handle(ACCESS_WRITE);
+            void* src_handle = inputs[i].handle(ACCESS_READ);
+            void* dst_handle = outputs[i].handle(ACCESS_WRITE);
             if (src_handle != dst_handle)
             {
                 MatShape outShape = shape(outputs[i]);
@@ -228,13 +223,13 @@ public:
         return true;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         std::vector<Mat> inputs, outputs;
         inputs_arr.getMatVector(inputs);
@@ -247,7 +242,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >& inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -265,7 +260,7 @@ public:
             ieLayer->shape = std::vector<int>(shapeSrc->dims.rbegin(), shapeSrc->dims.rend());
         }
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 };
@@ -276,5 +271,4 @@ Ptr<ReshapeLayer> ReshapeLayer::create(const LayerParams& params)
 }
 
 
-}
-}
+}} // namespace cv::dnn

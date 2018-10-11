@@ -48,41 +48,43 @@
 #include "../nms.inl.hpp"
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
-namespace util
-{
+namespace util {
 
 class NormalizedBBox
 {
 public:
     float xmin, ymin, xmax, ymax;
 
-    NormalizedBBox()
-        : xmin(0), ymin(0), xmax(0), ymax(0), has_size_(false), size_(0) {}
+    NormalizedBBox() : xmin(0), ymin(0), xmax(0), ymax(0), has_size_(false), size_(0) {}
 
     float size() const { return size_; }
 
     bool has_size() const { return has_size_; }
 
-    void set_size(float value) { size_ = value; has_size_ = true; }
+    void set_size(float value)
+    {
+        size_ = value;
+        has_size_ = true;
+    }
 
-    void clear_size() { size_ = 0; has_size_ = false; }
+    void clear_size()
+    {
+        size_ = 0;
+        has_size_ = false;
+    }
 
 private:
     bool has_size_;
     float size_;
 };
 
-template <typename T>
-static inline bool SortScorePairDescend(const std::pair<float, T>& pair1,
-                          const std::pair<float, T>& pair2)
+template<typename T>
+static inline bool SortScorePairDescend(const std::pair<float, T>& pair1, const std::pair<float, T>& pair2)
 {
     return pair1.first > pair2.first;
 }
@@ -91,7 +93,7 @@ static inline float caffe_box_overlap(const util::NormalizedBBox& a, const util:
 
 static inline float caffe_norm_box_overlap(const util::NormalizedBBox& a, const util::NormalizedBBox& b);
 
-} // namespace
+} // namespace util
 
 class DetectionOutputLayerImpl CV_FINAL : public DetectionOutputLayer
 {
@@ -117,14 +119,15 @@ public:
     bool _clip;
     bool _groupByClasses;
 
-    enum { _numAxes = 4 };
+    enum
+    {
+        _numAxes = 4
+    };
     static const std::string _layerName;
 
-    typedef std::map<int, std::vector<util::NormalizedBBox> > LabelBBox;
+    typedef std::map<int, std::vector<util::NormalizedBBox>> LabelBBox;
 
-    bool getParameterDict(const LayerParams &params,
-                          const std::string &parameterName,
-                          DictValue& result)
+    bool getParameterDict(const LayerParams& params, const std::string& parameterName, DictValue& result)
     {
         if (!params.has(parameterName))
         {
@@ -136,17 +139,14 @@ public:
     }
 
     template<typename T>
-    T getParameter(const LayerParams &params,
-                   const std::string &parameterName,
-                   const size_t &idx=0,
-                   const bool required=true,
-                   const T& defaultValue=T())
+    T getParameter(const LayerParams& params, const std::string& parameterName, const size_t& idx = 0,
+                   const bool required = true, const T& defaultValue = T())
     {
         DictValue dictValue;
         bool success = getParameterDict(params, parameterName, dictValue);
-        if(!success)
+        if (!success)
         {
-            if(required)
+            if (required)
             {
                 std::string message = _layerName;
                 message += " layer parameter does not contain ";
@@ -162,7 +162,7 @@ public:
         return dictValue.get<T>(idx);
     }
 
-    void getCodeType(const LayerParams &params)
+    void getCodeType(const LayerParams& params)
     {
         String codeTypeString = toLowerCase(params.get<String>("code_type"));
         if (codeTypeString == "center_size")
@@ -171,7 +171,7 @@ public:
             _codeType = "CORNER";
     }
 
-    DetectionOutputLayerImpl(const LayerParams &params)
+    DetectionOutputLayerImpl(const LayerParams& params)
     {
         _numClasses = getParameter<unsigned>(params, "num_classes");
         _shareLocation = getParameter<bool>(params, "share_location");
@@ -197,14 +197,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && !_locPredTransposed && _bboxesNormalized && !_clip;
+        return backendId == DNN_BACKEND_OPENCV
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && !_locPredTransposed && _bboxesNormalized && !_clip;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() >= 3);
         CV_Assert(inputs[0][0] == inputs[1][0]);
@@ -226,11 +224,10 @@ public:
 
 #ifdef HAVE_OPENCL
     // Decode all bboxes in a batch
-    bool ocl_DecodeBBoxesAll(UMat& loc_mat, UMat& prior_mat,
-                             const int num, const int numPriors, const bool share_location,
-                             const int num_loc_classes, const int background_label_id,
-                             const cv::String& code_type, const bool variance_encoded_in_target,
-                             const bool clip, std::vector<LabelBBox>& all_decode_bboxes)
+    bool ocl_DecodeBBoxesAll(UMat& loc_mat, UMat& prior_mat, const int num, const int numPriors,
+                             const bool share_location, const int num_loc_classes, const int background_label_id,
+                             const cv::String& code_type, const bool variance_encoded_in_target, const bool clip,
+                             std::vector<LabelBBox>& all_decode_bboxes)
     {
         UMat outmat = UMat(loc_mat.dims, loc_mat.size, CV_32F);
         size_t nthreads = loc_mat.total();
@@ -289,11 +286,10 @@ public:
         return true;
     }
 
-    void ocl_GetConfidenceScores(const UMat& inp1, const int num,
-                                 const int numPredsPerClass, const int numClasses,
+    void ocl_GetConfidenceScores(const UMat& inp1, const int num, const int numPredsPerClass, const int numClasses,
                                  std::vector<Mat>& confPreds)
     {
-        int shape[] = { numClasses, numPredsPerClass };
+        int shape[] = {numClasses, numPredsPerClass};
         for (int i = 0; i < num; i++)
             confPreds.push_back(Mat(2, shape, CV_32F));
 
@@ -302,7 +298,7 @@ public:
         UMat umat = inp1.reshape(1, 2, &shape[0]);
         for (int i = 0; i < num; ++i)
         {
-            Range ranges[] = { Range(i * numPredsPerClass, (i + 1) * numPredsPerClass), Range::all() };
+            Range ranges[] = {Range(i * numPredsPerClass, (i + 1) * numPredsPerClass), Range::all()};
             transpose(umat(ranges), confPreds[i]);
         }
     }
@@ -344,16 +340,15 @@ public:
             ocl_GetConfidenceScores(inputs[1], num, numPriors, _numClasses, allConfidenceScores);
 
             // Decode all loc predictions to bboxes
-            bool ret = ocl_DecodeBBoxesAll(inputs[0], inputs[2], num, numPriors,
-                                           _shareLocation, _numLocClasses, _backgroundLabelId,
-                                           _codeType, _varianceEncodedInTarget, _clip,
+            bool ret = ocl_DecodeBBoxesAll(inputs[0], inputs[2], num, numPriors, _shareLocation, _numLocClasses,
+                                           _backgroundLabelId, _codeType, _varianceEncodedInTarget, _clip,
                                            allDecodedBBoxes);
             if (!ret)
                 return false;
         }
 
         size_t numKept = 0;
-        std::vector<std::map<int, std::vector<int> > > allIndices;
+        std::vector<std::map<int, std::vector<int>>> allIndices;
         for (int i = 0; i < num; ++i)
         {
             numKept += processDetections_(allDecodedBBoxes[i], allConfidenceScores[i], allIndices);
@@ -368,7 +363,8 @@ public:
                 std::vector<UMat> orig_outputs;
                 outs.getUMatVector(orig_outputs);
                 orig_outputs[0](ranges).setTo(0);
-            } else
+            }
+            else
                 outputs[0](ranges).setTo(0);
             return true;
         }
@@ -381,8 +377,7 @@ public:
             size_t count = 0;
             for (int i = 0; i < num; ++i)
             {
-                count += outputDetections_(i, &outputsData[count * 7],
-                                           allDecodedBBoxes[i], allConfidenceScores[i],
+                count += outputDetections_(i, &outputsData[count * 7], allDecodedBBoxes[i], allConfidenceScores[i],
                                            allIndices[i], _groupByClasses);
             }
             CV_Assert(count == numKept);
@@ -398,7 +393,9 @@ public:
             orig_outputs.clear();
             orig_outputs.push_back(half_umat);
             outs.assign(orig_outputs);
-        } else {
+        }
+        else
+        {
             outputs.clear();
             outputs.push_back(umat);
             outs.assign(outputs);
@@ -408,15 +405,15 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
         if (_bboxesNormalized)
         {
-            CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                       forward_ocl(inputs_arr, outputs_arr, internals_arr))
+            CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
         }
         if (inputs_arr.depth() == CV_16S)
         {
@@ -443,15 +440,15 @@ public:
 
             // Retrieve all location predictions
             std::vector<LabelBBox> allLocationPredictions;
-            GetLocPredictions(locationData, num, numPriors, _numLocClasses,
-                              _shareLocation, _locPredTransposed, allLocationPredictions);
+            GetLocPredictions(locationData, num, numPriors, _numLocClasses, _shareLocation, _locPredTransposed,
+                              allLocationPredictions);
 
             // Retrieve all confidences
             GetConfidenceScores(confidenceData, num, numPriors, _numClasses, allConfidenceScores);
 
             // Retrieve all prior bboxes
             std::vector<util::NormalizedBBox> priorBBoxes;
-            std::vector<std::vector<float> > priorVariances;
+            std::vector<std::vector<float>> priorVariances;
             GetPriorBBoxes(priorData, numPriors, _bboxesNormalized, priorBBoxes, priorVariances);
 
             // Decode all loc predictions to bboxes
@@ -470,14 +467,13 @@ public:
                     clipBounds.ymax = inputs[3].size[2] - 1;
                 }
             }
-            DecodeBBoxesAll(allLocationPredictions, priorBBoxes, priorVariances, num,
-                            _shareLocation, _numLocClasses, _backgroundLabelId,
-                            _codeType, _varianceEncodedInTarget, _clip, clipBounds,
-                            _bboxesNormalized, allDecodedBBoxes);
+            DecodeBBoxesAll(allLocationPredictions, priorBBoxes, priorVariances, num, _shareLocation,
+                            _numLocClasses, _backgroundLabelId, _codeType, _varianceEncodedInTarget, _clip,
+                            clipBounds, _bboxesNormalized, allDecodedBBoxes);
         }
 
         size_t numKept = 0;
-        std::vector<std::map<int, std::vector<int> > > allIndices;
+        std::vector<std::map<int, std::vector<int>>> allIndices;
         for (int i = 0; i < num; ++i)
         {
             numKept += processDetections_(allDecodedBBoxes[i], allConfidenceScores[i], allIndices);
@@ -497,8 +493,7 @@ public:
         size_t count = 0;
         for (int i = 0; i < num; ++i)
         {
-            count += outputDetections_(i, &outputsData[count * 7],
-                                       allDecodedBBoxes[i], allConfidenceScores[i],
+            count += outputDetections_(i, &outputsData[count * 7], allDecodedBBoxes[i], allConfidenceScores[i],
                                        allIndices[i], _groupByClasses);
         }
         CV_Assert(count == numKept);
@@ -506,16 +501,12 @@ public:
         outputs_arr.assign(outputs);
     }
 
-    size_t outputDetections_(
-            const int i, float* outputsData,
-            const LabelBBox& decodeBBoxes, Mat& confidenceScores,
-            const std::map<int, std::vector<int> >& indicesMap,
-            bool groupByClasses
-    )
+    size_t outputDetections_(const int i, float* outputsData, const LabelBBox& decodeBBoxes, Mat& confidenceScores,
+                             const std::map<int, std::vector<int>>& indicesMap, bool groupByClasses)
     {
         std::vector<int> dstIndices;
-        std::vector<std::pair<float, int> > allScores;
-        for (std::map<int, std::vector<int> >::const_iterator it = indicesMap.begin(); it != indicesMap.end(); ++it)
+        std::vector<std::pair<float, int>> allScores;
+        for (std::map<int, std::vector<int>>::const_iterator it = indicesMap.begin(); it != indicesMap.end(); ++it)
         {
             int label = it->first;
             if (confidenceScores.rows <= label)
@@ -540,7 +531,7 @@ public:
         }
 
         size_t count = 0;
-        for (std::map<int, std::vector<int> >::const_iterator it = indicesMap.begin(); it != indicesMap.end(); ++it)
+        for (std::map<int, std::vector<int>>::const_iterator it = indicesMap.begin(); it != indicesMap.end(); ++it)
         {
             int label = it->first;
             if (confidenceScores.rows <= label)
@@ -569,12 +560,10 @@ public:
         return count;
     }
 
-    size_t processDetections_(
-            const LabelBBox& decodeBBoxes, Mat& confidenceScores,
-            std::vector<std::map<int, std::vector<int> > >& allIndices
-    )
+    size_t processDetections_(const LabelBBox& decodeBBoxes, Mat& confidenceScores,
+                              std::vector<std::map<int, std::vector<int>>>& allIndices)
     {
-        std::map<int, std::vector<int> > indices;
+        std::map<int, std::vector<int>> indices;
         size_t numDetections = 0;
         for (int c = 0; c < (int)_numClasses; ++c)
         {
@@ -590,18 +579,17 @@ public:
             if (label_bboxes == decodeBBoxes.end())
                 CV_Error_(cv::Error::StsError, ("Could not find location predictions for label %d", label));
             if (_bboxesNormalized)
-                NMSFast_(label_bboxes->second, scores, _confidenceThreshold, _nmsThreshold, 1.0, _topK,
-                         indices[c], util::caffe_norm_box_overlap);
+                NMSFast_(label_bboxes->second, scores, _confidenceThreshold, _nmsThreshold, 1.0, _topK, indices[c],
+                         util::caffe_norm_box_overlap);
             else
-                NMSFast_(label_bboxes->second, scores, _confidenceThreshold, _nmsThreshold, 1.0, _topK,
-                         indices[c], util::caffe_box_overlap);
+                NMSFast_(label_bboxes->second, scores, _confidenceThreshold, _nmsThreshold, 1.0, _topK, indices[c],
+                         util::caffe_box_overlap);
             numDetections += indices[c].size();
         }
         if (_keepTopK > -1 && numDetections > (size_t)_keepTopK)
         {
-            std::vector<std::pair<float, std::pair<int, int> > > scoreIndexPairs;
-            for (std::map<int, std::vector<int> >::iterator it = indices.begin();
-                 it != indices.end(); ++it)
+            std::vector<std::pair<float, std::pair<int, int>>> scoreIndexPairs;
+            for (std::map<int, std::vector<int>>::iterator it = indices.begin(); it != indices.end(); ++it)
             {
                 int label = it->first;
                 const std::vector<int>& labelIndices = it->second;
@@ -617,10 +605,10 @@ public:
             }
             // Keep outputs k results per image.
             std::sort(scoreIndexPairs.begin(), scoreIndexPairs.end(),
-                      util::SortScorePairDescend<std::pair<int, int> >);
+                      util::SortScorePairDescend<std::pair<int, int>>);
             scoreIndexPairs.resize(_keepTopK);
 
-            std::map<int, std::vector<int> > newIndices;
+            std::map<int, std::vector<int>> newIndices;
             for (size_t j = 0; j < scoreIndexPairs.size(); ++j)
             {
                 int label = scoreIndexPairs[j].second.first;
@@ -675,12 +663,10 @@ public:
 
     // Decode a bbox according to a prior bbox
     template<bool variance_encoded_in_target>
-    static void DecodeBBox(
-        const util::NormalizedBBox& prior_bbox, const std::vector<float>& prior_variance,
-        const cv::String& code_type,
-        const bool clip_bbox, const util::NormalizedBBox& clip_bounds,
-        const bool normalized_bbox, const util::NormalizedBBox& bbox,
-        util::NormalizedBBox& decode_bbox)
+    static void DecodeBBox(const util::NormalizedBBox& prior_bbox, const std::vector<float>& prior_variance,
+                           const cv::String& code_type, const bool clip_bbox,
+                           const util::NormalizedBBox& clip_bounds, const bool normalized_bbox,
+                           const util::NormalizedBBox& bbox, util::NormalizedBBox& decode_bbox)
     {
         float bbox_xmin = variance_encoded_in_target ? bbox.xmin : prior_variance[0] * bbox.xmin;
         float bbox_ymin = variance_encoded_in_target ? bbox.ymin : prior_variance[1] * bbox.ymin;
@@ -734,44 +720,41 @@ public:
     }
 
     // Decode a set of bboxes according to a set of prior bboxes
-    static void DecodeBBoxes(
-        const std::vector<util::NormalizedBBox>& prior_bboxes,
-        const std::vector<std::vector<float> >& prior_variances,
-        const cv::String& code_type, const bool variance_encoded_in_target,
-        const bool clip_bbox, const util::NormalizedBBox& clip_bounds,
-        const bool normalized_bbox, const std::vector<util::NormalizedBBox>& bboxes,
-        std::vector<util::NormalizedBBox>& decode_bboxes)
+    static void DecodeBBoxes(const std::vector<util::NormalizedBBox>& prior_bboxes,
+                             const std::vector<std::vector<float>>& prior_variances, const cv::String& code_type,
+                             const bool variance_encoded_in_target, const bool clip_bbox,
+                             const util::NormalizedBBox& clip_bounds, const bool normalized_bbox,
+                             const std::vector<util::NormalizedBBox>& bboxes,
+                             std::vector<util::NormalizedBBox>& decode_bboxes)
     {
         CV_Assert(prior_bboxes.size() == prior_variances.size());
         CV_Assert(prior_bboxes.size() == bboxes.size());
         size_t num_bboxes = prior_bboxes.size();
         CV_Assert(num_bboxes == 0 || prior_variances[0].size() == 4);
-        decode_bboxes.clear(); decode_bboxes.resize(num_bboxes);
-        if(variance_encoded_in_target)
+        decode_bboxes.clear();
+        decode_bboxes.resize(num_bboxes);
+        if (variance_encoded_in_target)
         {
             for (int i = 0; i < num_bboxes; ++i)
-                DecodeBBox<true>(prior_bboxes[i], prior_variances[i], code_type,
-                                 clip_bbox, clip_bounds, normalized_bbox,
-                                 bboxes[i], decode_bboxes[i]);
+                DecodeBBox<true>(prior_bboxes[i], prior_variances[i], code_type, clip_bbox, clip_bounds,
+                                 normalized_bbox, bboxes[i], decode_bboxes[i]);
         }
         else
         {
             for (int i = 0; i < num_bboxes; ++i)
-                DecodeBBox<false>(prior_bboxes[i], prior_variances[i], code_type,
-                                  clip_bbox, clip_bounds, normalized_bbox,
-                                  bboxes[i], decode_bboxes[i]);
+                DecodeBBox<false>(prior_bboxes[i], prior_variances[i], code_type, clip_bbox, clip_bounds,
+                                  normalized_bbox, bboxes[i], decode_bboxes[i]);
         }
     }
 
     // Decode all bboxes in a batch
     static void DecodeBBoxesAll(const std::vector<LabelBBox>& all_loc_preds,
-        const std::vector<util::NormalizedBBox>& prior_bboxes,
-        const std::vector<std::vector<float> >& prior_variances,
-        const int num, const bool share_location,
-        const int num_loc_classes, const int background_label_id,
-        const cv::String& code_type, const bool variance_encoded_in_target,
-        const bool clip, const util::NormalizedBBox& clip_bounds,
-        const bool normalized_bbox, std::vector<LabelBBox>& all_decode_bboxes)
+                                const std::vector<util::NormalizedBBox>& prior_bboxes,
+                                const std::vector<std::vector<float>>& prior_variances, const int num,
+                                const bool share_location, const int num_loc_classes, const int background_label_id,
+                                const cv::String& code_type, const bool variance_encoded_in_target,
+                                const bool clip, const util::NormalizedBBox& clip_bounds,
+                                const bool normalized_bbox, std::vector<LabelBBox>& all_decode_bboxes)
     {
         CV_Assert(all_loc_preds.size() == num);
         all_decode_bboxes.clear();
@@ -789,9 +772,8 @@ public:
                 LabelBBox::const_iterator label_loc_preds = loc_preds.find(label);
                 if (label_loc_preds == loc_preds.end())
                     CV_Error_(cv::Error::StsError, ("Could not find location predictions for label %d", label));
-                DecodeBBoxes(prior_bboxes, prior_variances,
-                             code_type, variance_encoded_in_target, clip, clip_bounds,
-                             normalized_bbox, label_loc_preds->second, decode_bboxes[label]);
+                DecodeBBoxes(prior_bboxes, prior_variances, code_type, variance_encoded_in_target, clip,
+                             clip_bounds, normalized_bbox, label_loc_preds->second, decode_bboxes[label]);
             }
         }
     }
@@ -801,12 +783,14 @@ public:
     //    num_priors: number of priors.
     //    prior_bboxes: stores all the prior bboxes in the format of util::NormalizedBBox.
     //    prior_variances: stores all the variances needed by prior bboxes.
-    static void GetPriorBBoxes(const float* priorData, const int& numPriors,
-                        bool normalized_bbox, std::vector<util::NormalizedBBox>& priorBBoxes,
-                        std::vector<std::vector<float> >& priorVariances)
+    static void GetPriorBBoxes(const float* priorData, const int& numPriors, bool normalized_bbox,
+                               std::vector<util::NormalizedBBox>& priorBBoxes,
+                               std::vector<std::vector<float>>& priorVariances)
     {
-        priorBBoxes.clear(); priorBBoxes.resize(numPriors);
-        priorVariances.clear(); priorVariances.resize(numPriors);
+        priorBBoxes.clear();
+        priorBBoxes.resize(numPriors);
+        priorVariances.clear();
+        priorVariances.resize(numPriors);
         for (int i = 0; i < numPriors; ++i)
         {
             int startIdx = i * 4;
@@ -840,10 +824,9 @@ public:
     //                         [y,x,height,width] or [x,y,width,height] otherwise.
     //    loc_preds: stores the location prediction, where each item contains
     //      location prediction for an image.
-    static void GetLocPredictions(const float* locData, const int num,
-                           const int numPredsPerClass, const int numLocClasses,
-                           const bool shareLocation, const bool locPredTransposed,
-                           std::vector<LabelBBox>& locPreds)
+    static void GetLocPredictions(const float* locData, const int num, const int numPredsPerClass,
+                                  const int numLocClasses, const bool shareLocation, const bool locPredTransposed,
+                                  std::vector<LabelBBox>& locPreds)
     {
         locPreds.clear();
         if (shareLocation)
@@ -891,11 +874,10 @@ public:
     //    num_classes: number of classes.
     //    conf_preds: stores the confidence prediction, where each item contains
     //      confidence prediction for an image.
-    static void GetConfidenceScores(const float* confData, const int num,
-                             const int numPredsPerClass, const int numClasses,
-                             std::vector<Mat>& confPreds)
+    static void GetConfidenceScores(const float* confData, const int num, const int numPredsPerClass,
+                                    const int numClasses, std::vector<Mat>& confPreds)
     {
-        int shape[] = { numClasses, numPredsPerClass };
+        int shape[] = {numClasses, numPredsPerClass};
         for (int i = 0; i < num; i++)
             confPreds.push_back(Mat(2, shape, CV_32F));
 
@@ -914,8 +896,7 @@ public:
 
     // Compute the jaccard (intersection over union IoU) overlap between two bboxes.
     template<bool normalized>
-    static float JaccardOverlap(const util::NormalizedBBox& bbox1,
-                         const util::NormalizedBBox& bbox2)
+    static float JaccardOverlap(const util::NormalizedBBox& bbox1, const util::NormalizedBBox& bbox2)
     {
         util::NormalizedBBox intersect_bbox;
         intersect_bbox.xmin = std::max(bbox1.xmin, bbox2.xmin);
@@ -936,7 +917,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -956,7 +937,7 @@ public:
         ieLayer->params["variance_encoded_in_target"] = _varianceEncodedInTarget ? "1" : "0";
         ieLayer->params["code_type"] = "caffe.PriorBoxParameter." + _codeType;
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 };
@@ -973,10 +954,9 @@ float util::caffe_norm_box_overlap(const util::NormalizedBBox& a, const util::No
 
 const std::string DetectionOutputLayerImpl::_layerName = std::string("DetectionOutput");
 
-Ptr<DetectionOutputLayer> DetectionOutputLayer::create(const LayerParams &params)
+Ptr<DetectionOutputLayer> DetectionOutputLayer::create(const LayerParams& params)
 {
     return Ptr<DetectionOutputLayer>(new DetectionOutputLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

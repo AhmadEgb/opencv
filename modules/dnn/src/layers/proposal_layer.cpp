@@ -72,7 +72,7 @@ public:
             lp.set("code_type", "CENTER_SIZE");
             lp.set("num_classes", 1);
             lp.set("share_location", true);
-            lp.set("background_label_id", 1);  // We won't pass background scores so set it out of range [0, num_classes)
+            lp.set("background_label_id", 1); // We won't pass background scores so set it out of range [0, num_classes)
             lp.set("variance_encoded_in_target", true);
             lp.set("keep_top_k", keepTopAfterNMS);
             lp.set("top_k", keepTopBeforeNMS);
@@ -86,14 +86,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && preferableTarget != DNN_TARGET_MYRIAD;
+        return backendId == DNN_BACKEND_OPENCV
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE && preferableTarget != DNN_TARGET_MYRIAD;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         // We need to allocate the following blobs:
         // - output priors from PriorBoxLayer
@@ -116,7 +114,7 @@ public:
         // Scores permute layer.
         CV_Assert(scores.size() == 4);
         MatShape objectScores = scores;
-        CV_Assert((scores[1] & 1) == 0);  // Number of channels is even.
+        CV_Assert((scores[1] & 1) == 0); // Number of channels is even.
         objectScores[1] /= 2;
         layerInputs.assign(1, objectScores);
         scoresPermute->getMemoryShapes(layerInputs, 1, layerOutputs, layerInternals);
@@ -148,16 +146,15 @@ public:
         // Scores permute layer.
         Mat scores = getObjectScores(inputs[0]);
         layerInputs.assign(1, scores);
-        layerOutputs.assign(1, Mat(shape(scores.size[0], scores.size[2],
-                                         scores.size[3], scores.size[1]), CV_32FC1));
+        layerOutputs.assign(1, Mat(shape(scores.size[0], scores.size[2], scores.size[3], scores.size[1]), CV_32FC1));
         scoresPermute->finalize(layerInputs, layerOutputs);
 
         // BBox predictions permute layer.
         const Mat& bboxDeltas = inputs[1];
         CV_Assert(bboxDeltas.dims == 4);
         layerInputs.assign(1, bboxDeltas);
-        layerOutputs.assign(1, Mat(shape(bboxDeltas.size[0], bboxDeltas.size[2],
-                                         bboxDeltas.size[3], bboxDeltas.size[1]), CV_32FC1));
+        layerOutputs.assign(
+            1, Mat(shape(bboxDeltas.size[0], bboxDeltas.size[2], bboxDeltas.size[3], bboxDeltas.size[1]), CV_32FC1));
         deltasPermute->finalize(layerInputs, layerOutputs);
     }
 
@@ -231,7 +228,7 @@ public:
         // The boxes.
         UMat dst = outputs[0].rowRange(0, numDets);
         layerOutputs[0].colRange(3, 7).copyTo(dst.colRange(1, 5));
-        dst.col(0).setTo(0);  // First column are batch ids. Keep it zeros too.
+        dst.col(0).setTo(0); // First column are batch ids. Keep it zeros too.
 
         // The scores.
         dst = outputs[1].rowRange(0, numDets);
@@ -245,13 +242,14 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget) &&
-                   OCL_PERFORMANCE_CHECK(ocl::Device::getDefault().isIntel()),
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget)
+                       && OCL_PERFORMANCE_CHECK(ocl::Device::getDefault().isIntel()),
                    forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
@@ -314,7 +312,7 @@ public:
         layerOutputs[0] = layerOutputs[0].reshape(1, numDets);
         Mat dst = outputs[0].rowRange(0, numDets);
         layerOutputs[0].colRange(3, 7).copyTo(dst.colRange(1, 5));
-        dst.col(0).setTo(0);  // First column are batch ids. Keep it zeros too.
+        dst.col(0).setTo(0); // First column are batch ids. Keep it zeros too.
 
         // The scores.
         dst = outputs[1].rowRange(0, numDets);
@@ -325,7 +323,7 @@ public:
                 outputs[i].rowRange(numDets, keepTopAfterNMS).setTo(0);
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -353,7 +351,7 @@ public:
                 ieLayer->params["scale"] += format(",%f", scales.get<float>(i));
         }
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -377,7 +375,7 @@ private:
         CV_Assert((channels & 1) == 0);
 
         Range r = Range(channels / 2, channels);
-        Range ranges[4] = { Range::all(), r, Range::all(), Range::all() };
+        Range ranges[4] = {Range::all(), r, Range::all(), Range::all()};
         return m(&ranges[0]);
     }
 #endif
@@ -402,5 +400,4 @@ Ptr<ProposalLayer> ProposalLayer::create(const LayerParams& params)
     return Ptr<ProposalLayer>(new ProposalLayerImpl(params));
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn

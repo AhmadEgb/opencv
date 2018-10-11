@@ -16,10 +16,7 @@ Implementation of Batch Normalization layer.
 
 #include <iostream>
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class MaxUnpoolLayerImpl CV_FINAL : public MaxUnpoolLayer
 {
@@ -34,15 +31,12 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_HALIDE && haveHalide() &&
-               !poolPad.width && !poolPad.height;
+        return backendId == DNN_BACKEND_OPENCV
+               || backendId == DNN_BACKEND_HALIDE && haveHalide() && !poolPad.width && !poolPad.height;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 2);
         CV_Assert(total(inputs[0]) == total(inputs[1]));
@@ -57,7 +51,8 @@ public:
         return false;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -80,37 +75,35 @@ public:
         CV_Assert(input.size[0] == 1);
         CV_Assert(input.isContinuous());
 
-        for(int i_n = 0; i_n < outputs.size(); i_n++)
+        for (int i_n = 0; i_n < outputs.size(); i_n++)
         {
             Mat& outBlob = outputs[i_n];
             outBlob.setTo(0);
             CV_Assert(input.size[1] == outBlob.size[1]);
-            int outPlaneTotal = outBlob.size[2]*outBlob.size[3];
+            int outPlaneTotal = outBlob.size[2] * outBlob.size[3];
 
             for (int i_c = 0; i_c < input.size[1]; i_c++)
             {
                 Mat outPlane = getPlane(outBlob, 0, i_c);
-                int wh_area = input.size[2]*input.size[3];
+                int wh_area = input.size[2] * input.size[3];
                 const float* inptr = input.ptr<float>(0, i_c);
                 const float* idxptr = indices.ptr<float>(0, i_c);
                 float* outptr = outPlane.ptr<float>();
 
-                for(int i_wh = 0; i_wh < wh_area; i_wh++)
+                for (int i_wh = 0; i_wh < wh_area; i_wh++)
                 {
                     int index = idxptr[i_wh];
                     if (!(0 <= index && index < outPlaneTotal))
                     {
-                        std::cerr
-                            << "i_n=" << i_n << std::endl
-                            << "i_c=" << i_c << std::endl
-                            << "i_wh=" << i_wh << std::endl
-                            << "index=" << index << std::endl
-                            << "maxval=" << inptr[i_wh] << std::endl
-                            << "outPlaneTotal=" << outPlaneTotal << std::endl
-                            << "input.size=" << input.size << std::endl
-                            << "indices.size=" << indices.size << std::endl
-                            << "outBlob=" << outBlob.size << std::endl
-                            ;
+                        std::cerr << "i_n=" << i_n << std::endl
+                                  << "i_c=" << i_c << std::endl
+                                  << "i_wh=" << i_wh << std::endl
+                                  << "index=" << index << std::endl
+                                  << "maxval=" << inptr[i_wh] << std::endl
+                                  << "outPlaneTotal=" << outPlaneTotal << std::endl
+                                  << "input.size=" << input.size << std::endl
+                                  << "indices.size=" << indices.size << std::endl
+                                  << "outBlob=" << outBlob.size << std::endl;
                         CV_Assert(0 <= index && index < outPlaneTotal);
                     }
                     outptr[index] = inptr[i_wh];
@@ -119,17 +112,15 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &input) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& input) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         // Meaningless operation if false because if kernel > stride
         // it is not deterministic and if kernel < stride we just
         // skip a part of input data (you'd better change your model).
-        if (poolKernel.width != poolStride.width ||
-            poolKernel.height != poolStride.height)
-            CV_Error(cv::Error::StsNotImplemented,
-                     "Halide backend for maximum unpooling "
-                     "is not support cases when kernel != stride");
+        if (poolKernel.width != poolStride.width || poolKernel.height != poolStride.height)
+            CV_Error(cv::Error::StsNotImplemented, "Halide backend for maximum unpooling "
+                                                   "is not support cases when kernel != stride");
 
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = (name.empty() ? Halide::Func() : Halide::Func(name));
@@ -143,7 +134,7 @@ public:
         top(x, y, c, n) = select(y * outW + x == indices(pooledX, pooledY, c, n),
                                  inputBuffer(pooledX, pooledY, c, n), 0.0f);
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 };
@@ -153,5 +144,4 @@ Ptr<MaxUnpoolLayer> MaxUnpoolLayer::create(const LayerParams& params)
     return Ptr<MaxUnpoolLayer>(new MaxUnpoolLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

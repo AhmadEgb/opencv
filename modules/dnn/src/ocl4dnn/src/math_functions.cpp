@@ -59,11 +59,8 @@ enum gemm_data_type_t
 // will use the image directly. It's caller's responsibility to
 // release the created image.
 template<typename Dtype>
-ocl::Image2D ocl4dnnGEMMCopyBufferToImage(UMat buffer, int offset,
-                                          bool is_matrix_a, bool transpose,
-                                          bool padding, int padded_height,
-                                          int padded_width, int height,
-                                          int width, int ld)
+ocl::Image2D ocl4dnnGEMMCopyBufferToImage(UMat buffer, int offset, bool is_matrix_a, bool transpose, bool padding,
+                                          int padded_height, int padded_width, int height, int width, int ld)
 {
     ocl::Image2D image;
     String opts = format("-DTYPE=%d", TYPE_FLOAT);
@@ -73,15 +70,16 @@ ocl::Image2D ocl4dnnGEMMCopyBufferToImage(UMat buffer, int offset,
         if (ld == width)
         {
             image = ocl::Image2D(buffer);
-        } else {
+        }
+        else
+        {
             // For matrix B with transpose, we need to handle them differently.
             // As we can't use the sub group block read to get a row easily,
             // we have to use CL_FLOAT type with read_imagef to get the row.
             UMat mat(height, width, CV_32FC1);
             image = ocl::Image2D(mat);
 
-            ocl::Kernel oclk_gemm_copy("gemm_buffer_copy_image_transpose_float",
-                                       ocl::dnn::gemm_image_oclsrc, opts);
+            ocl::Kernel oclk_gemm_copy("gemm_buffer_copy_image_transpose_float", ocl::dnn::gemm_image_oclsrc, opts);
 
             size_t global_copy[2];
             global_copy[0] = width;
@@ -94,17 +92,21 @@ ocl::Image2D ocl4dnnGEMMCopyBufferToImage(UMat buffer, int offset,
             oclk_gemm_copy.set(5, ld);
             oclk_gemm_copy.run(2, global_copy, NULL, false);
         }
-    } else {
+    }
+    else
+    {
         if (!padding)
         {
             // copy without padding.
             image = ocl::Image2D(buffer);
-        } else {
+        }
+        else
+        {
             UMat mat(padded_height, padded_width, CV_8UC4);
             image = ocl::Image2D(mat);
 
-            ocl::Kernel oclk_gemm_copy("gemm_buffer_copy_image_no_transpose_float",
-                                       ocl::dnn::gemm_image_oclsrc, opts);
+            ocl::Kernel oclk_gemm_copy("gemm_buffer_copy_image_no_transpose_float", ocl::dnn::gemm_image_oclsrc,
+                                       opts);
 
             size_t global_copy[2];
             global_copy[0] = padded_width;
@@ -124,12 +126,9 @@ ocl::Image2D ocl4dnnGEMMCopyBufferToImage(UMat buffer, int offset,
     return image;
 }
 
-template
-ocl::Image2D ocl4dnnGEMMCopyBufferToImage<float>(UMat buffer, int offset,
-                                                 bool is_matrix_a, bool transpose,
-                                                 bool padding, int padded_height,
-                                                 int padded_width, int height,
-                                                 int width,  int ld);
+template ocl::Image2D ocl4dnnGEMMCopyBufferToImage<float>(UMat buffer, int offset, bool is_matrix_a,
+                                                          bool transpose, bool padding, int padded_height,
+                                                          int padded_width, int height, int width, int ld);
 
 enum gemm_type_t
 {
@@ -141,17 +140,16 @@ enum gemm_type_t
 };
 
 template<typename Dtype>
-static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
-                                 const CBLAS_TRANSPOSE TransB, const int32_t M,
-                                 const int32_t N, const int32_t K, const Dtype alpha,
-                                 const UMat A, const int32_t offA, const UMat B,
-                                 const int32_t offB, const Dtype beta, UMat C,
-                                 const int32_t offC, bool is_image_a, bool is_image_b,
-                                 enum gemm_type_t gemm_type,
+static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int32_t M,
+                                 const int32_t N, const int32_t K, const Dtype alpha, const UMat A,
+                                 const int32_t offA, const UMat B, const int32_t offB, const Dtype beta, UMat C,
+                                 const int32_t offC, bool is_image_a, bool is_image_b, enum gemm_type_t gemm_type,
                                  const size_t max_image_size)
 {
-    CHECK_EQ(gemm_type == GEMM_TYPE_FAST_IMAGE_32_1 || gemm_type == GEMM_TYPE_FAST_IMAGE_32_2 ||
-             gemm_type == GEMM_TYPE_FAST_IMAGE_B_IMAGE, true) << "Invalid fast image gemm type." << std::endl;
+    CHECK_EQ(gemm_type == GEMM_TYPE_FAST_IMAGE_32_1 || gemm_type == GEMM_TYPE_FAST_IMAGE_32_2
+                 || gemm_type == GEMM_TYPE_FAST_IMAGE_B_IMAGE,
+             true)
+        << "Invalid fast image gemm type." << std::endl;
 
     bool halfPrecisionMode = (A.depth() == CV_16S);
 
@@ -212,12 +210,16 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
     if (TransB == CblasNoTrans)
     {
         kernel_name += "N_";
-    } else {
+    }
+    else
+    {
         kernel_name += "T_";
         if (is_image_b || (K % use_buffer_indicator != 0))
         {
             kernel_name += "SCALAR_";
-        } else {
+        }
+        else
+        {
             kernel_name += "BUFFER_";
         }
     }
@@ -232,9 +234,12 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
     else
         kernel_name += "1";
 
-    if (halfPrecisionMode) {
+    if (halfPrecisionMode)
+    {
         kernel_name += "_half";
-    } else {
+    }
+    else
+    {
         kernel_name += "_float";
     }
 
@@ -270,7 +275,8 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
                 bool padding_A = false;
                 bool padding_B = false;
 
-                if (halfPrecisionMode && is_image_b) {
+                if (halfPrecisionMode && is_image_b)
+                {
                     padding_A = true;
                 }
 
@@ -285,20 +291,20 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
                 if (!is_image_a)
                 {
                     if (!halfPrecisionMode)
-                        ImA = ocl4dnnGEMMCopyBufferToImage<Dtype>(A, blockA_offset,
-                                                                  true, TransA != CblasNoTrans,
-                                                                  padding_A, imageA_h, imageA_w,
-                                                                  blockA_height, blockA_width, ldA);
+                        ImA = ocl4dnnGEMMCopyBufferToImage<Dtype>(A, blockA_offset, true, TransA != CblasNoTrans,
+                                                                  padding_A, imageA_h, imageA_w, blockA_height,
+                                                                  blockA_width, ldA);
                 }
                 if (!is_image_b)
                 {
                     if (!halfPrecisionMode)
-                        ImB = ocl4dnnGEMMCopyBufferToImage<Dtype>(B, blockB_offset,
-                                                                  false, false,
-                                                                  padding_B, imageB_h, imageB_w,
-                                                                  blockB_height, blockB_width, ldB);
+                        ImB = ocl4dnnGEMMCopyBufferToImage<Dtype>(B, blockB_offset, false, false, padding_B,
+                                                                  imageB_h, imageB_w, blockB_height, blockB_width,
+                                                                  ldB);
                 }
-            } else {
+            }
+            else
+            {
                 // We will use normal read_imagef to read image B when B has transpose.
                 // thus we don't need to pad image A at all.
                 if (!is_image_a)
@@ -306,35 +312,40 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
                     bool padding;
                     padding = !is_image_b || halfPrecisionMode;
                     if (!halfPrecisionMode)
-                        ImA = ocl4dnnGEMMCopyBufferToImage<Dtype>(A, blockA_offset,
-                                                                  true, TransA != CblasNoTrans,
-                                                                  padding, imageA_h, imageA_w,
-                                                                  blockA_height, blockA_width, ldA);
+                        ImA = ocl4dnnGEMMCopyBufferToImage<Dtype>(A, blockA_offset, true, TransA != CblasNoTrans,
+                                                                  padding, imageA_h, imageA_w, blockA_height,
+                                                                  blockA_width, ldA);
                 }
 
                 if (!is_image_b && (K % use_buffer_indicator != 0))
                 {
                     if (!halfPrecisionMode)
-                        ImB = ocl4dnnGEMMCopyBufferToImage<Dtype>(B, blockB_offset,
-                                                                  false, true, false,
-                                                                  imageB_h, imageB_w,
-                                                                  blockB_height, blockB_width, ldB);
+                        ImB = ocl4dnnGEMMCopyBufferToImage<Dtype>(B, blockB_offset, false, true, false, imageB_h,
+                                                                  imageB_w, blockB_height, blockB_width, ldB);
                 }
             }
 
             size_t global[2];
             if (gemm_type == GEMM_TYPE_FAST_IMAGE_32_1 || gemm_type == GEMM_TYPE_FAST_IMAGE_B_IMAGE)
             {
-                if (halfPrecisionMode) {
-                    global[0] = (size_t)( blockC_width + 15 ) & ~15;
-                } else {
-                    global[0] = (size_t)( blockC_width + 7 ) & ~7;
+                if (halfPrecisionMode)
+                {
+                    global[0] = (size_t)(blockC_width + 15) & ~15;
                 }
-            } else {
-                if (halfPrecisionMode) {
-                    global[0] = (size_t)( (blockC_width / 2 ) + 15 ) ^ ~15;
-                } else {
-                    global[0] = (size_t)( (blockC_width / 2 ) + 7 ) ^ ~7;
+                else
+                {
+                    global[0] = (size_t)(blockC_width + 7) & ~7;
+                }
+            }
+            else
+            {
+                if (halfPrecisionMode)
+                {
+                    global[0] = (size_t)((blockC_width / 2) + 15) ^ ~15;
+                }
+                else
+                {
+                    global[0] = (size_t)((blockC_width / 2) + 7) ^ ~7;
                 }
             }
             global[1] = (size_t)(blockC_height + 31) / 32;
@@ -343,7 +354,9 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
             if (halfPrecisionMode)
             {
                 local[0] = 16;
-            } else {
+            }
+            else
+            {
                 local[0] = 8;
             }
             local[1] = 1;
@@ -360,7 +373,9 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
                     oclk_gemm_float.set(arg_idx++, ocl::KernelArg::PtrReadOnly(B));
                 else
                     oclk_gemm_float.set(arg_idx++, ImB);
-            } else {
+            }
+            else
+            {
                 oclk_gemm_float.set(arg_idx++, ocl::KernelArg::PtrReadOnly(B));
                 oclk_gemm_float.set(arg_idx++, blockB_offset);
                 oclk_gemm_float.set(arg_idx++, ldB);
@@ -402,7 +417,9 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
         {
             B_start_x += blockB_width;
             B_start_y = 0;
-        } else {
+        }
+        else
+        {
             B_start_y += blockB_height;
             B_start_x = 0;
         }
@@ -423,40 +440,44 @@ static bool ocl4dnnFastImageGEMM(const CBLAS_TRANSPOSE TransA,
 }
 
 template<typename Dtype>
-static bool ocl4dnnFastBufferGEMM(const CBLAS_TRANSPOSE TransA,
-                                  const CBLAS_TRANSPOSE TransB, const int32_t M,
-                                  const int32_t N, const int32_t K, const Dtype alpha,
-                                  const UMat A, const int32_t offA, const UMat B,
-                                  const int32_t offB, const Dtype beta, UMat C,
+static bool ocl4dnnFastBufferGEMM(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, const int32_t M,
+                                  const int32_t N, const int32_t K, const Dtype alpha, const UMat A,
+                                  const int32_t offA, const UMat B, const int32_t offB, const Dtype beta, UMat C,
                                   const int32_t offC, enum gemm_type_t gemm_type)
 {
-    CHECK_EQ(gemm_type == GEMM_TYPE_FAST_BUFFER, true)
-             << "Invalid fast buffer gemm type." << std::endl;
+    CHECK_EQ(gemm_type == GEMM_TYPE_FAST_BUFFER, true) << "Invalid fast buffer gemm type." << std::endl;
 
     bool halfPrecisionMode = (A.depth() == CV_16S);
 
     size_t sub_group_size = 8;
     bool is_small_batch = (M == 2 || M == 4 || M == 8);
     String kernel_name("gemm_buffer_");
-    if (TransA == CblasNoTrans && TransB == CblasNoTrans) {
+    if (TransA == CblasNoTrans && TransB == CblasNoTrans)
+    {
         kernel_name += "NN";
-        if (halfPrecisionMode) {
+        if (halfPrecisionMode)
+        {
             sub_group_size = 16;
         }
-    } else if (TransA == CblasNoTrans && TransB != CblasNoTrans) {
+    }
+    else if (TransA == CblasNoTrans && TransB != CblasNoTrans)
+    {
         if (M == 2)
-            kernel_name +="NT_M_2";
+            kernel_name += "NT_M_2";
         else if (M == 4)
-            kernel_name +="NT_M_4";
+            kernel_name += "NT_M_4";
         else if (M == 8)
-            kernel_name +="NT_M_8";
+            kernel_name += "NT_M_8";
         else
             kernel_name += "NT";
     }
 
-    if (halfPrecisionMode) {
+    if (halfPrecisionMode)
+    {
         kernel_name += "_half";
-    } else {
+    }
+    else
+    {
         kernel_name += "_float";
     }
 
@@ -464,7 +485,8 @@ static bool ocl4dnnFastBufferGEMM(const CBLAS_TRANSPOSE TransA,
     ocl::Kernel oclk_gemm_float(kernel_name.c_str(), ocl::dnn::gemm_buffer_oclsrc, opts);
     size_t local[2] = {};
     size_t global[2] = {};
-    if (TransA == CblasNoTrans && TransB != CblasNoTrans && is_small_batch) {
+    if (TransA == CblasNoTrans && TransB != CblasNoTrans && is_small_batch)
+    {
         if (M == 8)
             local[0] = 16;
         else if (M == 4)
@@ -478,7 +500,9 @@ static bool ocl4dnnFastBufferGEMM(const CBLAS_TRANSPOSE TransA,
         else
             global[0] = (N + 3) / 4 * local[0];
         global[1] = 1;
-    } else {
+    }
+    else
+    {
         size_t lx = sub_group_size;
         size_t ly = (TransB != CblasNoTrans && TransA == CblasNoTrans && halfPrecisionMode) ? 2 : 4;
         int dx = (TransB != CblasNoTrans && TransA == CblasNoTrans) ? 1 : 4;
@@ -505,73 +529,61 @@ static bool ocl4dnnFastBufferGEMM(const CBLAS_TRANSPOSE TransA,
     oclk_gemm_float.set(arg_idx++, (float)beta);
 
     bool ret = true;
-    if (TransB == CblasNoTrans || TransA != CblasNoTrans) {
+    if (TransB == CblasNoTrans || TransA != CblasNoTrans)
+    {
         int stride = 256;
-        for (int start_index = 0; start_index < K; start_index += stride) {
+        for (int start_index = 0; start_index < K; start_index += stride)
+        {
             oclk_gemm_float.set(arg_idx, start_index);
             ret = oclk_gemm_float.run(2, global, local, false);
         }
-    } else {
+    }
+    else
+    {
         ret = oclk_gemm_float.run(2, global, local, false);
     }
     return ret;
 }
 
 template<typename Dtype>
-bool ocl4dnnGEMMCommon(const CBLAS_TRANSPOSE TransB,
-                       const int32_t M, const int32_t N, const int32_t K,
-                       const UMat A, const UMat B,
-                       const UMat B_image, UMat C,
-                       const size_t max_image_size)
+bool ocl4dnnGEMMCommon(const CBLAS_TRANSPOSE TransB, const int32_t M, const int32_t N, const int32_t K,
+                       const UMat A, const UMat B, const UMat B_image, UMat C, const size_t max_image_size)
 {
     bool halfPrecisionMode = (A.depth() == CV_16S);
     gemm_type_t gemm_type = halfPrecisionMode ? GEMM_TYPE_FAST_BUFFER : GEMM_TYPE_FAST_IMAGE_32_1;
 
-    if (gemm_type == GEMM_TYPE_FAST_IMAGE_32_1 ||
-        gemm_type == GEMM_TYPE_FAST_IMAGE_32_2)
+    if (gemm_type == GEMM_TYPE_FAST_IMAGE_32_1 || gemm_type == GEMM_TYPE_FAST_IMAGE_32_2)
     {
-        return ocl4dnnFastImageGEMM<Dtype>(CblasNoTrans, TransB, M, N, K,
-                                           (Dtype)1., A, 0, B, 0, (Dtype)0., C,
-                                           0, false, false, gemm_type, max_image_size);
+        return ocl4dnnFastImageGEMM<Dtype>(CblasNoTrans, TransB, M, N, K, (Dtype)1., A, 0, B, 0, (Dtype)0., C, 0,
+                                           false, false, gemm_type, max_image_size);
     }
     else if (gemm_type == GEMM_TYPE_FAST_IMAGE_B_IMAGE)
     {
-        return ocl4dnnFastImageGEMM<Dtype>(CblasNoTrans, TransB, M, N, K,
-                                           (Dtype)1., A, 0, B_image, 0, (Dtype)0., C,
-                                           0, false, true,
-                                           GEMM_TYPE_FAST_IMAGE_B_IMAGE,
-                                           max_image_size);
+        return ocl4dnnFastImageGEMM<Dtype>(CblasNoTrans, TransB, M, N, K, (Dtype)1., A, 0, B_image, 0, (Dtype)0.,
+                                           C, 0, false, true, GEMM_TYPE_FAST_IMAGE_B_IMAGE, max_image_size);
     }
     else if (gemm_type == GEMM_TYPE_FAST_BUFFER)
     {
-        return ocl4dnnFastBufferGEMM<Dtype>(CblasNoTrans, TransB, M, N, K,
-                                            1.f, A, 0, B, 0, 0.f, C, 0, gemm_type);
+        return ocl4dnnFastBufferGEMM<Dtype>(CblasNoTrans, TransB, M, N, K, 1.f, A, 0, B, 0, 0.f, C, 0, gemm_type);
     }
     return false;
 }
 
-template bool ocl4dnnGEMMCommon<float>(const CBLAS_TRANSPOSE TransB,
-                                       const int32_t M, const int32_t N, const int32_t K,
-                                       const UMat A, const UMat B,
-                                       const UMat B_image, UMat C,
+template bool ocl4dnnGEMMCommon<float>(const CBLAS_TRANSPOSE TransB, const int32_t M, const int32_t N,
+                                       const int32_t K, const UMat A, const UMat B, const UMat B_image, UMat C,
                                        const size_t max_image_size);
 
 template<typename Dtype>
-bool ocl4dnnGEMV(const CBLAS_TRANSPOSE TransA,
-                 const int32_t M, const int32_t N, const Dtype alpha,
-                 const UMat A, const int32_t offA, const UMat x,
-                 const int32_t offx, const Dtype beta, UMat y,
-                 const int32_t offy)
+bool ocl4dnnGEMV(const CBLAS_TRANSPOSE TransA, const int32_t M, const int32_t N, const Dtype alpha, const UMat A,
+                 const int32_t offA, const UMat x, const int32_t offx, const Dtype beta, UMat y, const int32_t offy)
 {
     return false;
 }
 
 template<>
-bool ocl4dnnGEMV<float>(const CBLAS_TRANSPOSE TransA,
-                 const int32_t M, const int32_t N, const float alpha,
-                 const UMat A, const int32_t offA, const UMat x,
-                 const int32_t offx, const float beta, UMat y,
-                 const int32_t offy)
+bool ocl4dnnGEMV<float>(const CBLAS_TRANSPOSE TransA, const int32_t M, const int32_t N, const float alpha,
+                        const UMat A, const int32_t offA, const UMat x, const int32_t offx, const float beta,
+                        UMat y, const int32_t offy)
 {
     bool ret = false;
     bool use_half = (A.depth() == CV_16S);
@@ -593,14 +605,14 @@ bool ocl4dnnGEMV<float>(const CBLAS_TRANSPOSE TransA,
 
         if (row_size >= 4)
         {
-            size_t localsize[] = { 128 };
-            size_t globalsize[] = { row_size / 4 * localsize[0] };
+            size_t localsize[] = {128};
+            size_t globalsize[] = {row_size / 4 * localsize[0]};
 
             uint argId = 0;
             k.set(argId++, ocl::KernelArg::PtrReadOnly(A));
             k.set(argId++, offA);
             k.set(argId++, cl_uint(col_size));
-            k.set(argId++, cl_uint(col_size%4));
+            k.set(argId++, cl_uint(col_size % 4));
             k.set(argId++, ocl::KernelArg::PtrReadOnly(x));
             k.set(argId++, offx);
             k.set(argId++, alpha);
@@ -616,8 +628,8 @@ bool ocl4dnnGEMV<float>(const CBLAS_TRANSPOSE TransA,
         {
             String kname = format("matvec_mul1_%s", use_half ? "half" : "float");
             ocl::Kernel k_1(kname.c_str(), cv::ocl::dnn::matvec_mul_oclsrc, opts);
-            size_t localsize[] = { 128 };
-            size_t globalsize[] = { row_size % 4 * localsize[0] };
+            size_t localsize[] = {128};
+            size_t globalsize[] = {row_size % 4 * localsize[0]};
             uint row_offset = row_size - (row_size % 4);
 
             uint argId = 0;
@@ -625,7 +637,7 @@ bool ocl4dnnGEMV<float>(const CBLAS_TRANSPOSE TransA,
             k_1.set(argId++, offA);
             k_1.set(argId++, cl_uint(col_size));
             k_1.set(argId++, cl_uint(row_offset));
-            k_1.set(argId++, cl_uint(col_size%4));
+            k_1.set(argId++, cl_uint(col_size % 4));
             k_1.set(argId++, ocl::KernelArg::PtrReadOnly(x));
             k_1.set(argId++, offx);
             k_1.set(argId++, alpha);
@@ -641,9 +653,7 @@ bool ocl4dnnGEMV<float>(const CBLAS_TRANSPOSE TransA,
 }
 
 template<typename Dtype>
-bool ocl4dnnAXPY(const int32_t N, const Dtype alpha,
-                 const UMat X, const int32_t offX, UMat Y,
-                 const int32_t offY)
+bool ocl4dnnAXPY(const int32_t N, const Dtype alpha, const UMat X, const int32_t offX, UMat Y, const int32_t offY)
 {
     bool use_half = (X.depth() == CV_16S);
     String opts;
@@ -657,8 +667,8 @@ bool ocl4dnnAXPY(const int32_t N, const Dtype alpha,
     if (oclk_axpy.empty())
         return false;
 
-    size_t global[] = { 128 * 128 };
-    size_t local[] = { 128 };
+    size_t global[] = {128 * 128};
+    size_t local[] = {128};
 
     cl_uint argIdx = 0;
     oclk_axpy.set(argIdx++, N);
@@ -671,8 +681,7 @@ bool ocl4dnnAXPY(const int32_t N, const Dtype alpha,
     return oclk_axpy.run(1, global, local, false);
 }
 
-template bool ocl4dnnAXPY<float>(const int32_t N, const float alpha,
-                                 const UMat X, const int32_t offX,
-                                 UMat Y, const int32_t offY);
+template bool ocl4dnnAXPY<float>(const int32_t N, const float alpha, const UMat X, const int32_t offX, UMat Y,
+                                 const int32_t offY);
 
 }}} // namespace cv::dnn::ocl4dnn

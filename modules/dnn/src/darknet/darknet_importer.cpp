@@ -52,22 +52,19 @@
 #include "darknet_io.hpp"
 
 
-namespace cv {
-namespace dnn {
+namespace cv { namespace dnn {
 CV__DNN_INLINE_NS_BEGIN
 
-namespace
-{
+namespace {
 
 class DarknetImporter
 {
     darknet::NetParameter net;
 
 public:
-
     DarknetImporter() {}
 
-    DarknetImporter(std::istream &cfgStream, std::istream &darknetModelStream)
+    DarknetImporter(std::istream& cfgStream, std::istream& darknetModelStream)
     {
         CV_TRACE_FUNCTION();
 
@@ -75,7 +72,7 @@ public:
         ReadNetParamsFromBinaryStreamOrDie(darknetModelStream, &net);
     }
 
-    DarknetImporter(std::istream &cfgStream)
+    DarknetImporter(std::istream& cfgStream)
     {
         CV_TRACE_FUNCTION();
 
@@ -84,8 +81,10 @@ public:
 
     struct BlobNote
     {
-        BlobNote(const std::string &_name, int _layerId, int _outNum) :
-            name(_name), layerId(_layerId), outNum(_outNum) {}
+        BlobNote(const std::string& _name, int _layerId, int _outNum)
+            : name(_name), layerId(_layerId), outNum(_outNum)
+        {
+        }
 
         std::string name;
         int layerId, outNum;
@@ -116,7 +115,7 @@ public:
 
         for (int li = 0; li < layersSize; li++)
         {
-            const darknet::LayerParameter &layer = net.layer(li);
+            const darknet::LayerParameter& layer = net.layer(li);
             String name = layer.name();
             String type = layer.type();
             LayerParams layerParams = layer.getLayerParams();
@@ -138,9 +137,9 @@ public:
         addedBlobs.clear();
     }
 
-    void addOutput(const darknet::LayerParameter &layer, int layerId, int outNum)
+    void addOutput(const darknet::LayerParameter& layer, int layerId, int outNum)
     {
-        const std::string &name = layer.top(outNum);
+        const std::string& name = layer.top(outNum);
 
         bool haveDups = false;
         for (int idx = (int)addedBlobs.size() - 1; idx >= 0; idx--)
@@ -162,7 +161,7 @@ public:
         addedBlobs.push_back(BlobNote(name, layerId, outNum));
     }
 
-    void addInput(const std::string &name, int layerId, int inNum, Net &dstNet, std::string nn)
+    void addInput(const std::string& name, int layerId, int inNum, Net& dstNet, std::string nn)
     {
         int idx;
         for (idx = (int)addedBlobs.size() - 1; idx >= 0; idx--)
@@ -181,7 +180,7 @@ public:
     }
 };
 
-static Net readNetFromDarknet(std::istream &cfgFile, std::istream &darknetModel)
+static Net readNetFromDarknet(std::istream& cfgFile, std::istream& darknetModel)
 {
     Net net;
     DarknetImporter darknetImporter(cfgFile, darknetModel);
@@ -189,7 +188,7 @@ static Net readNetFromDarknet(std::istream &cfgFile, std::istream &darknetModel)
     return net;
 }
 
-static Net readNetFromDarknet(std::istream &cfgFile)
+static Net readNetFromDarknet(std::istream& cfgFile)
 {
     Net net;
     DarknetImporter darknetImporter(cfgFile);
@@ -197,9 +196,9 @@ static Net readNetFromDarknet(std::istream &cfgFile)
     return net;
 }
 
-}
+} // namespace
 
-Net readNetFromDarknet(const String &cfgFile, const String &darknetModel /*= String()*/)
+Net readNetFromDarknet(const String& cfgFile, const String& darknetModel /*= String()*/)
 {
     std::ifstream cfgStream(cfgFile.c_str());
     if (!cfgStream.is_open())
@@ -228,7 +227,7 @@ struct BufferStream : public std::streambuf
     }
 };
 
-Net readNetFromDarknet(const char *bufferCfg, size_t lenCfg, const char *bufferModel, size_t lenModel)
+Net readNetFromDarknet(const char* bufferCfg, size_t lenCfg, const char* bufferModel, size_t lenModel)
 {
     BufferStream cfgBufferStream(bufferCfg, lenCfg);
     std::istream cfgStream(&cfgBufferStream);
@@ -245,11 +244,9 @@ Net readNetFromDarknet(const char *bufferCfg, size_t lenCfg, const char *bufferM
 Net readNetFromDarknet(const std::vector<uchar>& bufferCfg, const std::vector<uchar>& bufferModel)
 {
     const char* bufferCfgPtr = reinterpret_cast<const char*>(&bufferCfg[0]);
-    const char* bufferModelPtr = bufferModel.empty() ? NULL :
-                                 reinterpret_cast<const char*>(&bufferModel[0]);
-    return readNetFromDarknet(bufferCfgPtr, bufferCfg.size(),
-                              bufferModelPtr, bufferModel.size());
+    const char* bufferModelPtr = bufferModel.empty() ? NULL : reinterpret_cast<const char*>(&bufferModel[0]);
+    return readNetFromDarknet(bufferCfgPtr, bufferCfg.size(), bufferModelPtr, bufferModel.size());
 }
 
 CV__DNN_INLINE_NS_END
-}} // namespace
+}} // namespace cv::dnn

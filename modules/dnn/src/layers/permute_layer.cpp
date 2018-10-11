@@ -47,13 +47,10 @@
 #include <algorithm>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 class PermuteLayerImpl CV_FINAL : public PermuteLayer
 {
 public:
@@ -70,8 +67,7 @@ public:
         }
     }
 
-    PermuteLayerImpl(const LayerParams &params)
-        : _count(0), _needsPermute(false), _numAxes(0)
+    PermuteLayerImpl(const LayerParams& params) : _count(0), _needsPermute(false), _numAxes(0)
     {
         if (!params.has("order"))
         {
@@ -86,14 +82,13 @@ public:
             int currentOrder = paramOrder.get<int>(i);
             if (currentOrder < 0 || currentOrder > _numAxes)
             {
-                CV_Error(Error::StsBadArg,
-                         format("Orders of dimensions in Permute layer parameter"
-                                "must be in [0...%zu]", _numAxes - 1));
+                CV_Error(Error::StsBadArg, format("Orders of dimensions in Permute layer parameter"
+                                                  "must be in [0...%zu]",
+                                                  _numAxes - 1));
             }
             if (std::find(_order.begin(), _order.end(), currentOrder) != _order.end())
             {
-                CV_Error(Error::StsBadArg,
-                         "Permute layer parameter contains duplicated orders.");
+                CV_Error(Error::StsBadArg, "Permute layer parameter contains duplicated orders.");
             }
             _order.push_back(currentOrder);
         }
@@ -104,16 +99,13 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine();
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
-        if(!_needsPermute)
+        if (!_needsPermute)
         {
             Layer::getMemoryShapes(inputs, requiredOutputs, outputs, internals);
             return true;
@@ -139,7 +131,7 @@ public:
         return false;
     }
 
-    void computeStrides(const MatShape &shapeBefore, const MatShape &shapeAfter)
+    void computeStrides(const MatShape& shapeBefore, const MatShape& shapeAfter)
     {
         _oldStride.resize(_numAxes);
         _newStride.resize(_numAxes);
@@ -147,7 +139,7 @@ public:
         _oldStride[_numAxes - 1] = 1;
         _newStride[_numAxes - 1] = 1;
 
-        for(int i = _numAxes - 2; i >= 0; i--)
+        for (int i = _numAxes - 2; i >= 0; i--)
         {
             _oldStride[i] = _oldStride[i + 1] * shapeBefore[i + 1];
             _newStride[i] = _newStride[i + 1] * shapeAfter[i + 1];
@@ -158,7 +150,7 @@ public:
 
     void finalize(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr) CV_OVERRIDE
     {
-        if(!_needsPermute)
+        if (!_needsPermute)
         {
             return;
         }
@@ -175,7 +167,8 @@ public:
 #ifdef HAVE_OPENCL
         if (uorder.empty())
         {
-            std::vector<int> orderVec(_order.begin(), _order.end());;
+            std::vector<int> orderVec(_order.begin(), _order.end());
+            ;
             Mat morder(1, orderVec.size(), CV_32SC1, &orderVec[0]);
 
             std::vector<int> oldStrideVec(_oldStride.begin(), _oldStride.end());
@@ -207,10 +200,8 @@ public:
             p.order = &order;
             p.nstripes = nstripes;
 
-            CV_Assert( out.size[0] == inp.size[order[0]] &&
-                      out.size[1] == inp.size[order[1]] &&
-                      out.size[2] == inp.size[order[2]] &&
-                      out.size[3] == inp.size[order[3]]);
+            CV_Assert(out.size[0] == inp.size[order[0]] && out.size[1] == inp.size[order[1]]
+                      && out.size[2] == inp.size[order[2]] && out.size[3] == inp.size[order[3]]);
 
             parallel_for_(Range(0, nstripes), p, nstripes);
         }
@@ -221,16 +212,16 @@ public:
         {
             int n0 = out->size[0], n1 = out->size[1], n2 = out->size[2], n3 = out->size[3];
 
-            size_t orows = (size_t)n0*n1*n2;
-            size_t stripeSize = (orows + nstripes - 1)/nstripes;
-            size_t stripeStart = r.start*stripeSize;
-            size_t stripeEnd = std::min(r.end*stripeSize, orows);
+            size_t orows = (size_t)n0 * n1 * n2;
+            size_t stripeSize = (orows + nstripes - 1) / nstripes;
+            size_t stripeStart = r.start * stripeSize;
+            size_t stripeEnd = std::min(r.end * stripeSize, orows);
 
             const size_t esz = sizeof(float);
-            size_t ostep0 = out->step[0]/esz, ostep1 = out->step[1]/esz, ostep2 = out->step[2]/esz;
+            size_t ostep0 = out->step[0] / esz, ostep1 = out->step[1] / esz, ostep2 = out->step[2] / esz;
             const size_t* ord = &order->at(0);
-            size_t istep0 = inp->step[ord[0]]/esz, istep1 = inp->step[ord[1]]/esz,
-            istep2 = inp->step[ord[2]]/esz, istep3 = inp->step[ord[3]]/esz;
+            size_t istep0 = inp->step[ord[0]] / esz, istep1 = inp->step[ord[1]] / esz,
+                   istep2 = inp->step[ord[2]] / esz, istep3 = inp->step[ord[3]] / esz;
 
             size_t val = stripeStart;
             int i2 = (int)(val % n2);
@@ -241,21 +232,21 @@ public:
             const float* inptr_orig = inp->ptr<float>();
             float* outptr_orig = out->ptr<float>();
 
-            for( size_t ofs = stripeStart; ofs < stripeEnd; ofs++ )
+            for (size_t ofs = stripeStart; ofs < stripeEnd; ofs++)
             {
-                const float* inptr = inptr_orig + i0*istep0 + i1*istep1 + i2*istep2;
-                float* outptr = outptr_orig + i0*ostep0 + i1*ostep1 + i2*ostep2;
+                const float* inptr = inptr_orig + i0 * istep0 + i1 * istep1 + i2 * istep2;
+                float* outptr = outptr_orig + i0 * ostep0 + i1 * ostep1 + i2 * ostep2;
 
-                for( int i3 = 0; i3 < n3; i3++ )
-                    outptr[i3] = inptr[i3*istep3];
+                for (int i3 = 0; i3 < n3; i3++)
+                    outptr[i3] = inptr[i3 * istep3];
 
-                if( ++i2 >= n2 )
+                if (++i2 >= n2)
                 {
                     i2 = 0;
-                    if( ++i1 >= n1 )
+                    if (++i1 >= n1)
                     {
                         i1 = 0;
-                        if( ++i0 >= n0 )
+                        if (++i0 >= n0)
                             break;
                     }
                 }
@@ -297,13 +288,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -316,7 +307,7 @@ public:
         outputs_arr.getMatVector(outputs);
 
         size_t k, ninputs = inputs.size();
-        if(!_needsPermute)
+        if (!_needsPermute)
         {
             for (k = 0; k < ninputs; k++)
             {
@@ -343,15 +334,15 @@ public:
                 CV_Assert(inp.isContinuous() && out.isContinuous());
                 CV_Assert(inp.type() == CV_32F && out.type() == CV_32F);
 
-                if( numAxes == 4 )
+                if (numAxes == 4)
                 {
                     int nstripes = getNumThreads();
                     PermuteInvoker::run(inp, out, _order, nstripes);
                 }
                 else
                 {
-                    const float *srcData = inp.ptr<float>();
-                    float *dstData = out.ptr<float>();
+                    const float* srcData = inp.ptr<float>();
+                    float* dstData = out.ptr<float>();
 
                     for (i = 0; i < count; ++i)
                     {
@@ -370,7 +361,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
@@ -385,7 +376,7 @@ public:
             ieLayer->params["order"] += format(",%zu", _order[i]);
 
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -406,10 +397,9 @@ public:
     size_t _numAxes;
 };
 
-Ptr<PermuteLayer> PermuteLayer::create(const LayerParams &params)
+Ptr<PermuteLayer> PermuteLayer::create(const LayerParams& params)
 {
     return Ptr<PermuteLayer>(new PermuteLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

@@ -49,13 +49,10 @@
 #include <iostream>
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 using std::abs;
 using std::exp;
@@ -74,7 +71,7 @@ public:
         Mat* dst_;
         int nstripes_;
 
-        PBody(const Func &func, const Mat &src, Mat& dst, int nstripes)
+        PBody(const Func& func, const Mat& src, Mat& dst, int nstripes)
         {
             func_ = &func;
             src_ = &src;
@@ -82,7 +79,7 @@ public:
             nstripes_ = nstripes;
         }
 
-        void operator()(const Range &r) const CV_OVERRIDE
+        void operator()(const Range& r) const CV_OVERRIDE
         {
             int nstripes = nstripes_, nsamples = 1, outCn = 1;
             size_t planeSize = 1;
@@ -98,11 +95,11 @@ public:
             for (int i = 2; i < src_->dims; ++i)
                 planeSize *= src_->size[i];
 
-            size_t stripeSize = (planeSize + nstripes - 1)/nstripes;
-            size_t stripeStart = r.start*stripeSize;
-            size_t stripeEnd = std::min(r.end*stripeSize, planeSize);
+            size_t stripeSize = (planeSize + nstripes - 1) / nstripes;
+            size_t stripeStart = r.start * stripeSize;
+            size_t stripeEnd = std::min(r.end * stripeSize, planeSize);
 
-            for( int i = 0; i < nsamples; i++ )
+            for (int i = 0; i < nsamples; i++)
             {
                 const float* srcptr = src_->ptr<float>(i) + stripeStart;
                 float* dstptr = dst_->ptr<float>(i) + stripeStart;
@@ -111,7 +108,7 @@ public:
         }
     };
 
-    ElementWiseLayer(const Func &f=Func()) : run_parallel(false) { func = f; }
+    ElementWiseLayer(const Func& f = Func()) : run_parallel(false) { func = f; }
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
@@ -122,23 +119,23 @@ public:
     {
         switch (node->backendId)
         {
-            case DNN_BACKEND_HALIDE:
-            {
+        case DNN_BACKEND_HALIDE:
+        {
 #ifdef HAVE_HALIDE
-                auto base = node.dynamicCast<HalideBackendNode>();
-                Halide::Func& input = base->funcs.back();
-                Halide::Var x("x"), y("y"), c("c"), n("n");
-                Halide::Func top = (this->name.empty() ? Halide::Func() : Halide::Func(this->name));
-                func.attachHalide(input(x, y, c, n), top);
-                return Ptr<BackendNode>(new HalideBackendNode(base, top));
-#endif  // HAVE_HALIDE
-                break;
-            }
+            auto base = node.dynamicCast<HalideBackendNode>();
+            Halide::Func& input = base->funcs.back();
+            Halide::Var x("x"), y("y"), c("c"), n("n");
+            Halide::Func top = (this->name.empty() ? Halide::Func() : Halide::Func(this->name));
+            func.attachHalide(input(x, y, c, n), top);
+            return Ptr<BackendNode>(new HalideBackendNode(base, top));
+#endif // HAVE_HALIDE
+            break;
+        }
         }
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
         Halide::Buffer<float> input = halideBuffer(inputs[0]);
@@ -146,41 +143,34 @@ public:
         Halide::Func top = (this->name.empty() ? Halide::Func() : Halide::Func(this->name));
         func.attachHalide(input(x, y, c, n), top);
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >&) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>&) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::LayerParams lp;
         lp.name = this->name;
         lp.precision = InferenceEngine::Precision::FP32;
         return Ptr<BackendNode>(new InfEngineBackendNode(func.initInfEngine(lp)));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
-    virtual bool tryFuse(Ptr<dnn::Layer>& top) CV_OVERRIDE
-    {
-        return func.tryFuse(top);
-    }
+    virtual bool tryFuse(Ptr<dnn::Layer>& top) CV_OVERRIDE { return func.tryFuse(top); }
 
-    void getScaleShift(Mat& scale_, Mat& shift_) const CV_OVERRIDE
-    {
-        func.getScaleShift(scale_, shift_);
-    }
+    void getScaleShift(Mat& scale_, Mat& shift_) const CV_OVERRIDE { func.getScaleShift(scale_, shift_); }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         Layer::getMemoryShapes(inputs, requiredOutputs, outputs, internals);
         return true;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
 
@@ -199,10 +189,10 @@ public:
 
         for (size_t i = 0; i < inputs.size(); i++)
         {
-            const Mat &src = inputs[i];
-            Mat &dst = outputs[i];
-            CV_Assert(src.size == dst.size && src.type() == dst.type() &&
-                      src.isContinuous() && dst.isContinuous() && src.type() == CV_32F);
+            const Mat& src = inputs[i];
+            Mat& dst = outputs[i];
+            CV_Assert(src.size == dst.size && src.type() == dst.type() && src.isContinuous() && dst.isContinuous()
+                      && src.type() == CV_32F);
 
             const int nstripes = getNumThreads();
             PBody body(func, src, dst, nstripes);
@@ -215,8 +205,7 @@ public:
         func.apply(src, dst, len, planeSize, cn0, cn1);
     }
 
-    virtual int64 getFLOPS(const std::vector<MatShape> &inputs,
-                           const std::vector<MatShape> &outputs) const CV_OVERRIDE
+    virtual int64 getFLOPS(const std::vector<MatShape>& inputs, const std::vector<MatShape>& outputs) const CV_OVERRIDE
     {
         long flops = 0;
         for (int i = 0; i < outputs.size(); i++)
@@ -231,7 +220,7 @@ public:
 };
 
 #ifdef HAVE_OPENCL
-static String oclGetTMacro(const UMat &m)
+static String oclGetTMacro(const UMat& m)
 {
     String str_name = ocl::typeToStr(m.type());
 
@@ -247,50 +236,50 @@ struct ReLUFunctor
     typedef ReLULayer Layer;
     float slope;
 
-    explicit ReLUFunctor(float slope_=1.f) : slope(slope_) {}
+    explicit ReLUFunctor(float slope_ = 1.f) : slope(slope_) {}
 
     bool supportBackend(int backendId, int)
     {
-        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE;
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE;
     }
 
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
         float s = slope;
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
             int i = 0;
 #if CV_SIMD128
             v_float32x4 s4 = v_setall_f32(s), z = v_setzero_f32();
-            for( ; i <= len - 16; i += 16 )
+            for (; i <= len - 16; i += 16)
             {
                 v_float32x4 x0 = v_load(srcptr + i);
                 v_float32x4 x1 = v_load(srcptr + i + 4);
                 v_float32x4 x2 = v_load(srcptr + i + 8);
                 v_float32x4 x3 = v_load(srcptr + i + 12);
-                x0 = v_select(x0 >= z, x0, x0*s4);
-                x1 = v_select(x1 >= z, x1, x1*s4);
-                x2 = v_select(x2 >= z, x2, x2*s4);
-                x3 = v_select(x3 >= z, x3, x3*s4);
+                x0 = v_select(x0 >= z, x0, x0 * s4);
+                x1 = v_select(x1 >= z, x1, x1 * s4);
+                x2 = v_select(x2 >= z, x2, x2 * s4);
+                x3 = v_select(x3 >= z, x3, x3 * s4);
                 v_store(dstptr + i, x0);
                 v_store(dstptr + i + 4, x1);
                 v_store(dstptr + i + 8, x2);
                 v_store(dstptr + i + 12, x3);
             }
 #endif
-            for( ; i < len; i++ )
+            for (; i < len; i++)
             {
                 float x = srcptr[i];
-                dstptr[i] = x >= 0.f ? x : s*x;
+                dstptr[i] = x >= 0.f ? x : s * x;
             }
         }
     }
 
 #ifdef HAVE_OPENCL
-    bool initKernel(ocl::Kernel &ker, const UMat &src) const
+    bool initKernel(ocl::Kernel& ker, const UMat& src) const
     {
-        const char *buildoptSlope = (slope == 0) ? "-DRELU_NO_SLOPE" : "";
+        const char* buildoptSlope = (slope == 0) ? "-DRELU_NO_SLOPE" : "";
         String buildopt = oclGetTMacro(src) + buildoptSlope;
 
         if (!ker.create("ReLUForward", ocl::dnn::activations_oclsrc, buildopt))
@@ -343,7 +332,7 @@ struct ReLUFunctor
             top(x, y, c, n) = max(input, 0.0f);
         }
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -354,7 +343,7 @@ struct ReLUFunctor
         ieLayer->params["negative_slope"] = format("%f", slope);
         return ieLayer;
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -368,26 +357,25 @@ struct ReLU6Functor
     typedef ReLU6Layer Layer;
     float minValue, maxValue;
 
-    ReLU6Functor(float minValue_ = 0.0f, float maxValue_ = 6.0f)
-        : minValue(minValue_), maxValue(maxValue_)
+    ReLU6Functor(float minValue_ = 0.0f, float maxValue_ = 6.0f) : minValue(minValue_), maxValue(maxValue_)
     {
         CV_Assert(minValue <= maxValue);
     }
 
     bool supportBackend(int backendId, int)
     {
-        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE;
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE;
     }
 
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
             int i = 0;
 #if CV_SIMD128
             v_float32x4 minV = v_setall_f32(minValue), maxV = v_setall_f32(maxValue);
-            for( ; i <= len - 16; i += 16 )
+            for (; i <= len - 16; i += 16)
             {
                 v_float32x4 x0 = v_load(srcptr + i);
                 v_float32x4 x1 = v_load(srcptr + i + 4);
@@ -403,7 +391,7 @@ struct ReLU6Functor
                 v_store(dstptr + i + 12, x3);
             }
 #endif
-            for( ; i < len; i++ )
+            for (; i < len; i++)
             {
                 float x = srcptr[i];
                 if (x >= minValue)
@@ -450,7 +438,7 @@ struct ReLU6Functor
         Halide::Var x("x"), y("y"), c("c"), n("n");
         top(x, y, c, n) = clamp(input, minValue, maxValue);
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -463,7 +451,7 @@ struct ReLU6Functor
         ieLayer->params["max"] = format("%f", maxValue);
         return ieLayer;
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -478,15 +466,15 @@ struct TanHFunctor
 
     bool supportBackend(int backendId, int)
     {
-        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE;
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE;
     }
 
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
-            for( int i = 0; i < len; i++ )
+            for (int i = 0; i < len; i++)
             {
                 float x = srcptr[i];
                 dstptr[i] = tanh(x);
@@ -528,7 +516,7 @@ struct TanHFunctor
         Halide::Var x("x"), y("y"), c("c"), n("n");
         top(x, y, c, n) = tanh(input);
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -537,7 +525,7 @@ struct TanHFunctor
         std::shared_ptr<InferenceEngine::CNNLayer> ieLayer(new InferenceEngine::CNNLayer(lp));
         return ieLayer;
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -552,18 +540,18 @@ struct SigmoidFunctor
 
     bool supportBackend(int backendId, int)
     {
-        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE;
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE;
     }
 
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
-            for( int i = 0; i < len; i++ )
+            for (int i = 0; i < len; i++)
             {
                 float x = srcptr[i];
-                dstptr[i] = 1.f/(1.f + exp(-x));
+                dstptr[i] = 1.f / (1.f + exp(-x));
             }
         }
     }
@@ -602,7 +590,7 @@ struct SigmoidFunctor
         Halide::Var x("x"), y("y"), c("c"), n("n");
         top(x, y, c, n) = 1.0f / (1.0f + exp(-input));
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -611,7 +599,7 @@ struct SigmoidFunctor
         std::shared_ptr<InferenceEngine::CNNLayer> ieLayer(new InferenceEngine::CNNLayer(lp));
         return ieLayer;
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -628,15 +616,15 @@ struct ELUFunctor
 
     bool supportBackend(int backendId, int)
     {
-        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE ||
-               backendId == DNN_BACKEND_INFERENCE_ENGINE;
+        return backendId == DNN_BACKEND_OPENCV || backendId == DNN_BACKEND_HALIDE
+               || backendId == DNN_BACKEND_INFERENCE_ENGINE;
     }
 
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
-            for(int i = 0; i < len; i++ )
+            for (int i = 0; i < len; i++)
             {
                 float x = srcptr[i];
                 dstptr[i] = x >= 0.f ? x : exp(x) - 1;
@@ -678,7 +666,7 @@ struct ELUFunctor
         Halide::Var x("x"), y("y"), c("c"), n("n");
         top(x, y, c, n) = select(input >= 0.0f, input, exp(input) - 1);
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -686,7 +674,7 @@ struct ELUFunctor
         lp.type = "ELU";
         return InferenceEngine::CNNLayerPtr(new InferenceEngine::CNNLayer(lp));
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -706,9 +694,9 @@ struct AbsValFunctor
 
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
-            for( int i = 0; i < len; i++ )
+            for (int i = 0; i < len; i++)
             {
                 float x = srcptr[i];
                 dstptr[i] = abs(x);
@@ -750,7 +738,7 @@ struct AbsValFunctor
         Halide::Var x("x"), y("y"), c("c"), n("n");
         top(x, y, c, n) = abs(input);
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -758,7 +746,7 @@ struct AbsValFunctor
         CV_Error(Error::StsNotImplemented, "Abs");
         return InferenceEngine::CNNLayerPtr();
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -778,9 +766,9 @@ struct BNLLFunctor
 
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
-            for( int i = 0; i < len; i++ )
+            for (int i = 0; i < len; i++)
             {
                 float x = srcptr[i];
                 dstptr[i] = log(1.f + exp(-abs(x)));
@@ -802,7 +790,7 @@ struct BNLLFunctor
         Halide::Var x("x"), y("y"), c("c"), n("n");
         top(x, y, c, n) = log(1.0f + exp(-abs(input)));
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -810,7 +798,7 @@ struct BNLLFunctor
         CV_Error(Error::StsNotImplemented, "BNLL");
         return InferenceEngine::CNNLayerPtr();
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -828,7 +816,9 @@ struct PowerFunctor
     float shift;
 
     explicit PowerFunctor(float power_ = 1.f, float scale_ = 1.f, float shift_ = 0.f)
-        : power(power_), scale(scale_), shift(shift_) {}
+        : power(power_), scale(scale_), shift(shift_)
+    {
+    }
 
     bool supportBackend(int backendId, int targetId)
     {
@@ -841,25 +831,25 @@ struct PowerFunctor
     void apply(const float* srcptr, float* dstptr, int len, size_t planeSize, int cn0, int cn1) const
     {
         float a = scale, b = shift, p = power;
-        if( p == 1.f )
+        if (p == 1.f)
         {
-            for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+            for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
             {
-                for( int i = 0; i < len; i++ )
+                for (int i = 0; i < len; i++)
                 {
                     float x = srcptr[i];
-                    dstptr[i] = a*x + b;
+                    dstptr[i] = a * x + b;
                 }
             }
         }
         else
         {
-            for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+            for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
             {
-                for( int i = 0; i < len; i++ )
+                for (int i = 0; i < len; i++)
                 {
                     float x = srcptr[i];
-                    dstptr[i] = pow(a*x + b, p);
+                    dstptr[i] = pow(a * x + b, p);
                 }
             }
         }
@@ -911,7 +901,7 @@ struct PowerFunctor
         }
         top(x, y, c, n) = topExpr;
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -933,7 +923,7 @@ struct PowerFunctor
             return ieLayer;
         }
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>& top)
     {
@@ -973,9 +963,7 @@ struct ChannelsPReLUFunctor
     UMat scale_umat;
 #endif
 
-    explicit ChannelsPReLUFunctor(const Mat& scale_=Mat()) : scale(scale_)
-    {
-    }
+    explicit ChannelsPReLUFunctor(const Mat& scale_ = Mat()) : scale(scale_) {}
 
     bool supportBackend(int backendId, int)
     {
@@ -987,34 +975,34 @@ struct ChannelsPReLUFunctor
         CV_Assert(scale.isContinuous() && scale.type() == CV_32F);
 
         const float* scaleptr = scale.ptr<float>();
-        CV_Assert( 0 <= cn0 && cn0 < cn1 && cn1 <= (int)scale.total() );
+        CV_Assert(0 <= cn0 && cn0 < cn1 && cn1 <= (int)scale.total());
 
-        for( int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize )
+        for (int cn = cn0; cn < cn1; cn++, srcptr += planeSize, dstptr += planeSize)
         {
             float s = scaleptr[cn];
             int i = 0;
-        #if CV_SIMD128
+#if CV_SIMD128
             v_float32x4 s4 = v_setall_f32(s), z = v_setzero_f32();
-            for( ; i <= len - 16; i += 16 )
+            for (; i <= len - 16; i += 16)
             {
                 v_float32x4 x0 = v_load(srcptr + i);
                 v_float32x4 x1 = v_load(srcptr + i + 4);
                 v_float32x4 x2 = v_load(srcptr + i + 8);
                 v_float32x4 x3 = v_load(srcptr + i + 12);
-                x0 = v_select(x0 >= z, x0, x0*s4);
-                x1 = v_select(x1 >= z, x1, x1*s4);
-                x2 = v_select(x2 >= z, x2, x2*s4);
-                x3 = v_select(x3 >= z, x3, x3*s4);
+                x0 = v_select(x0 >= z, x0, x0 * s4);
+                x1 = v_select(x1 >= z, x1, x1 * s4);
+                x2 = v_select(x2 >= z, x2, x2 * s4);
+                x3 = v_select(x3 >= z, x3, x3 * s4);
                 v_store(dstptr + i, x0);
                 v_store(dstptr + i + 4, x1);
                 v_store(dstptr + i + 8, x2);
                 v_store(dstptr + i + 12, x3);
             }
-        #endif
-            for( ; i < len; i++ )
+#endif
+            for (; i < len; i++)
             {
                 float x = srcptr[i];
-                dstptr[i] = x >= 0.f ? x : s*x;
+                dstptr[i] = x >= 0.f ? x : s * x;
             }
         }
     }
@@ -1060,7 +1048,7 @@ struct ChannelsPReLUFunctor
         auto weights = wrapToHalideBuffer(scale, {(int)scale.total()});
         top(x, y, c, n) = select(input >= 0.0f, input, weights(c) * input);
     }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 #ifdef HAVE_INF_ENGINE
     InferenceEngine::CNNLayerPtr initInfEngine(InferenceEngine::LayerParams& lp)
@@ -1068,7 +1056,7 @@ struct ChannelsPReLUFunctor
         CV_Error(Error::StsNotImplemented, "PReLU");
         return InferenceEngine::CNNLayerPtr();
     }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
 
     bool tryFuse(Ptr<dnn::Layer>&) { return false; }
 
@@ -1078,8 +1066,7 @@ struct ChannelsPReLUFunctor
 };
 
 #define ACTIVATION_CREATOR_FOR(_Layer, _Functor, ...) \
-Ptr<_Layer> _Layer::create() { \
-    return return Ptr<_Layer>( new ElementWiseLayer<_Functor>(_Functor()) ); }
+    Ptr<_Layer> _Layer::create() { return return Ptr<_Layer>(new ElementWiseLayer<_Functor>(_Functor())); }
 
 
 Ptr<ReLULayer> ReLULayer::create(const LayerParams& params)
@@ -1173,5 +1160,4 @@ Ptr<Layer> ChannelsPReLULayer::create(const LayerParams& params)
     return l;
 }
 
-}
-}
+}} // namespace cv::dnn

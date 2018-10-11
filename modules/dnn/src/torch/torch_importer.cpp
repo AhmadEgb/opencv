@@ -49,8 +49,7 @@
 
 #include "THDiskFile.h"
 
-namespace cv {
-namespace dnn {
+namespace cv { namespace dnn {
 CV__DNN_INLINE_NS_BEGIN
 
 using namespace TH;
@@ -63,12 +62,12 @@ static bool dbgPrint = false;
 
 enum LuaType
 {
-    TYPE_NIL      = 0,
-    TYPE_NUMBER   = 1,
-    TYPE_STRING   = 2,
-    TYPE_TABLE    = 3,
-    TYPE_TORCH    = 4,
-    TYPE_BOOLEAN  = 5,
+    TYPE_NIL = 0,
+    TYPE_NUMBER = 1,
+    TYPE_STRING = 2,
+    TYPE_TABLE = 3,
+    TYPE_TORCH = 4,
+    TYPE_BOOLEAN = 5,
     TYPE_FUNCTION = 6,
     TYPE_RECUR_FUNCTION = 8,
     LEGACY_TYPE_RECUR_FUNCTION = 7
@@ -78,35 +77,32 @@ enum LuaType
 enum TorchType
 {
     TYPE_DOUBLE = CV_64F,
-    TYPE_FLOAT  = CV_32F,
-    TYPE_BYTE   = CV_8U,
-    TYPE_CHAR   = CV_8S,
-    TYPE_SHORT  = CV_16S,
-    TYPE_INT    = CV_32S,
-    TYPE_LONG   = CV_32SC2
+    TYPE_FLOAT = CV_32F,
+    TYPE_BYTE = CV_8U,
+    TYPE_CHAR = CV_8S,
+    TYPE_SHORT = CV_16S,
+    TYPE_INT = CV_32S,
+    TYPE_LONG = CV_32SC2
 };
 
 template<typename T>
-static String toString(const T &v)
+static String toString(const T& v)
 {
     std::ostringstream ss;
     ss << v;
     return ss.str();
 }
 
-static inline bool startsWith(const String &str, const char *substr)
-{
-    return str.find(substr) == 0;
-}
+static inline bool startsWith(const String& str, const char* substr) { return str.find(substr) == 0; }
 
-static inline bool endsWith(const String &str, const char *substr)
+static inline bool endsWith(const String& str, const char* substr)
 {
     return str.rfind(substr) == str.length() - strlen(substr);
 }
 
 struct TorchImporter
 {
-    typedef std::map<String, std::pair<int, Mat> > TensorsMap;
+    typedef std::map<String, std::pair<int, Mat>> TensorsMap;
     Net net;
 
     cv::Ptr<THFile> file;
@@ -120,14 +116,13 @@ struct TorchImporter
     {
         String thName, apiType;
         dnn::LayerParams params;
-        std::vector<cv::Ptr<Module> > modules;
+        std::vector<cv::Ptr<Module>> modules;
 
-        Module(const String &_thName, const String &_apiType = String())
-            : thName(_thName), apiType(_apiType) {}
+        Module(const String& _thName, const String& _apiType = String()) : thName(_thName), apiType(_apiType) {}
     };
 
-    Module *rootModule;
-    Module *curModule;
+    Module* rootModule;
+    Module* curModule;
     int moduleCounter;
 
     TorchImporter(String filename, bool isBinary)
@@ -148,25 +143,13 @@ struct TorchImporter
 
     /* Simple readers */
 
-    inline int readInt()
-    {
-        return THFile_readIntScalar(file);
-    }
+    inline int readInt() { return THFile_readIntScalar(file); }
 
-    inline long readLong()
-    {
-        return THFile_readLongScalar(file);
-    }
+    inline long readLong() { return THFile_readLongScalar(file); }
 
-    inline bool readBool()
-    {
-        return readInt() != 0;
-    }
+    inline bool readBool() { return readInt() != 0; }
 
-    inline double readDouble()
-    {
-        return THFile_readDoubleScalar(file);
-    }
+    inline double readDouble() { return THFile_readDoubleScalar(file); }
 
     inline String readString()
     {
@@ -208,42 +191,37 @@ struct TorchImporter
 
     /* Special readers */
 
-    static inline int parseTorchType(const String &str, const char *suffix, const char *prefix = "torch.")
+    static inline int parseTorchType(const String& str, const char* suffix, const char* prefix = "torch.")
     {
         if (startsWith(str, prefix) && endsWith(str, suffix))
         {
-           String typeStr = str.substr(strlen(prefix), str.length() - strlen(prefix) - strlen(suffix));
+            String typeStr = str.substr(strlen(prefix), str.length() - strlen(prefix) - strlen(suffix));
 
-           if (typeStr == "Double")
-               return TYPE_DOUBLE;
-           else if (typeStr == "Float" || typeStr == "Cuda")
-               return TYPE_FLOAT;
-           else if (typeStr == "Byte")
-               return TYPE_BYTE;
-           else if (typeStr == "Char")
-               return TYPE_CHAR;
-           else if (typeStr == "Short")
-               return TYPE_SHORT;
-           else if (typeStr == "Int")
-               return TYPE_INT;
-           else if (typeStr == "Long")
-               return TYPE_LONG;
-           else
-               CV_Error(Error::StsNotImplemented, "Unknown type \"" + typeStr + "\" of torch class \"" + str + "\"");
+            if (typeStr == "Double")
+                return TYPE_DOUBLE;
+            else if (typeStr == "Float" || typeStr == "Cuda")
+                return TYPE_FLOAT;
+            else if (typeStr == "Byte")
+                return TYPE_BYTE;
+            else if (typeStr == "Char")
+                return TYPE_CHAR;
+            else if (typeStr == "Short")
+                return TYPE_SHORT;
+            else if (typeStr == "Int")
+                return TYPE_INT;
+            else if (typeStr == "Long")
+                return TYPE_LONG;
+            else
+                CV_Error(Error::StsNotImplemented,
+                         "Unknown type \"" + typeStr + "\" of torch class \"" + str + "\"");
         }
 
         return -1;
     }
 
-    static int parseTensorType(const String &className)
-    {
-        return parseTorchType(className, "Tensor");
-    }
+    static int parseTensorType(const String& className) { return parseTorchType(className, "Tensor"); }
 
-    static int parseStorageType(const String &className)
-    {
-        return parseTorchType(className, "Storage");
-    }
+    static int parseStorageType(const String& className) { return parseTorchType(className, "Storage"); }
 
     void readTorchStorage(int index, int type = -1)
     {
@@ -278,11 +256,11 @@ struct TorchImporter
             break;
         case TYPE_LONG:
         {
-            storageMat.create(1, size, CV_64F);   //handle LongStorage as CV_64F Mat
-            double *buf = storageMat.ptr<double>();
+            storageMat.create(1, size, CV_64F); //handle LongStorage as CV_64F Mat
+            double* buf = storageMat.ptr<double>();
             THFile_readLongRaw(file, (int64*)buf, size);
 
-            for (size_t i = (size_t)size; i-- > 0; )
+            for (size_t i = (size_t)size; i-- > 0;)
                 buf[i] = ((int64*)buf)[i];
             break;
         }
@@ -294,7 +272,7 @@ struct TorchImporter
         storages.insert(std::make_pair(index, storageMat));
     }
 
-    void readTorchTable(Dict &scalarParams, TensorsMap &tensorParams)
+    void readTorchTable(Dict& scalarParams, TensorsMap& tensorParams)
     {
         int luaType = readInt();
         int index = readInt();
@@ -337,7 +315,7 @@ struct TorchImporter
                 }
                 else if (storages.count(index)) //storage was read
                 {
-                    Mat &matStorage = storages[index];
+                    Mat& matStorage = storages[index];
                     Mat matCasted;
                     matStorage.convertTo(matCasted, CV_64F);
 
@@ -379,7 +357,7 @@ struct TorchImporter
             std::cout << scalarParams;
 
             std::cout << "#" << tensorParams.size() << " tensorParams:\n";
-            std::map<String,std::pair<int, Mat> >::const_iterator it;
+            std::map<String, std::pair<int, Mat>>::const_iterator it;
             for (it = tensorParams.begin(); it != tensorParams.end(); it++)
                 std::cout << it->first << ": Tensor " << it->second.second.size << "\n";
         }
@@ -431,7 +409,8 @@ struct TorchImporter
         }
 
         //allocate Blob
-        Mat srcMat(ndims, isizes.data(), typeTensor , storages[indexStorage].ptr() + offset*CV_ELEM_SIZE(typeTensor), ssteps.data());
+        Mat srcMat(ndims, isizes.data(), typeTensor,
+                   storages[indexStorage].ptr() + offset * CV_ELEM_SIZE(typeTensor), ssteps.data());
         int dstType = CV_32F;
 
         Mat blob;
@@ -440,9 +419,9 @@ struct TorchImporter
         tensors.insert(std::make_pair(indexTensor, blob));
     }
 
-    static bool isNNClass(const String &className, String &nnName)
+    static bool isNNClass(const String& className, String& nnName)
     {
-        const char *prefixes[] = {"nn.", "cunn.", "cudnn.", "fbcunn.", NULL};
+        const char* prefixes[] = {"nn.", "cunn.", "cudnn.", "fbcunn.", NULL};
 
         for (int i = 0; prefixes[i]; i++)
         {
@@ -456,7 +435,7 @@ struct TorchImporter
         return false;
     }
 
-    static void convertTorchKernelsParams(const Dict &torchParams, cv::dnn::LayerParams &layerParams)
+    static void convertTorchKernelsParams(const Dict& torchParams, cv::dnn::LayerParams& layerParams)
     {
         layerParams.set("kernel_h", torchParams.get<int>("kH"));
         layerParams.set("kernel_w", torchParams.get<int>("kW"));
@@ -468,7 +447,7 @@ struct TorchImporter
 
     void readTorchObject(int index)
     {
-        if(readedIndexes.count(index))
+        if (readedIndexes.count(index))
             return;
 
         String className = readTorchClassName();
@@ -478,11 +457,11 @@ struct TorchImporter
             std::cout << "Class: " << className << std::endl;
 
         int type;
-        if ( (type = parseTensorType(className)) >= 0 ) //is Tensor
+        if ((type = parseTensorType(className)) >= 0) //is Tensor
         {
             readTorchTensor(index, type);
         }
-        else if ( (type = parseStorageType(className)) >= 0 ) //is Storage
+        else if ((type = parseStorageType(className)) >= 0) //is Storage
         {
             readTorchStorage(index, type);
         }
@@ -492,15 +471,14 @@ struct TorchImporter
             TensorsMap tensorParams;
 
             cv::Ptr<Module> newModule(new Module(nnName));
-            cv::dnn::LayerParams &layerParams = newModule->params;
+            cv::dnn::LayerParams& layerParams = newModule->params;
 
             layerParams.set("torch_index", index);
 
-            if (nnName == "Sequential" || nnName == "Parallel" ||
-                nnName == "Concat" || nnName == "ConcatTable" || nnName == "JoinTable" ||
-                nnName == "DepthConcat" || nnName == "Inception")
+            if (nnName == "Sequential" || nnName == "Parallel" || nnName == "Concat" || nnName == "ConcatTable"
+                || nnName == "JoinTable" || nnName == "DepthConcat" || nnName == "Inception")
             {
-                Module *parentModule = curModule;
+                Module* parentModule = curModule;
                 curModule->modules.push_back(newModule);
                 curModule = newModule;
                 readTorchTable(scalarParams, tensorParams);
@@ -537,12 +515,12 @@ struct TorchImporter
                     // Split weights from a [ outCh x inCh*kH*kW ] 2D matrix
                     // onto a 4D [ outCh x inCh x kH x kW ] blob.
                     CV_Assert(layerParams.blobs[0].dims == 2);
-                    const int kernel = layerParams.blobs[0].size[1];  // inCh * kH * kW
+                    const int kernel = layerParams.blobs[0].size[1]; // inCh * kH * kW
                     MatShape kernelShape(4);
-                    kernelShape[0] = layerParams.blobs[0].size[0];  // outCh.
+                    kernelShape[0] = layerParams.blobs[0].size[0]; // outCh.
                     kernelShape[2] = layerParams.get<int>("kernel_h");
                     kernelShape[3] = layerParams.get<int>("kernel_w");
-                    kernelShape[1] = kernel / (kernelShape[2] * kernelShape[3]);  // inCh.
+                    kernelShape[1] = kernel / (kernelShape[2] * kernelShape[3]); // inCh.
                     layerParams.blobs[0] = layerParams.blobs[0].reshape(1, kernelShape);
                 }
                 curModule->modules.push_back(newModule);
@@ -568,15 +546,16 @@ struct TorchImporter
                 newModule->apiType = "Pooling";
                 readTorchTable(scalarParams, tensorParams);
 
-                if (nnName == "SpatialMaxPooling") {
+                if (nnName == "SpatialMaxPooling")
+                {
                     layerParams.set("pool", "MAX");
                     layerParams.set("indices_blob_id", tensorParams["indices"].first);
                 }
                 if (nnName == "SpatialAveragePooling")
                 {
                     layerParams.set("pool", "AVE");
-                    layerParams.set("ave_pool_padded_area", scalarParams.has("count_include_pad") &&
-                                                            scalarParams.get<bool>("count_include_pad"));
+                    layerParams.set("ave_pool_padded_area", scalarParams.has("count_include_pad")
+                                                                && scalarParams.get<bool>("count_include_pad"));
                 }
                 convertTorchKernelsParams(scalarParams, layerParams);
 
@@ -632,8 +611,8 @@ struct TorchImporter
                 curModule->modules.push_back(cv::Ptr<Module>(new Module(nnName, "Sigmoid")));
                 readObject();
             }
-            else if (nnName == "SpatialBatchNormalization" || nnName == "InstanceNormalization" ||
-                     nnName == "BatchNormalization")
+            else if (nnName == "SpatialBatchNormalization" || nnName == "InstanceNormalization"
+                     || nnName == "BatchNormalization")
             {
                 newModule->apiType = "BatchNorm";
                 readTorchTable(scalarParams, tensorParams);
@@ -686,8 +665,8 @@ struct TorchImporter
                     mvnModule->apiType = "MVN";
                     curModule->modules.push_back(mvnModule);
 
-                    layerParams.blobs[0].setTo(0);  // batch norm's mean
-                    layerParams.blobs[1].setTo(1);  // batch norm's std
+                    layerParams.blobs[0].setTo(0); // batch norm's mean
+                    layerParams.blobs[1].setTo(1); // batch norm's std
                 }
 
                 curModule->modules.push_back(newModule);
@@ -699,14 +678,16 @@ struct TorchImporter
                 CV_Assert(tensorParams.count("weight"));
 
                 size_t outputChannels = static_cast<int>(scalarParams.get<double>("nOutputPlane"));
-                if (outputChannels) {
+                if (outputChannels)
+                {
 
                     CV_Assert(tensorParams["weight"].second.total() == outputChannels);
                     layerParams.blobs.push_back(tensorParams["weight"].second);
 
                     newModule->apiType = "ChannelsPReLU";
                 }
-                else {
+                else
+                {
                     CV_Assert(tensorParams["weight"].second.total() == 1);
                     float negative_slope = *tensorParams["weight"].second.ptr<float>();
                     layerParams.set("negative_slope", negative_slope);
@@ -727,7 +708,7 @@ struct TorchImporter
                 }
                 else
                 {
-                    float scale = 1 -  scalarParams.get<double>("p");
+                    float scale = 1 - scalarParams.get<double>("p");
 
                     CV_Assert(scale > 0);
 
@@ -771,14 +752,14 @@ struct TorchImporter
                 if (scalarParams.has("nInputDim"))
                     layerParams.set("input_dims", scalarParams.get<int>("nInputDim"));
 
-                int dim = scalarParams.get<int>("dim") - 1;  // In Lua we start from 1.
+                int dim = scalarParams.get<int>("dim") - 1; // In Lua we start from 1.
                 int pad = scalarParams.get<int>("pad");
 
                 std::vector<int> paddings((dim + 1) * 2, 0);
                 if (pad > 0)
-                    paddings[dim * 2 + 1] = pad;  // Pad after (right).
+                    paddings[dim * 2 + 1] = pad; // Pad after (right).
                 else
-                    paddings[dim * 2] = -pad;  // Pad before (left).
+                    paddings[dim * 2] = -pad; // Pad before (left).
                 layerParams.set("paddings", DictValue::arrayInt<int*>(&paddings[0], paddings.size()));
 
                 curModule->modules.push_back(newModule);
@@ -792,15 +773,9 @@ struct TorchImporter
             {
                 readTorchTable(scalarParams, tensorParams);
                 newModule->apiType = "Convolution";
-                CV_Assert(scalarParams.has("padW") &&
-                          scalarParams.has("padH")&&
-                          scalarParams.has("dW")&&
-                          scalarParams.has("dH")&&
-                          scalarParams.has("dilationW")&&
-                          scalarParams.has("dilationH")&&
-                          scalarParams.has("kW")&&
-                          scalarParams.has("kH")&&
-                          scalarParams.has("nOutputPlane"));
+                CV_Assert(scalarParams.has("padW") && scalarParams.has("padH") && scalarParams.has("dW")
+                          && scalarParams.has("dH") && scalarParams.has("dilationW") && scalarParams.has("dilationH")
+                          && scalarParams.has("kW") && scalarParams.has("kH") && scalarParams.has("nOutputPlane"));
 
                 layerParams.set("kernel_w", static_cast<int>(scalarParams.get<double>("kW")));
                 layerParams.set("kernel_h", static_cast<int>(scalarParams.get<double>("kH")));
@@ -825,15 +800,9 @@ struct TorchImporter
             {
                 readTorchTable(scalarParams, tensorParams);
                 newModule->apiType = "Deconvolution";
-                CV_Assert(scalarParams.has("padW") &&
-                          scalarParams.has("padH")&&
-                          scalarParams.has("dW")&&
-                          scalarParams.has("dH")&&
-                          scalarParams.has("adjW")&&
-                          scalarParams.has("adjH")&&
-                          scalarParams.has("kW")&&
-                          scalarParams.has("kH")&&
-                          scalarParams.has("nOutputPlane"));
+                CV_Assert(scalarParams.has("padW") && scalarParams.has("padH") && scalarParams.has("dW")
+                          && scalarParams.has("dH") && scalarParams.has("adjW") && scalarParams.has("adjH")
+                          && scalarParams.has("kW") && scalarParams.has("kH") && scalarParams.has("nOutputPlane"));
 
                 layerParams.set("kernel_w", static_cast<int>(scalarParams.get<double>("kW")));
                 layerParams.set("kernel_h", static_cast<int>(scalarParams.get<double>("kH")));
@@ -897,9 +866,12 @@ struct TorchImporter
                 readTorchTable(scalarParams, tensorParams);
 
                 float power;
-                if (nnName == "Square") power = 2.0f;
-                else if (nnName == "Sqrt") power = 0.5f;
-                else if (nnName == "Power") power = scalarParams.get<float>("pow", 1.0f);
+                if (nnName == "Square")
+                    power = 2.0f;
+                else if (nnName == "Sqrt")
+                    power = 0.5f;
+                else if (nnName == "Power")
+                    power = scalarParams.get<float>("pow", 1.0f);
 
                 newModule->apiType = "Power";
                 layerParams.set("power", power);
@@ -916,8 +888,8 @@ struct TorchImporter
             else if (nnName == "SpatialZeroPadding" || nnName == "SpatialReflectionPadding")
             {
                 readTorchTable(scalarParams, tensorParams);
-                CV_Assert_N(scalarParams.has("pad_l"), scalarParams.has("pad_r"),
-                            scalarParams.has("pad_t"), scalarParams.has("pad_b"));
+                CV_Assert_N(scalarParams.has("pad_l"), scalarParams.has("pad_r"), scalarParams.has("pad_t"),
+                            scalarParams.has("pad_b"));
                 int padTop = scalarParams.get<int>("pad_t");
                 int padLeft = scalarParams.get<int>("pad_l");
                 int padRight = scalarParams.get<int>("pad_r");
@@ -929,7 +901,7 @@ struct TorchImporter
 
                 // Torch's SpatialZeroPadding works with 3- or 4-dimensional input.
                 // So we add parameter input_dims=3 to ignore batch dimension if it will be.
-                std::vector<int> paddings(6, 0);  // CHW
+                std::vector<int> paddings(6, 0); // CHW
                 paddings[2] = padTop;
                 paddings[3] = padBottom;
                 paddings[4] = padLeft;
@@ -978,7 +950,7 @@ struct TorchImporter
                 {
                     layerParams.set(it->first, it->second);
                 }
-                for (std::map<String, std::pair<int, Mat> >::iterator it = tensorParams.begin();
+                for (std::map<String, std::pair<int, Mat>>::iterator it = tensorParams.begin();
                      it != tensorParams.end(); ++it)
                 {
                     layerParams.blobs.push_back(it->second.second);
@@ -1019,12 +991,13 @@ struct TorchImporter
             CV_Error(Error::StsNotImplemented, "Unsupported Lua type");
     }
 
-    inline String generateLayerName(const String &label = String())
+    inline String generateLayerName(const String& label = String())
     {
         return "l" + toString(++this->moduleCounter) + "_" + label;
     }
 
-    int fill(Module *module, std::vector<std::pair<int, Module*> >& addedModules, int prevLayerId = 0, int prevOutNum = 0)
+    int fill(Module* module, std::vector<std::pair<int, Module*>>& addedModules, int prevLayerId = 0,
+             int prevOutNum = 0)
     {
         if (module == NULL)
             return prevLayerId;
@@ -1060,7 +1033,7 @@ struct TorchImporter
                     branchIds.push_back(newId);
                 }
 
-                moduleCounter += 1;  // Skip split layer creation. See https://github.com/opencv/opencv/pull/9384.
+                moduleCounter += 1; // Skip split layer creation. See https://github.com/opencv/opencv/pull/9384.
                 mergeId = net.addLayer(generateLayerName("torchMerge"), "Concat", mergeParams);
 
                 for (int i = 0; i < branchIds.size(); i++)
@@ -1127,9 +1100,10 @@ struct TorchImporter
                 addedModules.push_back(std::make_pair(mergeId, module));
                 return mergeId;
             }
-            else if (module->thName == "ConcatTable") {
+            else if (module->thName == "ConcatTable")
+            {
                 int newId = -1;
-                moduleCounter += 1;  // Skip split layer creation. See https://github.com/opencv/opencv/pull/9384.
+                moduleCounter += 1; // Skip split layer creation. See https://github.com/opencv/opencv/pull/9384.
                 for (int i = 0; i < (int)module->modules.size(); i++)
                 {
                     newId = fill(module->modules[i], addedModules, prevLayerId, prevOutNum);
@@ -1137,7 +1111,8 @@ struct TorchImporter
                 numUnconnectedLayers.push_back(module->modules.size());
                 return newId;
             }
-            else if (module->thName == "JoinTable") {
+            else if (module->thName == "JoinTable")
+            {
                 std::vector<int> ids = net.getUnconnectedOutLayers();
 
                 int mergeId;
@@ -1159,7 +1134,8 @@ struct TorchImporter
 
                 return mergeId;
             }
-            else if (module->thName == "CAddTable") {
+            else if (module->thName == "CAddTable")
+            {
                 String name = generateLayerName("torchCAddTable");
                 std::vector<int> ids = net.getUnconnectedOutLayers();
                 LayerParams params;
@@ -1181,17 +1157,18 @@ struct TorchImporter
                 addedModules.push_back(std::make_pair(id, module));
                 return id;
             }
-            else if (module->thName == "SpatialMaxUnpooling") {
+            else if (module->thName == "SpatialMaxUnpooling")
+            {
                 CV_Assert(module->params.has("indices_blob_id"));
                 int indicesBlobId = module->params.get<int>("indices_blob_id");
                 std::pair<int, Module*> poolingLayer;
                 poolingLayer.first = -1;
 
-                for(int i = 0; i < addedModules.size(); i++)
+                for (int i = 0; i < addedModules.size(); i++)
                 {
-                    if (addedModules[i].second->apiType == "Pooling" &&
-                        addedModules[i].second->params.has("indices_blob_id") &&
-                        addedModules[i].second->params.get<int>("indices_blob_id") == indicesBlobId)
+                    if (addedModules[i].second->apiType == "Pooling"
+                        && addedModules[i].second->params.has("indices_blob_id")
+                        && addedModules[i].second->params.get<int>("indices_blob_id") == indicesBlobId)
                     {
                         poolingLayer = addedModules[i];
                         break;
@@ -1233,7 +1210,7 @@ struct TorchImporter
         readObject();
 
         net = net_;
-        std::vector<std::pair<int, Module*> > addedModules;
+        std::vector<std::pair<int, Module*>> addedModules;
         fill(rootModule, addedModules);
 
         rootModule = NULL;
@@ -1241,7 +1218,7 @@ struct TorchImporter
     }
 };
 
-Mat readTorchBlob(const String &filename, bool isBinary)
+Mat readTorchBlob(const String& filename, bool isBinary)
 {
     TorchImporter importer(filename, isBinary);
     importer.readObject();
@@ -1250,7 +1227,7 @@ Mat readTorchBlob(const String &filename, bool isBinary)
     return importer.tensors.begin()->second;
 }
 
-Net readNetFromTorch(const String &model, bool isBinary)
+Net readNetFromTorch(const String& model, bool isBinary)
 {
     CV_TRACE_FUNCTION();
 
@@ -1261,4 +1238,4 @@ Net readNetFromTorch(const String &model, bool isBinary)
 }
 
 CV__DNN_INLINE_NS_END
-}} // namespace
+}} // namespace cv::dnn

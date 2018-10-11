@@ -43,15 +43,12 @@
 #include "../precomp.hpp"
 #include "layers_common.hpp"
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class SplitLayerImpl CV_FINAL : public SplitLayer
 {
 public:
-    SplitLayerImpl(const LayerParams &params)
+    SplitLayerImpl(const LayerParams& params)
     {
         setParamsFrom(params);
         //TODO: maybe "top_count" param is useless because it can be determined by output connections number
@@ -66,19 +63,18 @@ public:
         }
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 1);
 
-        Layer::getMemoryShapes(inputs, max(1, outputsCount >= 0 ? outputsCount : requiredOutputs),
-                               outputs, internals);
+        Layer::getMemoryShapes(inputs, max(1, outputsCount >= 0 ? outputsCount : requiredOutputs), outputs,
+                               internals);
         return false;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
@@ -99,5 +95,4 @@ Ptr<SplitLayer> SplitLayer::create(const LayerParams& params)
     return Ptr<SplitLayer>(new SplitLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

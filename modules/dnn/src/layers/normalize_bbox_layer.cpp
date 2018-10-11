@@ -77,15 +77,13 @@ public:
             return backendId == DNN_BACKEND_OPENCV;
     }
 
-    bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                         const int requiredOutputs,
-                         std::vector<MatShape> &outputs,
-                         std::vector<MatShape> &internals) const CV_OVERRIDE
+    bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                         std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() == 1);
         Layer::getMemoryShapes(inputs, requiredOutputs, outputs, internals);
         internals.resize(1, inputs[0]);
-        internals[0][0] = 1;  // Batch size.
+        internals[0][0] = 1; // Batch size.
         return true;
     }
 
@@ -179,13 +177,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         if (inputs_arr.depth() == CV_16S)
         {
@@ -261,7 +259,7 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >& inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::DataPtr input = infEngineDataNode(inputs[0]);
@@ -272,7 +270,7 @@ public:
 
         if (input->dims.size() == 4)
         {
-            const int numChannels = input->dims[2];  // NOTE: input->dims are reversed (whcn)
+            const int numChannels = input->dims[2]; // NOTE: input->dims are reversed (whcn)
 
             lp.type = "Normalize";
             std::shared_ptr<InferenceEngine::CNNLayer> ieLayer(new InferenceEngine::CNNLayer(lp));
@@ -290,7 +288,8 @@ public:
             else
             {
                 CV_Assert(numChannels == blobs[0].total());
-                ieLayer->blobs["weights"] = wrapToInfEngineBlob(blobs[0], {(size_t)numChannels}, InferenceEngine::Layout::C);
+                ieLayer->blobs["weights"] = wrapToInfEngineBlob(blobs[0], {(size_t)numChannels},
+                                                                InferenceEngine::Layout::C);
                 ieLayer->params["channel_shared"] = blobs[0].total() == 1 ? "1" : "0";
             }
             ieLayer->params["eps"] = format("%f", epsilon);
@@ -307,7 +306,7 @@ public:
             ieLayer->params["bias"] = format("%f", epsilon);
             return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
         }
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 
@@ -316,10 +315,9 @@ private:
 };
 
 
-Ptr<NormalizeBBoxLayer> NormalizeBBoxLayer::create(const LayerParams &params)
+Ptr<NormalizeBBoxLayer> NormalizeBBoxLayer::create(const LayerParams& params)
 {
     return Ptr<NormalizeBBoxLayer>(new NormalizeBBoxLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

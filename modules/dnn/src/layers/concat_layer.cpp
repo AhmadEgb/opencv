@@ -46,13 +46,10 @@
 #include "../op_inf_engine.hpp"
 
 #ifdef HAVE_OPENCL
-#include "opencl_kernels_dnn.hpp"
+#    include "opencl_kernels_dnn.hpp"
 #endif
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 class ConcatLayerImpl CV_FINAL : public ConcatLayer
 {
@@ -64,10 +61,8 @@ public:
         padding = params.get<bool>("padding", false);
     }
 
-    virtual bool getMemoryShapes(const std::vector<MatShape> &inputs,
-                                 const int requiredOutputs,
-                                 std::vector<MatShape> &outputs,
-                                 std::vector<MatShape> &internals) const CV_OVERRIDE
+    virtual bool getMemoryShapes(const std::vector<MatShape>& inputs, const int requiredOutputs,
+                                 std::vector<MatShape>& outputs, std::vector<MatShape>& internals) const CV_OVERRIDE
     {
         CV_Assert(inputs.size() > 0);
         outputs.resize(1, inputs[0]);
@@ -103,8 +98,8 @@ public:
 
     virtual bool supportBackend(int backendId) CV_OVERRIDE
     {
-        return backendId == DNN_BACKEND_OPENCV ||
-               backendId == DNN_BACKEND_HALIDE && haveHalide() && axis == 1 && !padding ||  // By channels
+        return backendId == DNN_BACKEND_OPENCV
+               || backendId == DNN_BACKEND_HALIDE && haveHalide() && axis == 1 && !padding || // By channels
                backendId == DNN_BACKEND_INFERENCE_ENGINE && haveInfEngine() && !padding;
     }
 
@@ -125,29 +120,28 @@ public:
 
             size_t i, ninputs = inputs.size();
             int nchannels = 0, batchsz = output.size[0];
-            for( i = 0; i < ninputs; i++ )
+            for (i = 0; i < ninputs; i++)
             {
                 Mat& inp = inputs[i];
-                CV_Assert( inp.isContinuous() && (inp.type() == CV_32F || inp.type() == CV_16S) &&
-                           inp.dims == 4 && inp.size[0] == output.size[0] &&
-                           inp.size[2] == output.size[2] &&
-                           inp.size[3] == output.size[3] );
+                CV_Assert(inp.isContinuous() && (inp.type() == CV_32F || inp.type() == CV_16S) && inp.dims == 4
+                          && inp.size[0] == output.size[0] && inp.size[2] == output.size[2]
+                          && inp.size[3] == output.size[3]);
                 nchannels += inp.size[1];
             }
-            CV_Assert( nchannels == output.size[1] );
-            CV_Assert( output.isContinuous() && (output.type() == CV_32F || output.type() == CV_16S) );
+            CV_Assert(nchannels == output.size[1]);
+            CV_Assert(output.isContinuous() && (output.type() == CV_32F || output.type() == CV_16S));
 
-            cc.chptrs.resize(nchannels*batchsz);
+            cc.chptrs.resize(nchannels * batchsz);
 
             int ofs = 0;
-            for( i = 0; i < ninputs; i++)
+            for (i = 0; i < ninputs; i++)
             {
                 Mat& inp = inputs[i];
-                for( int j = 0; j < batchsz; j++ )
-                    for( int k = 0; k < inp.size[1]; k++ )
+                for (int j = 0; j < batchsz; j++)
+                    for (int k = 0; k < inp.size[1]; k++)
                     {
                         const float* ptr = inp.ptr<float>(j, k);
-                        cc.chptrs[ofs + j*nchannels + k] = ptr;
+                        cc.chptrs[ofs + j * nchannels + k] = ptr;
                     }
                 ofs += inp.size[1];
             }
@@ -155,26 +149,26 @@ public:
             parallel_for_(Range(0, nstripes), cc, nstripes);
         }
 
-        ChannelConcatInvoker()  : inputs(0), output(0), nstripes(0) {}
+        ChannelConcatInvoker() : inputs(0), output(0), nstripes(0) {}
 
         void operator()(const Range& r) const CV_OVERRIDE
         {
-            size_t planeSize = (size_t)output->size[2]*output->size[3];
+            size_t planeSize = (size_t)output->size[2] * output->size[3];
             size_t nch = chptrs.size();
-            size_t total = nch*planeSize;
-            size_t stripeSize = (total + nstripes - 1)/nstripes;
-            size_t stripeStart = r.start*stripeSize;
-            size_t stripeEnd = std::min(total, r.end*stripeSize);
+            size_t total = nch * planeSize;
+            size_t stripeSize = (total + nstripes - 1) / nstripes;
+            size_t stripeStart = r.start * stripeSize;
+            size_t stripeEnd = std::min(total, r.end * stripeSize);
             const float** ptrs = (const float**)&chptrs[0];
             float* outptr = output->ptr<float>();
             size_t blockSize0 = 1 << 16;
 
-            for( size_t ofs0 = stripeStart; ofs0 < stripeEnd; )
+            for (size_t ofs0 = stripeStart; ofs0 < stripeEnd;)
             {
-                size_t ch = ofs0/planeSize;
-                size_t ofs = ofs0 - ch*planeSize;
+                size_t ch = ofs0 / planeSize;
+                size_t ofs = ofs0 - ch * planeSize;
                 size_t blockSize = std::min(blockSize0, planeSize - ofs);
-                memcpy(outptr + ofs0, ptrs[ch] + ofs, blockSize*sizeof(outptr[0]));
+                memcpy(outptr + ofs0, ptrs[ch] + ofs, blockSize * sizeof(outptr[0]));
                 ofs0 += blockSize;
             }
         }
@@ -232,13 +226,13 @@ public:
     }
 #endif
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr) CV_OVERRIDE
+    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr,
+                 OutputArrayOfArrays internals_arr) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget),
-                   forward_ocl(inputs_arr, outputs_arr, internals_arr))
+        CV_OCL_RUN(IS_DNN_OPENCL_TARGET(preferableTarget), forward_ocl(inputs_arr, outputs_arr, internals_arr))
 
         std::vector<Mat> inputs, outputs;
         inputs_arr.getMatVector(inputs);
@@ -250,7 +244,7 @@ public:
         if (padding)
             outMat.setTo(0);
 
-        if( cAxis == 1 && outMat.dims == 4 && !padding)
+        if (cAxis == 1 && outMat.dims == 4 && !padding)
         {
             int nstripes = getNumThreads();
             ChannelConcatInvoker::run(inputs, outMat, nstripes);
@@ -265,7 +259,8 @@ public:
                 ranges[cAxis].end = ranges[cAxis].start + inputs[i].size[cAxis];
                 for (int j = 0; j < outMat.dims; ++j)
                 {
-                    if (j == cAxis) continue;
+                    if (j == cAxis)
+                        continue;
                     ranges[j].start = (outMat.size[j] - inputs[i].size[j]) / 2;
                     ranges[j].end = ranges[j].start + inputs[i].size[j];
                 }
@@ -275,30 +270,27 @@ public:
         }
     }
 
-    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper> > &input) CV_OVERRIDE
+    virtual Ptr<BackendNode> initHalide(const std::vector<Ptr<BackendWrapper>>& input) CV_OVERRIDE
     {
 #ifdef HAVE_HALIDE
-        std::vector<Halide::Buffer<> > inputBuffers = halideBuffers(input);
+        std::vector<Halide::Buffer<>> inputBuffers = halideBuffers(input);
 
         Halide::Var x("x"), y("y"), c("c"), n("n");
         Halide::Func top = (name.empty() ? Halide::Func() : Halide::Func(name));
         int offset = inputBuffers[0].channels();
-        Halide::Expr topExpr = select(c < offset,
-                                      inputBuffers[0](x, y, c, n),
-                                      inputBuffers[1](x, y, c - offset, n));
+        Halide::Expr topExpr = select(c < offset, inputBuffers[0](x, y, c, n), inputBuffers[1](x, y, c - offset, n));
         for (int i = 2; i < input.size(); ++i)
         {
             offset += inputBuffers[i - 1].channels();
-            topExpr = select(c < offset, topExpr,
-                             inputBuffers[i](x, y, c - offset, n));
+            topExpr = select(c < offset, topExpr, inputBuffers[i](x, y, c - offset, n));
         }
         top(x, y, c, n) = topExpr;
         return Ptr<BackendNode>(new HalideBackendNode(top));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
         return Ptr<BackendNode>();
     }
 
-    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper> >& inputs) CV_OVERRIDE
+    virtual Ptr<BackendNode> initInfEngine(const std::vector<Ptr<BackendWrapper>>& inputs) CV_OVERRIDE
     {
 #ifdef HAVE_INF_ENGINE
         InferenceEngine::DataPtr input = infEngineDataNode(inputs[0]);
@@ -309,7 +301,7 @@ public:
         std::shared_ptr<InferenceEngine::ConcatLayer> ieLayer(new InferenceEngine::ConcatLayer(lp));
         ieLayer->_axis = clamp(axis, input->dims.size());
         return Ptr<BackendNode>(new InfEngineBackendNode(ieLayer));
-#endif  // HAVE_INF_ENGINE
+#endif // HAVE_INF_ENGINE
         return Ptr<BackendNode>();
     }
 };
@@ -319,5 +311,4 @@ Ptr<ConcatLayer> ConcatLayer::create(const LayerParams& params)
     return Ptr<ConcatLayer>(new ConcatLayerImpl(params));
 }
 
-}
-}
+}} // namespace cv::dnn

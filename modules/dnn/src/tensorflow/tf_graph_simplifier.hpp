@@ -12,7 +12,7 @@
 
 #ifdef HAVE_PROTOBUF
 
-#include "tf_io.hpp"
+#    include "tf_io.hpp"
 
 namespace cv { namespace dnn {
 CV__DNN_INLINE_NS_BEGIN
@@ -21,14 +21,14 @@ void RemoveIdentityOps(tensorflow::GraphDef& net);
 
 void simplifySubgraphs(tensorflow::GraphDef& net);
 
-Mat getTensorContent(const tensorflow::TensorProto &tensor);
+Mat getTensorContent(const tensorflow::TensorProto& tensor);
 
 void releaseTensor(tensorflow::TensorProto* tensor);
 
 void sortByExecutionOrder(tensorflow::GraphDef& net);
 
 CV__DNN_INLINE_NS_END
-}}  // namespace dnn, namespace cv
+}} // namespace cv::dnn
 
-#endif  // HAVE_PROTOBUF
-#endif  // __OPENCV_DNN_TF_SIMPLIFIER_HPP__
+#endif // HAVE_PROTOBUF
+#endif // __OPENCV_DNN_TF_SIMPLIFIER_HPP__

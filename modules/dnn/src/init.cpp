@@ -44,8 +44,7 @@
 
 #include <google/protobuf/stubs/common.h>
 
-namespace cv {
-namespace dnn {
+namespace cv { namespace dnn {
 CV__DNN_INLINE_NS_BEGIN
 
 static Mutex* __initialization_mutex = NULL;
@@ -60,7 +59,8 @@ Mutex* __initialization_mutex_initializer = &getInitializationMutex();
 
 namespace {
 using namespace google::protobuf;
-class ProtobufShutdown {
+class ProtobufShutdown
+{
 public:
     bool initialized;
     ProtobufShutdown() : initialized(true) {}
@@ -76,61 +76,62 @@ void initializeLayerFactory()
 {
     CV_TRACE_FUNCTION();
 
-    static ProtobufShutdown protobufShutdown; CV_UNUSED(protobufShutdown);
+    static ProtobufShutdown protobufShutdown;
+    CV_UNUSED(protobufShutdown);
 
-    CV_DNN_REGISTER_LAYER_CLASS(Slice,          SliceLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Split,          SplitLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Concat,         ConcatLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Reshape,        ReshapeLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Flatten,        FlattenLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Resize,         ResizeLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Interp,         InterpLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(CropAndResize,  CropAndResizeLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Slice, SliceLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Split, SplitLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Concat, ConcatLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Reshape, ReshapeLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Flatten, FlattenLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Resize, ResizeLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Interp, InterpLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(CropAndResize, CropAndResizeLayer);
 
-    CV_DNN_REGISTER_LAYER_CLASS(Convolution,    ConvolutionLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Deconvolution,  DeconvolutionLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Pooling,        PoolingLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(ROIPooling,     PoolingLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(PSROIPooling,   PoolingLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(LRN,            LRNLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(InnerProduct,   InnerProductLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Softmax,        SoftmaxLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(MVN,            MVNLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Convolution, ConvolutionLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Deconvolution, DeconvolutionLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Pooling, PoolingLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(ROIPooling, PoolingLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(PSROIPooling, PoolingLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(LRN, LRNLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(InnerProduct, InnerProductLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Softmax, SoftmaxLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(MVN, MVNLayer);
 
-    CV_DNN_REGISTER_LAYER_CLASS(ReLU,           ReLULayer);
-    CV_DNN_REGISTER_LAYER_CLASS(ReLU6,          ReLU6Layer);
-    CV_DNN_REGISTER_LAYER_CLASS(ChannelsPReLU,  ChannelsPReLULayer);
-    CV_DNN_REGISTER_LAYER_CLASS(PReLU,          ChannelsPReLULayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Sigmoid,        SigmoidLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(TanH,           TanHLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(ELU,            ELULayer);
-    CV_DNN_REGISTER_LAYER_CLASS(BNLL,           BNLLLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(AbsVal,         AbsLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Power,          PowerLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(BatchNorm,      BatchNormLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(MaxUnpool,      MaxUnpoolLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Dropout,        BlankLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Identity,       BlankLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Silence,        BlankLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(ReLU, ReLULayer);
+    CV_DNN_REGISTER_LAYER_CLASS(ReLU6, ReLU6Layer);
+    CV_DNN_REGISTER_LAYER_CLASS(ChannelsPReLU, ChannelsPReLULayer);
+    CV_DNN_REGISTER_LAYER_CLASS(PReLU, ChannelsPReLULayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Sigmoid, SigmoidLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(TanH, TanHLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(ELU, ELULayer);
+    CV_DNN_REGISTER_LAYER_CLASS(BNLL, BNLLLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(AbsVal, AbsLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Power, PowerLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(BatchNorm, BatchNormLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(MaxUnpool, MaxUnpoolLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Dropout, BlankLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Identity, BlankLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Silence, BlankLayer);
 
-    CV_DNN_REGISTER_LAYER_CLASS(Crop,           CropLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Eltwise,        EltwiseLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Permute,        PermuteLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Crop, CropLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Eltwise, EltwiseLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Permute, PermuteLayer);
     CV_DNN_REGISTER_LAYER_CLASS(ShuffleChannel, ShuffleChannelLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(PriorBox,       PriorBoxLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(PriorBox, PriorBoxLayer);
     CV_DNN_REGISTER_LAYER_CLASS(PriorBoxClustered, PriorBoxLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Reorg,          ReorgLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Region,         RegionLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Reorg, ReorgLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Region, RegionLayer);
     CV_DNN_REGISTER_LAYER_CLASS(DetectionOutput, DetectionOutputLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(NormalizeBBox,  NormalizeBBoxLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Normalize,      NormalizeBBoxLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Shift,          ShiftLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Padding,        PaddingLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Proposal,       ProposalLayer);
-    CV_DNN_REGISTER_LAYER_CLASS(Scale,          ScaleLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(NormalizeBBox, NormalizeBBoxLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Normalize, NormalizeBBoxLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Shift, ShiftLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Padding, PaddingLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Proposal, ProposalLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(Scale, ScaleLayer);
 
-    CV_DNN_REGISTER_LAYER_CLASS(LSTM,           LSTMLayer);
+    CV_DNN_REGISTER_LAYER_CLASS(LSTM, LSTMLayer);
 }
 
 CV__DNN_INLINE_NS_END
-}} // namespace
+}} // namespace cv::dnn

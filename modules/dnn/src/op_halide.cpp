@@ -10,13 +10,10 @@
 #include "op_halide.hpp"
 
 #ifdef HAVE_HALIDE
-#include <HalideRuntimeOpenCL.h>
-#endif  // HAVE_HALIDE
+#    include <HalideRuntimeOpenCL.h>
+#endif // HAVE_HALIDE
 
-namespace cv
-{
-namespace dnn
-{
+namespace cv { namespace dnn {
 
 #ifdef HAVE_HALIDE
 static MatShape getBufferShape(const MatShape& shape)
@@ -35,21 +32,17 @@ static MatShape getBufferShape(const MatShape& shape)
     }
 }
 
-static MatShape getBufferShape(const MatSize& size)
-{
-    return getBufferShape(shape(size));
-}
+static MatShape getBufferShape(const MatSize& size) { return getBufferShape(shape(size)); }
 
 Halide::Buffer<float> wrapToHalideBuffer(const Mat& mat)
 {
     return wrapToHalideBuffer(mat, getBufferShape(mat.size));
 }
 
-Halide::Buffer<float> wrapToHalideBuffer(const Mat& mat,
-                                         const std::vector<int>& sizes)
+Halide::Buffer<float> wrapToHalideBuffer(const Mat& mat, const std::vector<int>& sizes)
 {
     Halide::Buffer<float> buffer((float*)mat.data, sizes);
-    buffer.set_host_dirty();  // Indicate that data is on CPU.
+    buffer.set_host_dirty(); // Indicate that data is on CPU.
     return buffer;
 }
 
@@ -59,9 +52,9 @@ Halide::Buffer<> halideBuffer(const Ptr<BackendWrapper>& ptr)
     return ptr.dynamicCast<HalideBackendWrapper>()->buffer;
 }
 
-std::vector<Halide::Buffer<> > halideBuffers(const std::vector<Ptr<BackendWrapper> >& ptrs)
+std::vector<Halide::Buffer<>> halideBuffers(const std::vector<Ptr<BackendWrapper>>& ptrs)
 {
-    std::vector<Halide::Buffer<> > vec;
+    std::vector<Halide::Buffer<>> vec;
     vec.reserve(ptrs.size());
     for (const Ptr<BackendWrapper>& ptr : ptrs)
     {
@@ -70,8 +63,7 @@ std::vector<Halide::Buffer<> > halideBuffers(const std::vector<Ptr<BackendWrappe
     return vec;
 }
 
-void getCanonicalSize(const Halide::Buffer<>& buffer, int* width, int* height,
-                      int* channels, int* batch)
+void getCanonicalSize(const Halide::Buffer<>& buffer, int* width, int* height, int* channels, int* batch)
 {
     CV_Assert(buffer.dimensions() == 4);
     *width = buffer.extent(0);
@@ -80,14 +72,14 @@ void getCanonicalSize(const Halide::Buffer<>& buffer, int* width, int* height,
     *batch = buffer.extent(3);
 }
 
-HalideBackendNode::HalideBackendNode(const Halide::Func& func)
-    : BackendNode(DNN_BACKEND_HALIDE), funcs(1, func) {}
+HalideBackendNode::HalideBackendNode(const Halide::Func& func) : BackendNode(DNN_BACKEND_HALIDE), funcs(1, func) {}
 
 HalideBackendNode::HalideBackendNode(const std::vector<Halide::Func>& funcs)
-    : BackendNode(DNN_BACKEND_HALIDE), funcs(funcs) {}
+    : BackendNode(DNN_BACKEND_HALIDE), funcs(funcs)
+{
+}
 
-HalideBackendNode::HalideBackendNode(const Ptr<HalideBackendNode>& base,
-                                     const Halide::Func& top)
+HalideBackendNode::HalideBackendNode(const Ptr<HalideBackendNode>& base, const Halide::Func& top)
     : BackendNode(DNN_BACKEND_HALIDE), funcs(base->funcs)
 {
     funcs.back() = top;
@@ -112,14 +104,12 @@ HalideBackendWrapper::HalideBackendWrapper(int targetId, const cv::Mat& m)
         CV_Error(Error::StsNotImplemented, "Unknown target identifier");
 }
 
-HalideBackendWrapper::HalideBackendWrapper(const Ptr<BackendWrapper>& base,
-                                           const MatShape& shape)
+HalideBackendWrapper::HalideBackendWrapper(const Ptr<BackendWrapper>& base, const MatShape& shape)
     : BackendWrapper(DNN_BACKEND_HALIDE, base->targetId)
 {
     managesDevMemory = false;
     Halide::Buffer<float> baseBuffer = halideBuffer(base);
-    buffer = Halide::Buffer<float>((float*)baseBuffer.raw_buffer()->host,
-                                   getBufferShape(shape));
+    buffer = Halide::Buffer<float>((float*)baseBuffer.raw_buffer()->host, getBufferShape(shape));
     if (baseBuffer.has_device_allocation())
     {
         buffer.raw_buffer()->device = baseBuffer.raw_buffer()->device;
@@ -128,7 +118,7 @@ HalideBackendWrapper::HalideBackendWrapper(const Ptr<BackendWrapper>& base,
     }
     else
     {
-        buffer.set_host_dirty();  // Indicate that data is on CPU.
+        buffer.set_host_dirty(); // Indicate that data is on CPU.
         CV_Assert(targetId == DNN_TARGET_CPU);
     }
 }
@@ -157,15 +147,14 @@ void HalideBackendWrapper::setHostDirty()
     buffer.set_device_dirty(false);
     buffer.set_host_dirty();
 }
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 
 void getCanonicalSize(const MatSize& size, int* w, int* h, int* c, int* n)
 {
     getCanonicalSize(shape(size), w, h, c, n);
 }
 
-void getCanonicalSize(const MatShape& shape, int* width, int* height,
-                      int* channels, int* batch)
+void getCanonicalSize(const MatShape& shape, int* width, int* height, int* channels, int* batch)
 {
     const int dims = shape.size();
     CV_Assert(dims == 2 || dims == 4);
@@ -183,7 +172,7 @@ void getCanonicalSize(const MatShape& shape, int* width, int* height,
     }
 }
 
-void compileHalide(const std::vector<Mat> &outputs, Ptr<BackendNode>& node, int targetId)
+void compileHalide(const std::vector<Mat>& outputs, Ptr<BackendNode>& node, int targetId)
 {
 #ifdef HAVE_HALIDE
     CV_Assert(!node.empty());
@@ -192,8 +181,7 @@ void compileHalide(const std::vector<Mat> &outputs, Ptr<BackendNode>& node, int 
     int outW, outH, outC, outN;
     Halide::Var x("x"), y("y"), c("c"), n("n");
     getCanonicalSize(outputs[0].size, &outW, &outH, &outC, &outN);
-    top.bound(x, 0, outW).bound(y, 0, outH)
-       .bound(c, 0, outC).bound(n, 0, outN);
+    top.bound(x, 0, outW).bound(y, 0, outH).bound(c, 0, outC).bound(n, 0, outN);
 
     Halide::Target target = Halide::get_host_target();
     target.set_feature(Halide::Target::NoAsserts);
@@ -203,18 +191,17 @@ void compileHalide(const std::vector<Mat> &outputs, Ptr<BackendNode>& node, int 
     }
     CV_Assert(target.supported());
     top.compile_jit(target);
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 }
 
-void forwardHalide(std::vector<Ptr<BackendWrapper> > &outputs,
-                   const Ptr<BackendNode>& node)
+void forwardHalide(std::vector<Ptr<BackendWrapper>>& outputs, const Ptr<BackendNode>& node)
 {
 #ifdef HAVE_HALIDE
     CV_Assert(!node.empty());
     Halide::Func& top = node.dynamicCast<HalideBackendNode>()->funcs.back();
     auto outputBuffers = halideBuffers(outputs);
     top.realize(Halide::Realization(outputBuffers));
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 }
 
 bool haveHalide()
@@ -223,8 +210,7 @@ bool haveHalide()
     return true;
 #else
     return false;
-#endif  // HAVE_HALIDE
+#endif // HAVE_HALIDE
 }
 
-}  // namespace dnn
-}  // namespace cv
+}} // namespace cv::dnn
