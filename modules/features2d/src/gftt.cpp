@@ -41,17 +41,15 @@
 
 #include "precomp.hpp"
 
-namespace cv
-{
+namespace cv {
 
 class GFTTDetector_Impl CV_FINAL : public GFTTDetector
 {
 public:
-    GFTTDetector_Impl( int _nfeatures, double _qualityLevel,
-                      double _minDistance, int _blockSize, int _gradientSize,
-                      bool _useHarrisDetector, double _k )
-        : nfeatures(_nfeatures), qualityLevel(_qualityLevel), minDistance(_minDistance),
-        blockSize(_blockSize), gradSize(_gradientSize), useHarrisDetector(_useHarrisDetector), k(_k)
+    GFTTDetector_Impl(int _nfeatures, double _qualityLevel, double _minDistance, int _blockSize, int _gradientSize,
+                      bool _useHarrisDetector, double _k)
+        : nfeatures(_nfeatures), qualityLevel(_qualityLevel), minDistance(_minDistance), blockSize(_blockSize),
+          gradSize(_gradientSize), useHarrisDetector(_useHarrisDetector), k(_k)
     {
     }
 
@@ -76,11 +74,11 @@ public:
     void setK(double k_) CV_OVERRIDE { k = k_; }
     double getK() const CV_OVERRIDE { return k; }
 
-    void detect( InputArray _image, std::vector<KeyPoint>& keypoints, InputArray _mask ) CV_OVERRIDE
+    void detect(InputArray _image, std::vector<KeyPoint>& keypoints, InputArray _mask) CV_OVERRIDE
     {
         CV_INSTRUMENT_REGION();
 
-        if(_image.empty())
+        if (_image.empty())
         {
             keypoints.clear();
             return;
@@ -91,30 +89,29 @@ public:
         if (_image.isUMat())
         {
             UMat ugrayImage;
-            if( _image.type() != CV_8U )
-                cvtColor( _image, ugrayImage, COLOR_BGR2GRAY );
+            if (_image.type() != CV_8U)
+                cvtColor(_image, ugrayImage, COLOR_BGR2GRAY);
             else
                 ugrayImage = _image.getUMat();
 
-            goodFeaturesToTrack( ugrayImage, corners, nfeatures, qualityLevel, minDistance, _mask,
-                                 blockSize, gradSize, useHarrisDetector, k );
+            goodFeaturesToTrack(ugrayImage, corners, nfeatures, qualityLevel, minDistance, _mask, blockSize,
+                                gradSize, useHarrisDetector, k);
         }
         else
         {
             Mat image = _image.getMat(), grayImage = image;
-            if( image.type() != CV_8U )
-                cvtColor( image, grayImage, COLOR_BGR2GRAY );
+            if (image.type() != CV_8U)
+                cvtColor(image, grayImage, COLOR_BGR2GRAY);
 
-            goodFeaturesToTrack( grayImage, corners, nfeatures, qualityLevel, minDistance, _mask,
-                                blockSize, gradSize, useHarrisDetector, k );
+            goodFeaturesToTrack(grayImage, corners, nfeatures, qualityLevel, minDistance, _mask, blockSize,
+                                gradSize, useHarrisDetector, k);
         }
 
         keypoints.resize(corners.size());
         std::vector<Point2f>::const_iterator corner_it = corners.begin();
         std::vector<KeyPoint>::iterator keypoint_it = keypoints.begin();
-        for( ; corner_it != corners.end() && keypoint_it != keypoints.end(); ++corner_it, ++keypoint_it )
-            *keypoint_it = KeyPoint( *corner_it, (float)blockSize );
-
+        for (; corner_it != corners.end() && keypoint_it != keypoints.end(); ++corner_it, ++keypoint_it)
+            *keypoint_it = KeyPoint(*corner_it, (float)blockSize);
     }
 
     int nfeatures;
@@ -127,25 +124,20 @@ public:
 };
 
 
-Ptr<GFTTDetector> GFTTDetector::create( int _nfeatures, double _qualityLevel,
-                         double _minDistance, int _blockSize, int _gradientSize,
-                         bool _useHarrisDetector, double _k )
+Ptr<GFTTDetector> GFTTDetector::create(int _nfeatures, double _qualityLevel, double _minDistance, int _blockSize,
+                                       int _gradientSize, bool _useHarrisDetector, double _k)
 {
-    return makePtr<GFTTDetector_Impl>(_nfeatures, _qualityLevel,
-                                      _minDistance, _blockSize, _gradientSize, _useHarrisDetector, _k);
+    return makePtr<GFTTDetector_Impl>(_nfeatures, _qualityLevel, _minDistance, _blockSize, _gradientSize,
+                                      _useHarrisDetector, _k);
 }
 
-Ptr<GFTTDetector> GFTTDetector::create( int _nfeatures, double _qualityLevel,
-                         double _minDistance, int _blockSize,
-                         bool _useHarrisDetector, double _k )
+Ptr<GFTTDetector> GFTTDetector::create(int _nfeatures, double _qualityLevel, double _minDistance, int _blockSize,
+                                       bool _useHarrisDetector, double _k)
 {
-    return makePtr<GFTTDetector_Impl>(_nfeatures, _qualityLevel,
-                                      _minDistance, _blockSize, 3, _useHarrisDetector, _k);
+    return makePtr<GFTTDetector_Impl>(_nfeatures, _qualityLevel, _minDistance, _blockSize, 3, _useHarrisDetector,
+                                      _k);
 }
 
-String GFTTDetector::getDefaultName() const
-{
-    return (Feature2D::getDefaultName() + ".GFTTDetector");
-}
+String GFTTDetector::getDefaultName() const { return (Feature2D::getDefaultName() + ".GFTTDetector"); }
 
-}
+} // namespace cv

@@ -47,7 +47,7 @@
 #include "opencv2/core.hpp"
 
 #ifdef HAVE_OPENCV_FLANN
-#include "opencv2/flann/miniflann.hpp"
+#    include "opencv2/flann/miniflann.hpp"
 #endif
 
 /**
@@ -83,8 +83,7 @@ This section describes approaches based on local 2D features and used to categor
   @}
  */
 
-namespace cv
-{
+namespace cv {
 
 //! @addtogroup features2d
 //! @{
@@ -102,34 +101,33 @@ namespace cv
 class CV_EXPORTS KeyPointsFilter
 {
 public:
-    KeyPointsFilter(){}
+    KeyPointsFilter() {}
 
     /*
      * Remove keypoints within borderPixels of an image edge.
      */
-    static void runByImageBorder( std::vector<KeyPoint>& keypoints, Size imageSize, int borderSize );
+    static void runByImageBorder(std::vector<KeyPoint>& keypoints, Size imageSize, int borderSize);
     /*
      * Remove keypoints of sizes out of range.
      */
-    static void runByKeypointSize( std::vector<KeyPoint>& keypoints, float minSize,
-                                   float maxSize=FLT_MAX );
+    static void runByKeypointSize(std::vector<KeyPoint>& keypoints, float minSize, float maxSize = FLT_MAX);
     /*
      * Remove keypoints from some image by mask for pixels of this image.
      */
-    static void runByPixelsMask( std::vector<KeyPoint>& keypoints, const Mat& mask );
+    static void runByPixelsMask(std::vector<KeyPoint>& keypoints, const Mat& mask);
     /*
      * Remove duplicated keypoints.
      */
-    static void removeDuplicated( std::vector<KeyPoint>& keypoints );
+    static void removeDuplicated(std::vector<KeyPoint>& keypoints);
     /*
      * Remove duplicated keypoints and sort the remaining keypoints
      */
-    static void removeDuplicatedSorted( std::vector<KeyPoint>& keypoints );
+    static void removeDuplicatedSorted(std::vector<KeyPoint>& keypoints);
 
     /*
      * Retain the specified number of the best keypoints (according to the response)
      */
-    static void retainBest( std::vector<KeyPoint>& keypoints, int npoints );
+    static void retainBest(std::vector<KeyPoint>& keypoints, int npoints);
 };
 
 
@@ -154,9 +152,8 @@ public:
     @param mask Mask specifying where to look for keypoints (optional). It must be a 8-bit integer
     matrix with non-zero values in the region of interest.
      */
-    CV_WRAP virtual void detect( InputArray image,
-                                 CV_OUT std::vector<KeyPoint>& keypoints,
-                                 InputArray mask=noArray() );
+    CV_WRAP virtual void detect(InputArray image, CV_OUT std::vector<KeyPoint>& keypoints,
+                                InputArray mask = noArray());
 
     /** @overload
     @param images Image set.
@@ -165,9 +162,8 @@ public:
     @param masks Masks for each input image specifying where to look for keypoints (optional).
     masks[i] is a mask for images[i].
     */
-    CV_WRAP virtual void detect( InputArrayOfArrays images,
-                         CV_OUT std::vector<std::vector<KeyPoint> >& keypoints,
-                         InputArrayOfArrays masks=noArray() );
+    CV_WRAP virtual void detect(InputArrayOfArrays images, CV_OUT std::vector<std::vector<KeyPoint>>& keypoints,
+                                InputArrayOfArrays masks = noArray());
 
     /** @brief Computes the descriptors for a set of keypoints detected in an image (first variant) or image set
     (second variant).
@@ -180,9 +176,8 @@ public:
     descriptors computed for a keypoints[i]. Row j is the keypoints (or keypoints[i]) is the
     descriptor for keypoint j-th keypoint.
      */
-    CV_WRAP virtual void compute( InputArray image,
-                                  CV_OUT CV_IN_OUT std::vector<KeyPoint>& keypoints,
-                                  OutputArray descriptors );
+    CV_WRAP virtual void compute(InputArray image, CV_OUT CV_IN_OUT std::vector<KeyPoint>& keypoints,
+                                 OutputArray descriptors);
 
     /** @overload
 
@@ -194,35 +189,36 @@ public:
     descriptors computed for a keypoints[i]. Row j is the keypoints (or keypoints[i]) is the
     descriptor for keypoint j-th keypoint.
     */
-    CV_WRAP virtual void compute( InputArrayOfArrays images,
-                          CV_OUT CV_IN_OUT std::vector<std::vector<KeyPoint> >& keypoints,
-                          OutputArrayOfArrays descriptors );
+    CV_WRAP virtual void compute(InputArrayOfArrays images,
+                                 CV_OUT CV_IN_OUT std::vector<std::vector<KeyPoint>>& keypoints,
+                                 OutputArrayOfArrays descriptors);
 
     /** Detects keypoints and computes the descriptors */
-    CV_WRAP virtual void detectAndCompute( InputArray image, InputArray mask,
-                                           CV_OUT std::vector<KeyPoint>& keypoints,
-                                           OutputArray descriptors,
-                                           bool useProvidedKeypoints=false );
+    CV_WRAP virtual void detectAndCompute(InputArray image, InputArray mask, CV_OUT std::vector<KeyPoint>& keypoints,
+                                          OutputArray descriptors, bool useProvidedKeypoints = false);
 
     CV_WRAP virtual int descriptorSize() const;
     CV_WRAP virtual int descriptorType() const;
     CV_WRAP virtual int defaultNorm() const;
 
-    CV_WRAP void write( const String& fileName ) const;
+    CV_WRAP void write(const String& fileName) const;
 
-    CV_WRAP void read( const String& fileName );
+    CV_WRAP void read(const String& fileName);
 
-    virtual void write( FileStorage&) const CV_OVERRIDE;
+    virtual void write(FileStorage&) const CV_OVERRIDE;
 
     // see corresponding cv::Algorithm method
-    CV_WRAP virtual void read( const FileNode&) CV_OVERRIDE;
+    CV_WRAP virtual void read(const FileNode&) CV_OVERRIDE;
 
     //! Return true if detector object is empty
     CV_WRAP virtual bool empty() const CV_OVERRIDE;
     CV_WRAP virtual String getDefaultName() const CV_OVERRIDE;
 
     // see corresponding cv::Algorithm method
-    CV_WRAP inline void write(const Ptr<FileStorage>& fs, const String& name = String()) const { Algorithm::write(fs, name); }
+    CV_WRAP inline void write(const Ptr<FileStorage>& fs, const String& name = String()) const
+    {
+        Algorithm::write(fs, name);
+    }
 };
 
 /** Feature detectors in OpenCV have wrappers with a common interface that enables you to easily switch
@@ -252,7 +248,7 @@ public:
     @param patternScale apply this scale to the pattern used for sampling the neighbourhood of a
     keypoint.
      */
-    CV_WRAP static Ptr<BRISK> create(int thresh=30, int octaves=3, float patternScale=1.0f);
+    CV_WRAP static Ptr<BRISK> create(int thresh = 30, int octaves = 3, float patternScale = 1.0f);
 
     /** @brief The BRISK constructor for a custom pattern
 
@@ -265,8 +261,9 @@ public:
     @param dMin threshold for the long pairings used for orientation determination (in pixels for
     keypoint scale 1).
     @param indexChange index remapping of the bits. */
-    CV_WRAP static Ptr<BRISK> create(const std::vector<float> &radiusList, const std::vector<int> &numberList,
-        float dMax=5.85f, float dMin=8.2f, const std::vector<int>& indexChange=std::vector<int>());
+    CV_WRAP static Ptr<BRISK> create(const std::vector<float>& radiusList, const std::vector<int>& numberList,
+                                     float dMax = 5.85f, float dMin = 8.2f,
+                                     const std::vector<int>& indexChange = std::vector<int>());
 
     /** @brief The BRISK constructor for a custom pattern, detection threshold and octaves
 
@@ -281,9 +278,9 @@ public:
     @param dMin threshold for the long pairings used for orientation determination (in pixels for
     keypoint scale 1).
     @param indexChange index remapping of the bits. */
-    CV_WRAP static Ptr<BRISK> create(int thresh, int octaves, const std::vector<float> &radiusList,
-        const std::vector<int> &numberList, float dMax=5.85f, float dMin=8.2f,
-        const std::vector<int>& indexChange=std::vector<int>());
+    CV_WRAP static Ptr<BRISK> create(int thresh, int octaves, const std::vector<float>& radiusList,
+                                     const std::vector<int>& numberList, float dMax = 5.85f, float dMin = 8.2f,
+                                     const std::vector<int>& indexChange = std::vector<int>());
     CV_WRAP virtual String getDefaultName() const CV_OVERRIDE;
 };
 
@@ -297,7 +294,11 @@ k-tuples) are rotated according to the measured orientation).
 class CV_EXPORTS_W ORB : public Feature2D
 {
 public:
-    enum ScoreType { HARRIS_SCORE=0, FAST_SCORE=1 };
+    enum ScoreType
+    {
+        HARRIS_SCORE = 0,
+        FAST_SCORE = 1
+    };
     static const int kBytes = 32;
 
     /** @brief The ORB constructor
@@ -331,8 +332,10 @@ public:
     pyramid layers the perceived image area covered by a feature will be larger.
     @param fastThreshold
      */
-    CV_WRAP static Ptr<ORB> create(int nfeatures=500, float scaleFactor=1.2f, int nlevels=8, int edgeThreshold=31,
-        int firstLevel=0, int WTA_K=2, ORB::ScoreType scoreType=ORB::HARRIS_SCORE, int patchSize=31, int fastThreshold=20);
+    CV_WRAP static Ptr<ORB> create(int nfeatures = 500, float scaleFactor = 1.2f, int nlevels = 8,
+                                   int edgeThreshold = 31, int firstLevel = 0, int WTA_K = 2,
+                                   ORB::ScoreType scoreType = ORB::HARRIS_SCORE, int patchSize = 31,
+                                   int fastThreshold = 20);
 
     CV_WRAP virtual void setMaxFeatures(int maxFeatures) = 0;
     CV_WRAP virtual int getMaxFeatures() const = 0;
@@ -394,10 +397,10 @@ public:
     @param _min_margin for color image, ignore too small margin
     @param _edge_blur_size for color image, the aperture size for edge blur
      */
-    CV_WRAP static Ptr<MSER> create( int _delta=5, int _min_area=60, int _max_area=14400,
-          double _max_variation=0.25, double _min_diversity=.2,
-          int _max_evolution=200, double _area_threshold=1.01,
-          double _min_margin=0.003, int _edge_blur_size=5 );
+    CV_WRAP static Ptr<MSER> create(int _delta = 5, int _min_area = 60, int _max_area = 14400,
+                                    double _max_variation = 0.25, double _min_diversity = .2,
+                                    int _max_evolution = 200, double _area_threshold = 1.01,
+                                    double _min_margin = 0.003, int _edge_blur_size = 5);
 
     /** @brief Detect %MSER regions
 
@@ -405,9 +408,8 @@ public:
     @param msers resulting list of point sets
     @param bboxes resulting bounding boxes
     */
-    CV_WRAP virtual void detectRegions( InputArray image,
-                                        CV_OUT std::vector<std::vector<Point> >& msers,
-                                        CV_OUT std::vector<Rect>& bboxes ) = 0;
+    CV_WRAP virtual void detectRegions(InputArray image, CV_OUT std::vector<std::vector<Point>>& msers,
+                                       CV_OUT std::vector<Rect>& bboxes) = 0;
 
     CV_WRAP virtual void setDelta(int delta) = 0;
     CV_WRAP virtual int getDelta() const = 0;
@@ -435,17 +437,21 @@ class CV_EXPORTS_W FastFeatureDetector : public Feature2D
 public:
     enum DetectorType
     {
-        TYPE_5_8 = 0, TYPE_7_12 = 1, TYPE_9_16 = 2
+        TYPE_5_8 = 0,
+        TYPE_7_12 = 1,
+        TYPE_9_16 = 2
     };
     enum
     {
-        THRESHOLD = 10000, NONMAX_SUPPRESSION=10001, FAST_N=10002
+        THRESHOLD = 10000,
+        NONMAX_SUPPRESSION = 10001,
+        FAST_N = 10002
     };
 
 
-    CV_WRAP static Ptr<FastFeatureDetector> create( int threshold=10,
-                                                    bool nonmaxSuppression=true,
-                                                    FastFeatureDetector::DetectorType type=FastFeatureDetector::TYPE_9_16 );
+    CV_WRAP static Ptr<FastFeatureDetector>
+    create(int threshold = 10, bool nonmaxSuppression = true,
+           FastFeatureDetector::DetectorType type = FastFeatureDetector::TYPE_9_16);
 
     CV_WRAP virtual void setThreshold(int threshold) = 0;
     CV_WRAP virtual int getThreshold() const = 0;
@@ -459,8 +465,8 @@ public:
 };
 
 /** @overload */
-CV_EXPORTS void FAST( InputArray image, CV_OUT std::vector<KeyPoint>& keypoints,
-                      int threshold, bool nonmaxSuppression=true );
+CV_EXPORTS void FAST(InputArray image, CV_OUT std::vector<KeyPoint>& keypoints, int threshold,
+                     bool nonmaxSuppression = true);
 
 /** @brief Detects corners using the FAST algorithm
 
@@ -480,8 +486,8 @@ Detects corners using the FAST algorithm by @cite Rosten06 .
 cv2.FAST_FEATURE_DETECTOR_TYPE_7_12 and cv2.FAST_FEATURE_DETECTOR_TYPE_9_16. For corner
 detection, use cv2.FAST.detect() method.
  */
-CV_EXPORTS void FAST( InputArray image, CV_OUT std::vector<KeyPoint>& keypoints,
-                      int threshold, bool nonmaxSuppression, FastFeatureDetector::DetectorType type );
+CV_EXPORTS void FAST(InputArray image, CV_OUT std::vector<KeyPoint>& keypoints, int threshold,
+                     bool nonmaxSuppression, FastFeatureDetector::DetectorType type);
 
 //! @} features2d_main
 
@@ -495,17 +501,21 @@ class CV_EXPORTS_W AgastFeatureDetector : public Feature2D
 public:
     enum DetectorType
     {
-        AGAST_5_8 = 0, AGAST_7_12d = 1, AGAST_7_12s = 2, OAST_9_16 = 3,
+        AGAST_5_8 = 0,
+        AGAST_7_12d = 1,
+        AGAST_7_12s = 2,
+        OAST_9_16 = 3,
     };
 
     enum
     {
-        THRESHOLD = 10000, NONMAX_SUPPRESSION = 10001,
+        THRESHOLD = 10000,
+        NONMAX_SUPPRESSION = 10001,
     };
 
-    CV_WRAP static Ptr<AgastFeatureDetector> create( int threshold=10,
-                                                     bool nonmaxSuppression=true,
-                                                     AgastFeatureDetector::DetectorType type = AgastFeatureDetector::OAST_9_16);
+    CV_WRAP static Ptr<AgastFeatureDetector>
+    create(int threshold = 10, bool nonmaxSuppression = true,
+           AgastFeatureDetector::DetectorType type = AgastFeatureDetector::OAST_9_16);
 
     CV_WRAP virtual void setThreshold(int threshold) = 0;
     CV_WRAP virtual int getThreshold() const = 0;
@@ -519,8 +529,8 @@ public:
 };
 
 /** @overload */
-CV_EXPORTS void AGAST( InputArray image, CV_OUT std::vector<KeyPoint>& keypoints,
-                      int threshold, bool nonmaxSuppression=true );
+CV_EXPORTS void AGAST(InputArray image, CV_OUT std::vector<KeyPoint>& keypoints, int threshold,
+                      bool nonmaxSuppression = true);
 
 /** @brief Detects corners using the AGAST algorithm
 
@@ -540,18 +550,19 @@ The perl script and examples of tree generation are placed in features2d/doc fol
 Detects corners using the AGAST algorithm by @cite mair2010_agast .
 
  */
-CV_EXPORTS void AGAST( InputArray image, CV_OUT std::vector<KeyPoint>& keypoints,
-                      int threshold, bool nonmaxSuppression, AgastFeatureDetector::DetectorType type );
+CV_EXPORTS void AGAST(InputArray image, CV_OUT std::vector<KeyPoint>& keypoints, int threshold,
+                      bool nonmaxSuppression, AgastFeatureDetector::DetectorType type);
 
 /** @brief Wrapping class for feature detection using the goodFeaturesToTrack function. :
  */
 class CV_EXPORTS_W GFTTDetector : public Feature2D
 {
 public:
-    CV_WRAP static Ptr<GFTTDetector> create( int maxCorners=1000, double qualityLevel=0.01, double minDistance=1,
-                                             int blockSize=3, bool useHarrisDetector=false, double k=0.04 );
-    CV_WRAP static Ptr<GFTTDetector> create( int maxCorners, double qualityLevel, double minDistance,
-                                             int blockSize, int gradiantSize, bool useHarrisDetector=false, double k=0.04 );
+    CV_WRAP static Ptr<GFTTDetector> create(int maxCorners = 1000, double qualityLevel = 0.01,
+                                            double minDistance = 1, int blockSize = 3,
+                                            bool useHarrisDetector = false, double k = 0.04);
+    CV_WRAP static Ptr<GFTTDetector> create(int maxCorners, double qualityLevel, double minDistance, int blockSize,
+                                            int gradiantSize, bool useHarrisDetector = false, double k = 0.04);
     CV_WRAP virtual void setMaxFeatures(int maxFeatures) = 0;
     CV_WRAP virtual int getMaxFeatures() const = 0;
 
@@ -606,37 +617,37 @@ Default values of parameters are tuned to extract dark circular blobs.
 class CV_EXPORTS_W SimpleBlobDetector : public Feature2D
 {
 public:
-  struct CV_EXPORTS_W_SIMPLE Params
-  {
-      CV_WRAP Params();
-      CV_PROP_RW float thresholdStep;
-      CV_PROP_RW float minThreshold;
-      CV_PROP_RW float maxThreshold;
-      CV_PROP_RW size_t minRepeatability;
-      CV_PROP_RW float minDistBetweenBlobs;
+    struct CV_EXPORTS_W_SIMPLE Params
+    {
+        CV_WRAP Params();
+        CV_PROP_RW float thresholdStep;
+        CV_PROP_RW float minThreshold;
+        CV_PROP_RW float maxThreshold;
+        CV_PROP_RW size_t minRepeatability;
+        CV_PROP_RW float minDistBetweenBlobs;
 
-      CV_PROP_RW bool filterByColor;
-      CV_PROP_RW uchar blobColor;
+        CV_PROP_RW bool filterByColor;
+        CV_PROP_RW uchar blobColor;
 
-      CV_PROP_RW bool filterByArea;
-      CV_PROP_RW float minArea, maxArea;
+        CV_PROP_RW bool filterByArea;
+        CV_PROP_RW float minArea, maxArea;
 
-      CV_PROP_RW bool filterByCircularity;
-      CV_PROP_RW float minCircularity, maxCircularity;
+        CV_PROP_RW bool filterByCircularity;
+        CV_PROP_RW float minCircularity, maxCircularity;
 
-      CV_PROP_RW bool filterByInertia;
-      CV_PROP_RW float minInertiaRatio, maxInertiaRatio;
+        CV_PROP_RW bool filterByInertia;
+        CV_PROP_RW float minInertiaRatio, maxInertiaRatio;
 
-      CV_PROP_RW bool filterByConvexity;
-      CV_PROP_RW float minConvexity, maxConvexity;
+        CV_PROP_RW bool filterByConvexity;
+        CV_PROP_RW float minConvexity, maxConvexity;
 
-      void read( const FileNode& fn );
-      void write( FileStorage& fs ) const;
-  };
+        void read(const FileNode& fn);
+        void write(FileStorage& fs) const;
+    };
 
-  CV_WRAP static Ptr<SimpleBlobDetector>
-    create(const SimpleBlobDetector::Params &parameters = SimpleBlobDetector::Params());
-  CV_WRAP virtual String getDefaultName() const CV_OVERRIDE;
+    CV_WRAP static Ptr<SimpleBlobDetector>
+    create(const SimpleBlobDetector::Params& parameters = SimpleBlobDetector::Params());
+    CV_WRAP virtual String getDefaultName() const CV_OVERRIDE;
 };
 
 //! @} features2d_main
@@ -671,8 +682,7 @@ public:
     @param diffusivity Diffusivity type. DIFF_PM_G1, DIFF_PM_G2, DIFF_WEICKERT or
     DIFF_CHARBONNIER
      */
-    CV_WRAP static Ptr<KAZE> create(bool extended=false, bool upright=false,
-                                    float threshold = 0.001f,
+    CV_WRAP static Ptr<KAZE> create(bool extended = false, bool upright = false, float threshold = 0.001f,
                                     int nOctaves = 4, int nOctaveLayers = 4,
                                     KAZE::DiffusivityType diffusivity = KAZE::DIFF_PM_G2);
 
@@ -738,8 +748,8 @@ public:
      */
     CV_WRAP static Ptr<AKAZE> create(AKAZE::DescriptorType descriptor_type = AKAZE::DESCRIPTOR_MLDB,
                                      int descriptor_size = 0, int descriptor_channels = 3,
-                                     float threshold = 0.001f, int nOctaves = 4,
-                                     int nOctaveLayers = 4, KAZE::DiffusivityType diffusivity = KAZE::DIFF_PM_G2);
+                                     float threshold = 0.001f, int nOctaves = 4, int nOctaveLayers = 4,
+                                     KAZE::DiffusivityType diffusivity = KAZE::DIFF_PM_G2);
 
     CV_WRAP virtual void setDescriptorType(AKAZE::DescriptorType dtype) = 0;
     CV_WRAP virtual AKAZE::DescriptorType getDescriptorType() const = 0;
@@ -776,10 +786,26 @@ struct CV_EXPORTS Accumulator
     typedef T Type;
 };
 
-template<> struct Accumulator<unsigned char>  { typedef float Type; };
-template<> struct Accumulator<unsigned short> { typedef float Type; };
-template<> struct Accumulator<char>   { typedef float Type; };
-template<> struct Accumulator<short>  { typedef float Type; };
+template<>
+struct Accumulator<unsigned char>
+{
+    typedef float Type;
+};
+template<>
+struct Accumulator<unsigned short>
+{
+    typedef float Type;
+};
+template<>
+struct Accumulator<char>
+{
+    typedef float Type;
+};
+template<>
+struct Accumulator<short>
+{
+    typedef float Type;
+};
 
 /*
  * Squared Euclidean distance functor
@@ -791,7 +817,7 @@ struct CV_EXPORTS SL2
     typedef T ValueType;
     typedef typename Accumulator<T>::Type ResultType;
 
-    ResultType operator()( const T* a, const T* b, int size ) const
+    ResultType operator()(const T* a, const T* b, int size) const
     {
         return normL2Sqr<ValueType, ResultType>(a, b, size);
     }
@@ -807,7 +833,7 @@ struct L2
     typedef T ValueType;
     typedef typename Accumulator<T>::Type ResultType;
 
-    ResultType operator()( const T* a, const T* b, int size ) const
+    ResultType operator()(const T* a, const T* b, int size) const
     {
         return (ResultType)std::sqrt((double)normL2Sqr<ValueType, ResultType>(a, b, size));
     }
@@ -823,7 +849,7 @@ struct L1
     typedef T ValueType;
     typedef typename Accumulator<T>::Type ResultType;
 
-    ResultType operator()( const T* a, const T* b, int size ) const
+    ResultType operator()(const T* a, const T* b, int size) const
     {
         return normL1<ValueType, ResultType>(a, b, size);
     }
@@ -844,14 +870,14 @@ an image set.
 class CV_EXPORTS_W DescriptorMatcher : public Algorithm
 {
 public:
-   enum MatcherType
+    enum MatcherType
     {
-        FLANNBASED            = 1,
-        BRUTEFORCE            = 2,
-        BRUTEFORCE_L1         = 3,
-        BRUTEFORCE_HAMMING    = 4,
+        FLANNBASED = 1,
+        BRUTEFORCE = 2,
+        BRUTEFORCE_L1 = 3,
+        BRUTEFORCE_HAMMING = 4,
         BRUTEFORCE_HAMMINGLUT = 5,
-        BRUTEFORCE_SL2        = 6
+        BRUTEFORCE_SL2 = 6
     };
 
     virtual ~DescriptorMatcher();
@@ -864,7 +890,7 @@ public:
     @param descriptors Descriptors to add. Each descriptors[i] is a set of descriptors from the same
     train image.
      */
-    CV_WRAP virtual void add( InputArrayOfArrays descriptors );
+    CV_WRAP virtual void add(InputArrayOfArrays descriptors);
 
     /** @brief Returns a constant link to the train descriptor collection trainDescCollection .
      */
@@ -907,8 +933,8 @@ public:
     matched. Namely, queryDescriptors[i] can be matched with trainDescriptors[j] only if
     mask.at\<uchar\>(i,j) is non-zero.
      */
-    CV_WRAP void match( InputArray queryDescriptors, InputArray trainDescriptors,
-                CV_OUT std::vector<DMatch>& matches, InputArray mask=noArray() ) const;
+    CV_WRAP void match(InputArray queryDescriptors, InputArray trainDescriptors,
+                       CV_OUT std::vector<DMatch>& matches, InputArray mask = noArray()) const;
 
     /** @brief Finds the k best matches for each descriptor from a query set.
 
@@ -928,9 +954,9 @@ public:
     descriptor. The matches are returned in the distance increasing order. See DescriptorMatcher::match
     for the details about query and train descriptors.
      */
-    CV_WRAP void knnMatch( InputArray queryDescriptors, InputArray trainDescriptors,
-                   CV_OUT std::vector<std::vector<DMatch> >& matches, int k,
-                   InputArray mask=noArray(), bool compactResult=false ) const;
+    CV_WRAP void knnMatch(InputArray queryDescriptors, InputArray trainDescriptors,
+                          CV_OUT std::vector<std::vector<DMatch>>& matches, int k, InputArray mask = noArray(),
+                          bool compactResult = false) const;
 
     /** @brief For each query descriptor, finds the training descriptors not farther than the specified distance.
 
@@ -951,9 +977,9 @@ public:
     query descriptor and the training descriptor is equal or smaller than maxDistance. Found matches are
     returned in the distance increasing order.
      */
-    CV_WRAP void radiusMatch( InputArray queryDescriptors, InputArray trainDescriptors,
-                      CV_OUT std::vector<std::vector<DMatch> >& matches, float maxDistance,
-                      InputArray mask=noArray(), bool compactResult=false ) const;
+    CV_WRAP void radiusMatch(InputArray queryDescriptors, InputArray trainDescriptors,
+                             CV_OUT std::vector<std::vector<DMatch>>& matches, float maxDistance,
+                             InputArray mask = noArray(), bool compactResult = false) const;
 
     /** @overload
     @param queryDescriptors Query set of descriptors.
@@ -962,8 +988,8 @@ public:
     @param masks Set of masks. Each masks[i] specifies permissible matches between the input query
     descriptors and stored train descriptors from the i-th image trainDescCollection[i].
     */
-    CV_WRAP void match( InputArray queryDescriptors, CV_OUT std::vector<DMatch>& matches,
-                        InputArrayOfArrays masks=noArray() );
+    CV_WRAP void match(InputArray queryDescriptors, CV_OUT std::vector<DMatch>& matches,
+                       InputArrayOfArrays masks = noArray());
     /** @overload
     @param queryDescriptors Query set of descriptors.
     @param matches Matches. Each matches[i] is k or less matches for the same query descriptor.
@@ -975,8 +1001,8 @@ public:
     false, the matches vector has the same size as queryDescriptors rows. If compactResult is true,
     the matches vector does not contain matches for fully masked-out query descriptors.
     */
-    CV_WRAP void knnMatch( InputArray queryDescriptors, CV_OUT std::vector<std::vector<DMatch> >& matches, int k,
-                           InputArrayOfArrays masks=noArray(), bool compactResult=false );
+    CV_WRAP void knnMatch(InputArray queryDescriptors, CV_OUT std::vector<std::vector<DMatch>>& matches, int k,
+                          InputArrayOfArrays masks = noArray(), bool compactResult = false);
     /** @overload
     @param queryDescriptors Query set of descriptors.
     @param matches Found matches.
@@ -989,26 +1015,26 @@ public:
     false, the matches vector has the same size as queryDescriptors rows. If compactResult is true,
     the matches vector does not contain matches for fully masked-out query descriptors.
     */
-    CV_WRAP void radiusMatch( InputArray queryDescriptors, CV_OUT std::vector<std::vector<DMatch> >& matches, float maxDistance,
-                      InputArrayOfArrays masks=noArray(), bool compactResult=false );
+    CV_WRAP void radiusMatch(InputArray queryDescriptors, CV_OUT std::vector<std::vector<DMatch>>& matches,
+                             float maxDistance, InputArrayOfArrays masks = noArray(), bool compactResult = false);
 
 
-    CV_WRAP void write( const String& fileName ) const
+    CV_WRAP void write(const String& fileName) const
     {
         FileStorage fs(fileName, FileStorage::WRITE);
         write(fs);
     }
 
-    CV_WRAP void read( const String& fileName )
+    CV_WRAP void read(const String& fileName)
     {
         FileStorage fs(fileName, FileStorage::READ);
         read(fs.root());
     }
     // Reads matcher object from a file node
     // see corresponding cv::Algorithm method
-    CV_WRAP virtual void read( const FileNode& ) CV_OVERRIDE;
+    CV_WRAP virtual void read(const FileNode&) CV_OVERRIDE;
     // Writes matcher object to a file storage
-    virtual void write( FileStorage& ) const CV_OVERRIDE;
+    virtual void write(FileStorage&) const CV_OVERRIDE;
 
     /** @brief Clones the matcher.
 
@@ -1016,7 +1042,7 @@ public:
     that is, copies both parameters and train data. If emptyTrainData is true, the method creates an
     object copy with the current parameters but with empty train data.
      */
-    CV_WRAP virtual Ptr<DescriptorMatcher> clone( bool emptyTrainData=false ) const = 0;
+    CV_WRAP virtual Ptr<DescriptorMatcher> clone(bool emptyTrainData = false) const = 0;
 
     /** @brief Creates a descriptor matcher of a given type with the default parameters (using default
     constructor).
@@ -1029,13 +1055,16 @@ public:
     -   `BruteForce-Hamming(2)`
     -   `FlannBased`
      */
-    CV_WRAP static Ptr<DescriptorMatcher> create( const String& descriptorMatcherType );
+    CV_WRAP static Ptr<DescriptorMatcher> create(const String& descriptorMatcherType);
 
-    CV_WRAP static Ptr<DescriptorMatcher> create( const DescriptorMatcher::MatcherType& matcherType );
+    CV_WRAP static Ptr<DescriptorMatcher> create(const DescriptorMatcher::MatcherType& matcherType);
 
 
     // see corresponding cv::Algorithm method
-    CV_WRAP inline void write(const Ptr<FileStorage>& fs, const String& name = String()) const { Algorithm::write(fs, name); }
+    CV_WRAP inline void write(const Ptr<FileStorage>& fs, const String& name = String()) const
+    {
+        Algorithm::write(fs, name);
+    }
 
 protected:
     /**
@@ -1046,17 +1075,17 @@ protected:
     {
     public:
         DescriptorCollection();
-        DescriptorCollection( const DescriptorCollection& collection );
+        DescriptorCollection(const DescriptorCollection& collection);
         virtual ~DescriptorCollection();
 
         // Vector of matrices "descriptors" will be merged to one matrix "mergedDescriptors" here.
-        void set( const std::vector<Mat>& descriptors );
+        void set(const std::vector<Mat>& descriptors);
         virtual void clear();
 
         const Mat& getDescriptors() const;
-        const Mat getDescriptor( int imgIdx, int localDescIdx ) const;
-        const Mat getDescriptor( int globalDescIdx ) const;
-        void getLocalIdx( int globalDescIdx, int& imgIdx, int& localDescIdx ) const;
+        const Mat getDescriptor(int imgIdx, int localDescIdx) const;
+        const Mat getDescriptor(int globalDescIdx) const;
+        void getLocalIdx(int globalDescIdx, int& imgIdx, int& localDescIdx) const;
 
         int size() const;
 
@@ -1068,16 +1097,17 @@ protected:
     //! In fact the matching is implemented only by the following two methods. These methods suppose
     //! that the class object has been trained already. Public match methods call these methods
     //! after calling train().
-    virtual void knnMatchImpl( InputArray queryDescriptors, std::vector<std::vector<DMatch> >& matches, int k,
-        InputArrayOfArrays masks=noArray(), bool compactResult=false ) = 0;
-    virtual void radiusMatchImpl( InputArray queryDescriptors, std::vector<std::vector<DMatch> >& matches, float maxDistance,
-        InputArrayOfArrays masks=noArray(), bool compactResult=false ) = 0;
+    virtual void knnMatchImpl(InputArray queryDescriptors, std::vector<std::vector<DMatch>>& matches, int k,
+                              InputArrayOfArrays masks = noArray(), bool compactResult = false) = 0;
+    virtual void radiusMatchImpl(InputArray queryDescriptors, std::vector<std::vector<DMatch>>& matches,
+                                 float maxDistance, InputArrayOfArrays masks = noArray(),
+                                 bool compactResult = false) = 0;
 
-    static bool isPossibleMatch( InputArray mask, int queryIdx, int trainIdx );
-    static bool isMaskedOut( InputArrayOfArrays masks, int queryIdx );
+    static bool isPossibleMatch(InputArray mask, int queryIdx, int trainIdx);
+    static bool isMaskedOut(InputArrayOfArrays masks, int queryIdx);
 
-    static Mat clone_op( Mat m ) { return m.clone(); }
-    void checkMasks( InputArrayOfArrays masks, int queryDescriptorsCount ) const;
+    static Mat clone_op(Mat m) { return m.clone(); }
+    void checkMasks(InputArrayOfArrays masks, int queryDescriptorsCount) const;
 
     //! Collection of descriptors from train images.
     std::vector<Mat> trainDescCollection;
@@ -1097,7 +1127,7 @@ public:
      *
      *
     */
-    CV_WRAP BFMatcher( int normType=NORM_L2, bool crossCheck=false );
+    CV_WRAP BFMatcher(int normType = NORM_L2, bool crossCheck = false);
 
     virtual ~BFMatcher() {}
 
@@ -1115,14 +1145,16 @@ public:
     pairs. Such technique usually produces best results with minimal number of outliers when there are
     enough matches. This is alternative to the ratio test, used by D. Lowe in SIFT paper.
      */
-    CV_WRAP static Ptr<BFMatcher> create( int normType=NORM_L2, bool crossCheck=false ) ;
+    CV_WRAP static Ptr<BFMatcher> create(int normType = NORM_L2, bool crossCheck = false);
 
-    virtual Ptr<DescriptorMatcher> clone( bool emptyTrainData=false ) const CV_OVERRIDE;
+    virtual Ptr<DescriptorMatcher> clone(bool emptyTrainData = false) const CV_OVERRIDE;
+
 protected:
-    virtual void knnMatchImpl( InputArray queryDescriptors, std::vector<std::vector<DMatch> >& matches, int k,
-        InputArrayOfArrays masks=noArray(), bool compactResult=false ) CV_OVERRIDE;
-    virtual void radiusMatchImpl( InputArray queryDescriptors, std::vector<std::vector<DMatch> >& matches, float maxDistance,
-        InputArrayOfArrays masks=noArray(), bool compactResult=false ) CV_OVERRIDE;
+    virtual void knnMatchImpl(InputArray queryDescriptors, std::vector<std::vector<DMatch>>& matches, int k,
+                              InputArrayOfArrays masks = noArray(), bool compactResult = false) CV_OVERRIDE;
+    virtual void radiusMatchImpl(InputArray queryDescriptors, std::vector<std::vector<DMatch>>& matches,
+                                 float maxDistance, InputArrayOfArrays masks = noArray(),
+                                 bool compactResult = false) CV_OVERRIDE;
 
     int normType;
     bool crossCheck;
@@ -1140,32 +1172,33 @@ matches of descriptor sets because flann::Index does not support this. :
 class CV_EXPORTS_W FlannBasedMatcher : public DescriptorMatcher
 {
 public:
-    CV_WRAP FlannBasedMatcher( const Ptr<flann::IndexParams>& indexParams=makePtr<flann::KDTreeIndexParams>(),
-                       const Ptr<flann::SearchParams>& searchParams=makePtr<flann::SearchParams>() );
+    CV_WRAP FlannBasedMatcher(const Ptr<flann::IndexParams>& indexParams = makePtr<flann::KDTreeIndexParams>(),
+                              const Ptr<flann::SearchParams>& searchParams = makePtr<flann::SearchParams>());
 
-    virtual void add( InputArrayOfArrays descriptors ) CV_OVERRIDE;
+    virtual void add(InputArrayOfArrays descriptors) CV_OVERRIDE;
     virtual void clear() CV_OVERRIDE;
 
     // Reads matcher object from a file node
-    virtual void read( const FileNode& ) CV_OVERRIDE;
+    virtual void read(const FileNode&) CV_OVERRIDE;
     // Writes matcher object to a file storage
-    virtual void write( FileStorage& ) const CV_OVERRIDE;
+    virtual void write(FileStorage&) const CV_OVERRIDE;
 
     virtual void train() CV_OVERRIDE;
     virtual bool isMaskSupported() const CV_OVERRIDE;
 
     CV_WRAP static Ptr<FlannBasedMatcher> create();
 
-    virtual Ptr<DescriptorMatcher> clone( bool emptyTrainData=false ) const CV_OVERRIDE;
-protected:
-    static void convertToDMatches( const DescriptorCollection& descriptors,
-                                   const Mat& indices, const Mat& distances,
-                                   std::vector<std::vector<DMatch> >& matches );
+    virtual Ptr<DescriptorMatcher> clone(bool emptyTrainData = false) const CV_OVERRIDE;
 
-    virtual void knnMatchImpl( InputArray queryDescriptors, std::vector<std::vector<DMatch> >& matches, int k,
-        InputArrayOfArrays masks=noArray(), bool compactResult=false ) CV_OVERRIDE;
-    virtual void radiusMatchImpl( InputArray queryDescriptors, std::vector<std::vector<DMatch> >& matches, float maxDistance,
-        InputArrayOfArrays masks=noArray(), bool compactResult=false ) CV_OVERRIDE;
+protected:
+    static void convertToDMatches(const DescriptorCollection& descriptors, const Mat& indices,
+                                  const Mat& distances, std::vector<std::vector<DMatch>>& matches);
+
+    virtual void knnMatchImpl(InputArray queryDescriptors, std::vector<std::vector<DMatch>>& matches, int k,
+                              InputArrayOfArrays masks = noArray(), bool compactResult = false) CV_OVERRIDE;
+    virtual void radiusMatchImpl(InputArray queryDescriptors, std::vector<std::vector<DMatch>>& matches,
+                                 float maxDistance, InputArrayOfArrays masks = noArray(),
+                                 bool compactResult = false) CV_OVERRIDE;
 
     Ptr<flann::IndexParams> indexParams;
     Ptr<flann::SearchParams> searchParams;
@@ -1188,16 +1221,16 @@ protected:
 
 enum struct DrawMatchesFlags
 {
-  DEFAULT = 0, //!< Output image matrix will be created (Mat::create),
-               //!< i.e. existing memory of output image may be reused.
-               //!< Two source image, matches and single keypoints will be drawn.
-               //!< For each keypoint only the center point will be drawn (without
-               //!< the circle around keypoint with keypoint size and orientation).
-  DRAW_OVER_OUTIMG = 1, //!< Output image matrix will not be created (Mat::create).
-                        //!< Matches will be drawn on existing content of output image.
-  NOT_DRAW_SINGLE_POINTS = 2, //!< Single keypoints will not be drawn.
-  DRAW_RICH_KEYPOINTS = 4 //!< For each keypoint the circle around keypoint with keypoint size and
-                          //!< orientation will be drawn.
+    DEFAULT = 0, //!< Output image matrix will be created (Mat::create),
+    //!< i.e. existing memory of output image may be reused.
+    //!< Two source image, matches and single keypoints will be drawn.
+    //!< For each keypoint only the center point will be drawn (without
+    //!< the circle around keypoint with keypoint size and orientation).
+    DRAW_OVER_OUTIMG = 1, //!< Output image matrix will not be created (Mat::create).
+    //!< Matches will be drawn on existing content of output image.
+    NOT_DRAW_SINGLE_POINTS = 2, //!< Single keypoints will not be drawn.
+    DRAW_RICH_KEYPOINTS = 4 //!< For each keypoint the circle around keypoint with keypoint size and
+    //!< orientation will be drawn.
 };
 CV_ENUM_FLAGS(DrawMatchesFlags);
 
@@ -1216,8 +1249,9 @@ For Python API, flags are modified as cv2.DRAW_MATCHES_FLAGS_DEFAULT,
 cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS, cv2.DRAW_MATCHES_FLAGS_DRAW_OVER_OUTIMG,
 cv2.DRAW_MATCHES_FLAGS_NOT_DRAW_SINGLE_POINTS
  */
-CV_EXPORTS_W void drawKeypoints( InputArray image, const std::vector<KeyPoint>& keypoints, InputOutputArray outImage,
-                               const Scalar& color=Scalar::all(-1), DrawMatchesFlags flags=DrawMatchesFlags::DEFAULT );
+CV_EXPORTS_W void drawKeypoints(InputArray image, const std::vector<KeyPoint>& keypoints,
+                                InputOutputArray outImage, const Scalar& color = Scalar::all(-1),
+                                DrawMatchesFlags flags = DrawMatchesFlags::DEFAULT);
 
 /** @brief Draws the found matches of keypoints from two images.
 
@@ -1241,18 +1275,21 @@ DrawMatchesFlags.
 This function draws matches of keypoints from two images in the output image. Match is a line
 connecting two keypoints (circles). See cv::DrawMatchesFlags.
  */
-CV_EXPORTS_W void drawMatches( InputArray img1, const std::vector<KeyPoint>& keypoints1,
-                             InputArray img2, const std::vector<KeyPoint>& keypoints2,
-                             const std::vector<DMatch>& matches1to2, InputOutputArray outImg,
-                             const Scalar& matchColor=Scalar::all(-1), const Scalar& singlePointColor=Scalar::all(-1),
-                             const std::vector<char>& matchesMask=std::vector<char>(), DrawMatchesFlags flags=DrawMatchesFlags::DEFAULT );
+CV_EXPORTS_W void drawMatches(InputArray img1, const std::vector<KeyPoint>& keypoints1, InputArray img2,
+                              const std::vector<KeyPoint>& keypoints2, const std::vector<DMatch>& matches1to2,
+                              InputOutputArray outImg, const Scalar& matchColor = Scalar::all(-1),
+                              const Scalar& singlePointColor = Scalar::all(-1),
+                              const std::vector<char>& matchesMask = std::vector<char>(),
+                              DrawMatchesFlags flags = DrawMatchesFlags::DEFAULT);
 
 /** @overload */
-CV_EXPORTS_AS(drawMatchesKnn) void drawMatches( InputArray img1, const std::vector<KeyPoint>& keypoints1,
-                             InputArray img2, const std::vector<KeyPoint>& keypoints2,
-                             const std::vector<std::vector<DMatch> >& matches1to2, InputOutputArray outImg,
-                             const Scalar& matchColor=Scalar::all(-1), const Scalar& singlePointColor=Scalar::all(-1),
-                             const std::vector<std::vector<char> >& matchesMask=std::vector<std::vector<char> >(), DrawMatchesFlags flags=DrawMatchesFlags::DEFAULT );
+CV_EXPORTS_AS(drawMatchesKnn)
+void drawMatches(InputArray img1, const std::vector<KeyPoint>& keypoints1, InputArray img2,
+                 const std::vector<KeyPoint>& keypoints2, const std::vector<std::vector<DMatch>>& matches1to2,
+                 InputOutputArray outImg, const Scalar& matchColor = Scalar::all(-1),
+                 const Scalar& singlePointColor = Scalar::all(-1),
+                 const std::vector<std::vector<char>>& matchesMask = std::vector<std::vector<char>>(),
+                 DrawMatchesFlags flags = DrawMatchesFlags::DEFAULT);
 
 //! @} features2d_draw
 
@@ -1260,17 +1297,17 @@ CV_EXPORTS_AS(drawMatchesKnn) void drawMatches( InputArray img1, const std::vect
 *   Functions to evaluate the feature detectors and [generic] descriptor extractors      *
 \****************************************************************************************/
 
-CV_EXPORTS void evaluateFeatureDetector( const Mat& img1, const Mat& img2, const Mat& H1to2,
-                                         std::vector<KeyPoint>* keypoints1, std::vector<KeyPoint>* keypoints2,
-                                         float& repeatability, int& correspCount,
-                                         const Ptr<FeatureDetector>& fdetector=Ptr<FeatureDetector>() );
+CV_EXPORTS void evaluateFeatureDetector(const Mat& img1, const Mat& img2, const Mat& H1to2,
+                                        std::vector<KeyPoint>* keypoints1, std::vector<KeyPoint>* keypoints2,
+                                        float& repeatability, int& correspCount,
+                                        const Ptr<FeatureDetector>& fdetector = Ptr<FeatureDetector>());
 
-CV_EXPORTS void computeRecallPrecisionCurve( const std::vector<std::vector<DMatch> >& matches1to2,
-                                             const std::vector<std::vector<uchar> >& correctMatches1to2Mask,
-                                             std::vector<Point2f>& recallPrecisionCurve );
+CV_EXPORTS void computeRecallPrecisionCurve(const std::vector<std::vector<DMatch>>& matches1to2,
+                                            const std::vector<std::vector<uchar>>& correctMatches1to2Mask,
+                                            std::vector<Point2f>& recallPrecisionCurve);
 
-CV_EXPORTS float getRecall( const std::vector<Point2f>& recallPrecisionCurve, float l_precision );
-CV_EXPORTS int getNearestPoint( const std::vector<Point2f>& recallPrecisionCurve, float l_precision );
+CV_EXPORTS float getRecall(const std::vector<Point2f>& recallPrecisionCurve, float l_precision);
+CV_EXPORTS int getNearestPoint(const std::vector<Point2f>& recallPrecisionCurve, float l_precision);
 
 /****************************************************************************************\
 *                                     Bag of visual words                                *
@@ -1297,7 +1334,7 @@ public:
 
     The training set is clustered using clustermethod to construct the vocabulary.
      */
-    CV_WRAP void add( const Mat& descriptors );
+    CV_WRAP void add(const Mat& descriptors);
 
     /** @brief Returns a training set of descriptors.
     */
@@ -1321,7 +1358,7 @@ public:
     variant of the method, train descriptors stored in the object are clustered. In the second variant,
     input descriptors are clustered.
      */
-    CV_WRAP virtual Mat cluster( const Mat& descriptors ) const = 0;
+    CV_WRAP virtual Mat cluster(const Mat& descriptors) const = 0;
 
 protected:
     std::vector<Mat> descriptors;
@@ -1337,16 +1374,15 @@ public:
 
     @see cv::kmeans
     */
-    CV_WRAP BOWKMeansTrainer( int clusterCount, const TermCriteria& termcrit=TermCriteria(),
-                      int attempts=3, int flags=KMEANS_PP_CENTERS );
+    CV_WRAP BOWKMeansTrainer(int clusterCount, const TermCriteria& termcrit = TermCriteria(), int attempts = 3,
+                             int flags = KMEANS_PP_CENTERS);
     virtual ~BOWKMeansTrainer();
 
     // Returns trained vocabulary (i.e. cluster centers).
     CV_WRAP virtual Mat cluster() const CV_OVERRIDE;
-    CV_WRAP virtual Mat cluster( const Mat& descriptors ) const CV_OVERRIDE;
+    CV_WRAP virtual Mat cluster(const Mat& descriptors) const CV_OVERRIDE;
 
 protected:
-
     int clusterCount;
     TermCriteria termcrit;
     int attempts;
@@ -1373,10 +1409,10 @@ public:
     @param dmatcher Descriptor matcher that is used to find the nearest word of the trained vocabulary
     for each keypoint descriptor of the image.
      */
-    CV_WRAP BOWImgDescriptorExtractor( const Ptr<DescriptorExtractor>& dextractor,
-                               const Ptr<DescriptorMatcher>& dmatcher );
+    CV_WRAP BOWImgDescriptorExtractor(const Ptr<DescriptorExtractor>& dextractor,
+                                      const Ptr<DescriptorMatcher>& dmatcher);
     /** @overload */
-    BOWImgDescriptorExtractor( const Ptr<DescriptorMatcher>& dmatcher );
+    BOWImgDescriptorExtractor(const Ptr<DescriptorMatcher>& dmatcher);
     virtual ~BOWImgDescriptorExtractor();
 
     /** @brief Sets a visual vocabulary.
@@ -1384,7 +1420,7 @@ public:
     @param vocabulary Vocabulary (can be trained using the inheritor of BOWTrainer ). Each row of the
     vocabulary is a visual word (cluster center).
      */
-    CV_WRAP void setVocabulary( const Mat& vocabulary );
+    CV_WRAP void setVocabulary(const Mat& vocabulary);
 
     /** @brief Returns the set vocabulary.
     */
@@ -1400,8 +1436,8 @@ public:
     returned if it is non-zero.
     @param descriptors Descriptors of the image keypoints that are returned if they are non-zero.
      */
-    void compute( InputArray image, std::vector<KeyPoint>& keypoints, OutputArray imgDescriptor,
-                  std::vector<std::vector<int> >* pointIdxsOfClusters=0, Mat* descriptors=0 );
+    void compute(InputArray image, std::vector<KeyPoint>& keypoints, OutputArray imgDescriptor,
+                 std::vector<std::vector<int>>* pointIdxsOfClusters = 0, Mat* descriptors = 0);
     /** @overload
     @param keypointDescriptors Computed descriptors to match with vocabulary.
     @param imgDescriptor Computed output image descriptor.
@@ -1409,12 +1445,15 @@ public:
     pointIdxsOfClusters[i] are keypoint indices that belong to the i -th cluster (word of vocabulary)
     returned if it is non-zero.
     */
-    void compute( InputArray keypointDescriptors, OutputArray imgDescriptor,
-                  std::vector<std::vector<int> >* pointIdxsOfClusters=0 );
+    void compute(InputArray keypointDescriptors, OutputArray imgDescriptor,
+                 std::vector<std::vector<int>>* pointIdxsOfClusters = 0);
     // compute() is not constant because DescriptorMatcher::match is not constant
 
-    CV_WRAP_AS(compute) void compute2( const Mat& image, std::vector<KeyPoint>& keypoints, CV_OUT Mat& imgDescriptor )
-    { compute(image,keypoints,imgDescriptor); }
+    CV_WRAP_AS(compute)
+    void compute2(const Mat& image, std::vector<KeyPoint>& keypoints, CV_OUT Mat& imgDescriptor)
+    {
+        compute(image, keypoints, imgDescriptor);
+    }
 
     /** @brief Returns an image descriptor size if the vocabulary is set. Otherwise, it returns 0.
     */

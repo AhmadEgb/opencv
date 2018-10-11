@@ -45,25 +45,23 @@ The references are:
 #include "fast.hpp"
 #include "opencv2/core/hal/intrin.hpp"
 
-namespace cv
-{
-namespace opt_AVX2
-{
+namespace cv { namespace opt_AVX2 {
 
-class FAST_t_patternSize16_AVX2_Impl CV_FINAL: public FAST_t_patternSize16_AVX2
+class FAST_t_patternSize16_AVX2_Impl CV_FINAL : public FAST_t_patternSize16_AVX2
 {
 public:
-    FAST_t_patternSize16_AVX2_Impl(int _cols, int _threshold, bool _nonmax_suppression, const int* _pixel):
-                                   cols(_cols), nonmax_suppression(_nonmax_suppression), pixel(_pixel)
+    FAST_t_patternSize16_AVX2_Impl(int _cols, int _threshold, bool _nonmax_suppression, const int* _pixel)
+        : cols(_cols), nonmax_suppression(_nonmax_suppression), pixel(_pixel)
     {
         //patternSize = 16
         t256c = (char)_threshold;
         threshold = std::min(std::max(_threshold, 0), 255);
     }
 
-    virtual void process(int &j, const uchar* &ptr, uchar* curr, int* cornerpos, int &ncorners) CV_OVERRIDE
+    virtual void process(int& j, const uchar*& ptr, uchar* curr, int* cornerpos, int& ncorners) CV_OVERRIDE
     {
-        static const __m256i delta256 = _mm256_broadcastsi128_si256(_mm_set1_epi8((char)(-128))), K16_256 = _mm256_broadcastsi128_si256(_mm_set1_epi8((char)8));
+        static const __m256i delta256 = _mm256_broadcastsi128_si256(_mm_set1_epi8((char)(-128))),
+                             K16_256 = _mm256_broadcastsi128_si256(_mm_set1_epi8((char)8));
         const __m256i t256 = _mm256_broadcastsi128_si256(_mm_set1_epi8(t256c));
         for (; j < cols - 32 - 3; j += 32, ptr += 32)
         {
@@ -89,7 +87,8 @@ public:
             m0 = _mm256_or_si256(m0, m1);
 
             unsigned int mask = _mm256_movemask_epi8(m0); //unsigned is important!
-            if (mask == 0){
+            if (mask == 0)
+            {
                 continue;
             }
             if ((mask & 0xffff) == 0)
@@ -165,7 +164,7 @@ public:
         _mm256_zeroupper();
     }
 
-    virtual ~FAST_t_patternSize16_AVX2_Impl() CV_OVERRIDE {};
+    virtual ~FAST_t_patternSize16_AVX2_Impl() CV_OVERRIDE{};
 
 private:
     int cols;
@@ -175,10 +174,11 @@ private:
     const int* pixel;
 };
 
-Ptr<FAST_t_patternSize16_AVX2> FAST_t_patternSize16_AVX2::getImpl(int _cols, int _threshold, bool _nonmax_suppression, const int* _pixel)
+Ptr<FAST_t_patternSize16_AVX2> FAST_t_patternSize16_AVX2::getImpl(int _cols, int _threshold,
+                                                                  bool _nonmax_suppression, const int* _pixel)
 {
-    return Ptr<FAST_t_patternSize16_AVX2>(new FAST_t_patternSize16_AVX2_Impl(_cols, _threshold, _nonmax_suppression, _pixel));
+    return Ptr<FAST_t_patternSize16_AVX2>(
+        new FAST_t_patternSize16_AVX2_Impl(_cols, _threshold, _nonmax_suppression, _pixel));
 }
 
-}
-}
+}} // namespace cv::opt_AVX2

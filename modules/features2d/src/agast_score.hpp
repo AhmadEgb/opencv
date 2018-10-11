@@ -48,14 +48,14 @@ The references are:
 
 #ifdef __cplusplus
 
-#include "precomp.hpp"
-namespace cv
-{
+#    include "precomp.hpp"
+namespace cv {
 
-#if !(defined __i386__ || defined(_M_IX86) || defined __x86_64__ || defined(_M_X64))
+#    if !(defined __i386__ || defined(_M_IX86) || defined __x86_64__ || defined(_M_X64))
 int agast_tree_search(const uint32_t table_struct32[], int pixel_[], const unsigned char* const ptr, int threshold);
-int AGAST_ALL_SCORE(const uchar* ptr, const int pixel[], int threshold, AgastFeatureDetector::DetectorType agasttype);
-#endif //!(defined __i386__ || defined(_M_IX86) || defined __x86_64__ || defined(_M_X64))
+int AGAST_ALL_SCORE(const uchar* ptr, const int pixel[], int threshold,
+                    AgastFeatureDetector::DetectorType agasttype);
+#    endif //!(defined __i386__ || defined(_M_IX86) || defined __x86_64__ || defined(_M_X64))
 
 
 void makeAgastOffsets(int pixel[16], int row_stride, AgastFeatureDetector::DetectorType type);
@@ -64,6 +64,6 @@ template<AgastFeatureDetector::DetectorType type>
 int agast_cornerScore(const uchar* ptr, const int pixel[], int threshold);
 
 
-}
+} // namespace cv
 #endif
 #endif

@@ -47,38 +47,36 @@
 //#define DEBUG_BLOB_DETECTOR
 
 #ifdef DEBUG_BLOB_DETECTOR
-#  include "opencv2/opencv_modules.hpp"
-#  ifdef HAVE_OPENCV_HIGHGUI
-#    include "opencv2/highgui.hpp"
-#  else
-#    undef DEBUG_BLOB_DETECTOR
-#  endif
+#    include "opencv2/opencv_modules.hpp"
+#    ifdef HAVE_OPENCV_HIGHGUI
+#        include "opencv2/highgui.hpp"
+#    else
+#        undef DEBUG_BLOB_DETECTOR
+#    endif
 #endif
 
-namespace cv
-{
+namespace cv {
 
 class CV_EXPORTS_W SimpleBlobDetectorImpl : public SimpleBlobDetector
 {
 public:
+    explicit SimpleBlobDetectorImpl(const SimpleBlobDetector::Params& parameters = SimpleBlobDetector::Params());
 
-  explicit SimpleBlobDetectorImpl(const SimpleBlobDetector::Params &parameters = SimpleBlobDetector::Params());
-
-  virtual void read( const FileNode& fn ) CV_OVERRIDE;
-  virtual void write( FileStorage& fs ) const CV_OVERRIDE;
+    virtual void read(const FileNode& fn) CV_OVERRIDE;
+    virtual void write(FileStorage& fs) const CV_OVERRIDE;
 
 protected:
-  struct CV_EXPORTS Center
-  {
-      Point2d location;
-      double radius;
-      double confidence;
-  };
+    struct CV_EXPORTS Center
+    {
+        Point2d location;
+        double radius;
+        double confidence;
+    };
 
-  virtual void detect( InputArray image, std::vector<KeyPoint>& keypoints, InputArray mask=noArray() ) CV_OVERRIDE;
-  virtual void findBlobs(InputArray image, InputArray binaryImage, std::vector<Center> &centers) const;
+    virtual void detect(InputArray image, std::vector<KeyPoint>& keypoints, InputArray mask = noArray()) CV_OVERRIDE;
+    virtual void findBlobs(InputArray image, InputArray binaryImage, std::vector<Center>& centers) const;
 
-  Params params;
+    Params params;
 };
 
 /*
@@ -114,7 +112,7 @@ SimpleBlobDetector::Params::Params()
     maxConvexity = std::numeric_limits<float>::max();
 }
 
-void SimpleBlobDetector::Params::read(const cv::FileNode& fn )
+void SimpleBlobDetector::Params::read(const cv::FileNode& fn)
 {
     thresholdStep = fn["thresholdStep"];
     minThreshold = fn["minThreshold"];
@@ -172,23 +170,19 @@ void SimpleBlobDetector::Params::write(cv::FileStorage& fs) const
     fs << "maxConvexity" << maxConvexity;
 }
 
-SimpleBlobDetectorImpl::SimpleBlobDetectorImpl(const SimpleBlobDetector::Params &parameters) :
-params(parameters)
+SimpleBlobDetectorImpl::SimpleBlobDetectorImpl(const SimpleBlobDetector::Params& parameters) : params(parameters)
 {
 }
 
-void SimpleBlobDetectorImpl::read( const cv::FileNode& fn )
-{
-    params.read(fn);
-}
+void SimpleBlobDetectorImpl::read(const cv::FileNode& fn) { params.read(fn); }
 
-void SimpleBlobDetectorImpl::write( cv::FileStorage& fs ) const
+void SimpleBlobDetectorImpl::write(cv::FileStorage& fs) const
 {
     writeFormat(fs);
     params.write(fs);
 }
 
-void SimpleBlobDetectorImpl::findBlobs(InputArray _image, InputArray _binaryImage, std::vector<Center> &centers) const
+void SimpleBlobDetectorImpl::findBlobs(InputArray _image, InputArray _binaryImage, std::vector<Center>& centers) const
 {
     CV_INSTRUMENT_REGION();
 
@@ -196,7 +190,7 @@ void SimpleBlobDetectorImpl::findBlobs(InputArray _image, InputArray _binaryImag
     CV_UNUSED(image);
     centers.clear();
 
-    std::vector < std::vector<Point> > contours;
+    std::vector<std::vector<Point>> contours;
     Mat tmpBinaryImage = binaryImage.clone();
     findContours(tmpBinaryImage, contours, RETR_LIST, CHAIN_APPROX_NONE);
 
@@ -243,8 +237,10 @@ void SimpleBlobDetectorImpl::findBlobs(InputArray _image, InputArray _binaryImag
                 double cosmax = -cosmin;
                 double sinmax = -sinmin;
 
-                double imin = 0.5 * (moms.mu20 + moms.mu02) - 0.5 * (moms.mu20 - moms.mu02) * cosmin - moms.mu11 * sinmin;
-                double imax = 0.5 * (moms.mu20 + moms.mu02) - 0.5 * (moms.mu20 - moms.mu02) * cosmax - moms.mu11 * sinmax;
+                double imin = 0.5 * (moms.mu20 + moms.mu02) - 0.5 * (moms.mu20 - moms.mu02) * cosmin
+                              - moms.mu11 * sinmin;
+                double imax = 0.5 * (moms.mu20 + moms.mu02) - 0.5 * (moms.mu20 - moms.mu02) * cosmax
+                              - moms.mu11 * sinmax;
                 ratio = imin / imax;
             }
             else
@@ -260,7 +256,7 @@ void SimpleBlobDetectorImpl::findBlobs(InputArray _image, InputArray _binaryImag
 
         if (params.filterByConvexity)
         {
-            std::vector < Point > hull;
+            std::vector<Point> hull;
             convexHull(Mat(contours[contourIdx]), hull);
             double area = contourArea(Mat(contours[contourIdx]));
             double hullArea = contourArea(Mat(hull));
@@ -271,13 +267,13 @@ void SimpleBlobDetectorImpl::findBlobs(InputArray _image, InputArray _binaryImag
                 continue;
         }
 
-        if(moms.m00 == 0.0)
+        if (moms.m00 == 0.0)
             continue;
         center.location = Point2d(moms.m10 / moms.m00, moms.m01 / moms.m00);
 
         if (params.filterByColor)
         {
-            if (binaryImage.at<uchar> (cvRound(center.location.y), cvRound(center.location.x)) != params.blobColor)
+            if (binaryImage.at<uchar>(cvRound(center.location.y), cvRound(center.location.x)) != params.blobColor)
                 continue;
         }
 
@@ -318,34 +314,36 @@ void SimpleBlobDetectorImpl::detect(InputArray image, std::vector<cv::KeyPoint>&
     else
         grayscaleImage = image.getMat();
 
-    if (grayscaleImage.type() != CV_8UC1) {
+    if (grayscaleImage.type() != CV_8UC1)
+    {
         CV_Error(Error::StsUnsupportedFormat, "Blob detector only supports 8-bit images!");
     }
 
-    std::vector < std::vector<Center> > centers;
+    std::vector<std::vector<Center>> centers;
     for (double thresh = params.minThreshold; thresh < params.maxThreshold; thresh += params.thresholdStep)
     {
         Mat binarizedImage;
         threshold(grayscaleImage, binarizedImage, thresh, 255, THRESH_BINARY);
 
-        std::vector < Center > curCenters;
+        std::vector<Center> curCenters;
         findBlobs(grayscaleImage, binarizedImage, curCenters);
-        std::vector < std::vector<Center> > newCenters;
+        std::vector<std::vector<Center>> newCenters;
         for (size_t i = 0; i < curCenters.size(); i++)
         {
             bool isNew = true;
             for (size_t j = 0; j < centers.size(); j++)
             {
-                double dist = norm(centers[j][ centers[j].size() / 2 ].location - curCenters[i].location);
-                isNew = dist >= params.minDistBetweenBlobs && dist >= centers[j][ centers[j].size() / 2 ].radius && dist >= curCenters[i].radius;
+                double dist = norm(centers[j][centers[j].size() / 2].location - curCenters[i].location);
+                isNew = dist >= params.minDistBetweenBlobs && dist >= centers[j][centers[j].size() / 2].radius
+                        && dist >= curCenters[i].radius;
                 if (!isNew)
                 {
                     centers[j].push_back(curCenters[i]);
 
                     size_t k = centers[j].size() - 1;
-                    while( k > 0 && centers[j][k].radius < centers[j][k-1].radius )
+                    while (k > 0 && centers[j][k].radius < centers[j][k - 1].radius)
                     {
-                        centers[j][k] = centers[j][k-1];
+                        centers[j][k] = centers[j][k - 1];
                         k--;
                     }
                     centers[j][k] = curCenters[i];
@@ -354,7 +352,7 @@ void SimpleBlobDetectorImpl::detect(InputArray image, std::vector<cv::KeyPoint>&
                 }
             }
             if (isNew)
-                newCenters.push_back(std::vector<Center> (1, curCenters[i]));
+                newCenters.push_back(std::vector<Center>(1, curCenters[i]));
         }
         std::copy(newCenters.begin(), newCenters.end(), std::back_inserter(centers));
     }
@@ -386,9 +384,6 @@ Ptr<SimpleBlobDetector> SimpleBlobDetector::create(const SimpleBlobDetector::Par
     return makePtr<SimpleBlobDetectorImpl>(params);
 }
 
-String SimpleBlobDetector::getDefaultName() const
-{
-    return (Feature2D::getDefaultName() + ".SimpleBlobDetector");
-}
+String SimpleBlobDetector::getDefaultName() const { return (Feature2D::getDefaultName() + ".SimpleBlobDetector"); }
 
-}
+} // namespace cv

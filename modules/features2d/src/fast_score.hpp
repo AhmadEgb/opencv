@@ -46,17 +46,16 @@ The references are:
 
 #ifdef __cplusplus
 
-#include "precomp.hpp"
+#    include "precomp.hpp"
 
-namespace cv
-{
+namespace cv {
 
 void makeOffsets(int pixel[25], int row_stride, int patternSize);
 
 template<int patternSize>
 int cornerScore(const uchar* ptr, const int pixel[], int threshold);
 
-}
+} // namespace cv
 
 #endif
 #endif

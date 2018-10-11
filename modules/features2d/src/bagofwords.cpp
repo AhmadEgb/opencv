@@ -41,22 +41,19 @@
 
 #include "precomp.hpp"
 
-namespace cv
+namespace cv {
+
+BOWTrainer::BOWTrainer() : size(0) {}
+
+BOWTrainer::~BOWTrainer() {}
+
+void BOWTrainer::add(const Mat& _descriptors)
 {
-
-BOWTrainer::BOWTrainer() : size(0)
-{}
-
-BOWTrainer::~BOWTrainer()
-{}
-
-void BOWTrainer::add( const Mat& _descriptors )
-{
-    CV_Assert( !_descriptors.empty() );
-    if( !descriptors.empty() )
+    CV_Assert(!_descriptors.empty());
+    if (!descriptors.empty())
     {
-        CV_Assert( descriptors[0].cols == _descriptors.cols );
-        CV_Assert( descriptors[0].type() == _descriptors.type() );
+        CV_Assert(descriptors[0].cols == _descriptors.cols);
+        CV_Assert(descriptors[0].type() == _descriptors.type());
         size += _descriptors.rows;
     }
     else
@@ -67,126 +64,110 @@ void BOWTrainer::add( const Mat& _descriptors )
     descriptors.push_back(_descriptors);
 }
 
-const std::vector<Mat>& BOWTrainer::getDescriptors() const
-{
-    return descriptors;
-}
+const std::vector<Mat>& BOWTrainer::getDescriptors() const { return descriptors; }
 
-int BOWTrainer::descriptorsCount() const
-{
-    return descriptors.empty() ? 0 : size;
-}
+int BOWTrainer::descriptorsCount() const { return descriptors.empty() ? 0 : size; }
 
-void BOWTrainer::clear()
-{
-    descriptors.clear();
-}
+void BOWTrainer::clear() { descriptors.clear(); }
 
-BOWKMeansTrainer::BOWKMeansTrainer( int _clusterCount, const TermCriteria& _termcrit,
-                                    int _attempts, int _flags ) :
-    clusterCount(_clusterCount), termcrit(_termcrit), attempts(_attempts), flags(_flags)
-{}
+BOWKMeansTrainer::BOWKMeansTrainer(int _clusterCount, const TermCriteria& _termcrit, int _attempts, int _flags)
+    : clusterCount(_clusterCount), termcrit(_termcrit), attempts(_attempts), flags(_flags)
+{
+}
 
 Mat BOWKMeansTrainer::cluster() const
 {
     CV_INSTRUMENT_REGION();
 
-    CV_Assert( !descriptors.empty() );
+    CV_Assert(!descriptors.empty());
 
-    Mat mergedDescriptors( descriptorsCount(), descriptors[0].cols, descriptors[0].type() );
-    for( size_t i = 0, start = 0; i < descriptors.size(); i++ )
+    Mat mergedDescriptors(descriptorsCount(), descriptors[0].cols, descriptors[0].type());
+    for (size_t i = 0, start = 0; i < descriptors.size(); i++)
     {
         Mat submut = mergedDescriptors.rowRange((int)start, (int)(start + descriptors[i].rows));
         descriptors[i].copyTo(submut);
         start += descriptors[i].rows;
     }
-    return cluster( mergedDescriptors );
+    return cluster(mergedDescriptors);
 }
 
-BOWKMeansTrainer::~BOWKMeansTrainer()
-{}
+BOWKMeansTrainer::~BOWKMeansTrainer() {}
 
-Mat BOWKMeansTrainer::cluster( const Mat& _descriptors ) const
+Mat BOWKMeansTrainer::cluster(const Mat& _descriptors) const
 {
     CV_INSTRUMENT_REGION();
 
     Mat labels, vocabulary;
-    kmeans( _descriptors, clusterCount, labels, termcrit, attempts, flags, vocabulary );
+    kmeans(_descriptors, clusterCount, labels, termcrit, attempts, flags, vocabulary);
     return vocabulary;
 }
 
 
-BOWImgDescriptorExtractor::BOWImgDescriptorExtractor( const Ptr<DescriptorExtractor>& _dextractor,
-                                                      const Ptr<DescriptorMatcher>& _dmatcher ) :
-    dextractor(_dextractor), dmatcher(_dmatcher)
-{}
+BOWImgDescriptorExtractor::BOWImgDescriptorExtractor(const Ptr<DescriptorExtractor>& _dextractor,
+                                                     const Ptr<DescriptorMatcher>& _dmatcher)
+    : dextractor(_dextractor), dmatcher(_dmatcher)
+{
+}
 
-BOWImgDescriptorExtractor::BOWImgDescriptorExtractor( const Ptr<DescriptorMatcher>& _dmatcher ) :
-    dmatcher(_dmatcher)
-{}
+BOWImgDescriptorExtractor::BOWImgDescriptorExtractor(const Ptr<DescriptorMatcher>& _dmatcher) : dmatcher(_dmatcher)
+{
+}
 
-BOWImgDescriptorExtractor::~BOWImgDescriptorExtractor()
-{}
+BOWImgDescriptorExtractor::~BOWImgDescriptorExtractor() {}
 
-void BOWImgDescriptorExtractor::setVocabulary( const Mat& _vocabulary )
+void BOWImgDescriptorExtractor::setVocabulary(const Mat& _vocabulary)
 {
     dmatcher->clear();
     vocabulary = _vocabulary;
-    dmatcher->add( std::vector<Mat>(1, vocabulary) );
+    dmatcher->add(std::vector<Mat>(1, vocabulary));
 }
 
-const Mat& BOWImgDescriptorExtractor::getVocabulary() const
-{
-    return vocabulary;
-}
+const Mat& BOWImgDescriptorExtractor::getVocabulary() const { return vocabulary; }
 
-void BOWImgDescriptorExtractor::compute( InputArray image, std::vector<KeyPoint>& keypoints, OutputArray imgDescriptor,
-                                         std::vector<std::vector<int> >* pointIdxsOfClusters, Mat* descriptors )
+void BOWImgDescriptorExtractor::compute(InputArray image, std::vector<KeyPoint>& keypoints,
+                                        OutputArray imgDescriptor,
+                                        std::vector<std::vector<int>>* pointIdxsOfClusters, Mat* descriptors)
 {
     CV_INSTRUMENT_REGION();
 
     imgDescriptor.release();
 
-    if( keypoints.empty() )
+    if (keypoints.empty())
         return;
 
     // Compute descriptors for the image.
     Mat _descriptors;
-    dextractor->compute( image, keypoints, _descriptors );
+    dextractor->compute(image, keypoints, _descriptors);
 
-    compute( _descriptors, imgDescriptor, pointIdxsOfClusters );
+    compute(_descriptors, imgDescriptor, pointIdxsOfClusters);
 
     // Add the descriptors of image keypoints
-    if (descriptors) {
+    if (descriptors)
+    {
         *descriptors = _descriptors.clone();
     }
 }
 
-int BOWImgDescriptorExtractor::descriptorSize() const
-{
-    return vocabulary.empty() ? 0 : vocabulary.rows;
-}
+int BOWImgDescriptorExtractor::descriptorSize() const { return vocabulary.empty() ? 0 : vocabulary.rows; }
 
-int BOWImgDescriptorExtractor::descriptorType() const
-{
-    return CV_32FC1;
-}
+int BOWImgDescriptorExtractor::descriptorType() const { return CV_32FC1; }
 
-void BOWImgDescriptorExtractor::compute( InputArray keypointDescriptors, OutputArray _imgDescriptor, std::vector<std::vector<int> >* pointIdxsOfClusters )
+void BOWImgDescriptorExtractor::compute(InputArray keypointDescriptors, OutputArray _imgDescriptor,
+                                        std::vector<std::vector<int>>* pointIdxsOfClusters)
 {
     CV_INSTRUMENT_REGION();
 
-    CV_Assert( !vocabulary.empty() );
+    CV_Assert(!vocabulary.empty());
     CV_Assert(!keypointDescriptors.empty());
 
     int clusterCount = descriptorSize(); // = vocabulary.rows
 
     // Match keypoint descriptors to cluster center (to vocabulary)
     std::vector<DMatch> matches;
-    dmatcher->match( keypointDescriptors, matches );
+    dmatcher->match(keypointDescriptors, matches);
 
     // Compute image descriptor
-    if( pointIdxsOfClusters )
+    if (pointIdxsOfClusters)
     {
         pointIdxsOfClusters->clear();
         pointIdxsOfClusters->resize(clusterCount);
@@ -197,20 +178,20 @@ void BOWImgDescriptorExtractor::compute( InputArray keypointDescriptors, OutputA
 
     Mat imgDescriptor = _imgDescriptor.getMat();
 
-    float *dptr = imgDescriptor.ptr<float>();
-    for( size_t i = 0; i < matches.size(); i++ )
+    float* dptr = imgDescriptor.ptr<float>();
+    for (size_t i = 0; i < matches.size(); i++)
     {
         int queryIdx = matches[i].queryIdx;
         int trainIdx = matches[i].trainIdx; // cluster index
-        CV_Assert( queryIdx == (int)i );
+        CV_Assert(queryIdx == (int)i);
 
         dptr[trainIdx] = dptr[trainIdx] + 1.f;
-        if( pointIdxsOfClusters )
-            (*pointIdxsOfClusters)[trainIdx].push_back( queryIdx );
+        if (pointIdxsOfClusters)
+            (*pointIdxsOfClusters)[trainIdx].push_back(queryIdx);
     }
 
     // Normalize image descriptor.
     imgDescriptor /= keypointDescriptors.size().height;
 }
 
-}
+} // namespace cv
