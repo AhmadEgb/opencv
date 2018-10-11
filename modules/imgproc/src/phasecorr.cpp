@@ -35,76 +35,77 @@
 #include "precomp.hpp"
 #include <vector>
 
-namespace cv
-{
+namespace cv {
 
-static void magSpectrums( InputArray _src, OutputArray _dst)
+static void magSpectrums(InputArray _src, OutputArray _dst)
 {
     Mat src = _src.getMat();
     int depth = src.depth(), cn = src.channels(), type = src.type();
     int rows = src.rows, cols = src.cols;
     int j, k;
 
-    CV_Assert( type == CV_32FC1 || type == CV_32FC2 || type == CV_64FC1 || type == CV_64FC2 );
+    CV_Assert(type == CV_32FC1 || type == CV_32FC2 || type == CV_64FC1 || type == CV_64FC2);
 
-    if(src.depth() == CV_32F)
-        _dst.create( src.rows, src.cols, CV_32FC1 );
+    if (src.depth() == CV_32F)
+        _dst.create(src.rows, src.cols, CV_32FC1);
     else
-        _dst.create( src.rows, src.cols, CV_64FC1 );
+        _dst.create(src.rows, src.cols, CV_64FC1);
 
     Mat dst = _dst.getMat();
-    dst.setTo(0);//Mat elements are not equal to zero by default!
+    dst.setTo(0); //Mat elements are not equal to zero by default!
 
     bool is_1d = (rows == 1 || (cols == 1 && src.isContinuous() && dst.isContinuous()));
 
-    if( is_1d )
+    if (is_1d)
         cols = cols + rows - 1, rows = 1;
 
-    int ncols = cols*cn;
+    int ncols = cols * cn;
     int j0 = cn == 1;
     int j1 = ncols - (cols % 2 == 0 && cn == 1);
 
-    if( depth == CV_32F )
+    if (depth == CV_32F)
     {
         const float* dataSrc = src.ptr<float>();
         float* dataDst = dst.ptr<float>();
 
-        size_t stepSrc = src.step/sizeof(dataSrc[0]);
-        size_t stepDst = dst.step/sizeof(dataDst[0]);
+        size_t stepSrc = src.step / sizeof(dataSrc[0]);
+        size_t stepDst = dst.step / sizeof(dataDst[0]);
 
-        if( !is_1d && cn == 1 )
+        if (!is_1d && cn == 1)
         {
-            for( k = 0; k < (cols % 2 ? 1 : 2); k++ )
+            for (k = 0; k < (cols % 2 ? 1 : 2); k++)
             {
-                if( k == 1 )
+                if (k == 1)
                     dataSrc += cols - 1, dataDst += cols - 1;
-                dataDst[0] = dataSrc[0]*dataSrc[0];
-                if( rows % 2 == 0 )
-                    dataDst[(rows-1)*stepDst] = dataSrc[(rows-1)*stepSrc]*dataSrc[(rows-1)*stepSrc];
+                dataDst[0] = dataSrc[0] * dataSrc[0];
+                if (rows % 2 == 0)
+                    dataDst[(rows - 1) * stepDst] = dataSrc[(rows - 1) * stepSrc] * dataSrc[(rows - 1) * stepSrc];
 
-                for( j = 1; j <= rows - 2; j += 2 )
+                for (j = 1; j <= rows - 2; j += 2)
                 {
-                    dataDst[j*stepDst] = (float)std::sqrt((double)dataSrc[j*stepSrc]*dataSrc[j*stepSrc] +
-                                                          (double)dataSrc[(j+1)*stepSrc]*dataSrc[(j+1)*stepSrc]);
+                    dataDst[j * stepDst] = (float)std::sqrt((double)dataSrc[j * stepSrc] * dataSrc[j * stepSrc]
+                                                            + (double)dataSrc[(j + 1) * stepSrc]
+                                                                  * dataSrc[(j + 1) * stepSrc]);
                 }
 
-                if( k == 1 )
+                if (k == 1)
                     dataSrc -= cols - 1, dataDst -= cols - 1;
             }
         }
 
-        for( ; rows--; dataSrc += stepSrc, dataDst += stepDst )
+        for (; rows--; dataSrc += stepSrc, dataDst += stepDst)
         {
-            if( is_1d && cn == 1 )
+            if (is_1d && cn == 1)
             {
-                dataDst[0] = dataSrc[0]*dataSrc[0];
-                if( cols % 2 == 0 )
-                    dataDst[j1] = dataSrc[j1]*dataSrc[j1];
+                dataDst[0] = dataSrc[0] * dataSrc[0];
+                if (cols % 2 == 0)
+                    dataDst[j1] = dataSrc[j1] * dataSrc[j1];
             }
 
-            for( j = j0; j < j1; j += 2 )
+            for (j = j0; j < j1; j += 2)
             {
-                dataDst[j] = (float)std::sqrt((double)dataSrc[j]*dataSrc[j] + (double)dataSrc[j+1]*dataSrc[j+1]);
+                dataDst[j] = (float)std::sqrt((double)dataSrc[j] * dataSrc[j]
+                                              + (double)dataSrc[j + 1] * dataSrc[j + 1]);
             }
         }
     }
@@ -113,155 +114,155 @@ static void magSpectrums( InputArray _src, OutputArray _dst)
         const double* dataSrc = src.ptr<double>();
         double* dataDst = dst.ptr<double>();
 
-        size_t stepSrc = src.step/sizeof(dataSrc[0]);
-        size_t stepDst = dst.step/sizeof(dataDst[0]);
+        size_t stepSrc = src.step / sizeof(dataSrc[0]);
+        size_t stepDst = dst.step / sizeof(dataDst[0]);
 
-        if( !is_1d && cn == 1 )
+        if (!is_1d && cn == 1)
         {
-            for( k = 0; k < (cols % 2 ? 1 : 2); k++ )
+            for (k = 0; k < (cols % 2 ? 1 : 2); k++)
             {
-                if( k == 1 )
+                if (k == 1)
                     dataSrc += cols - 1, dataDst += cols - 1;
-                dataDst[0] = dataSrc[0]*dataSrc[0];
-                if( rows % 2 == 0 )
-                    dataDst[(rows-1)*stepDst] = dataSrc[(rows-1)*stepSrc]*dataSrc[(rows-1)*stepSrc];
+                dataDst[0] = dataSrc[0] * dataSrc[0];
+                if (rows % 2 == 0)
+                    dataDst[(rows - 1) * stepDst] = dataSrc[(rows - 1) * stepSrc] * dataSrc[(rows - 1) * stepSrc];
 
-                for( j = 1; j <= rows - 2; j += 2 )
+                for (j = 1; j <= rows - 2; j += 2)
                 {
-                    dataDst[j*stepDst] = std::sqrt(dataSrc[j*stepSrc]*dataSrc[j*stepSrc] +
-                                                   dataSrc[(j+1)*stepSrc]*dataSrc[(j+1)*stepSrc]);
+                    dataDst[j * stepDst] = std::sqrt(dataSrc[j * stepSrc] * dataSrc[j * stepSrc]
+                                                     + dataSrc[(j + 1) * stepSrc] * dataSrc[(j + 1) * stepSrc]);
                 }
 
-                if( k == 1 )
+                if (k == 1)
                     dataSrc -= cols - 1, dataDst -= cols - 1;
             }
         }
 
-        for( ; rows--; dataSrc += stepSrc, dataDst += stepDst )
+        for (; rows--; dataSrc += stepSrc, dataDst += stepDst)
         {
-            if( is_1d && cn == 1 )
+            if (is_1d && cn == 1)
             {
-                dataDst[0] = dataSrc[0]*dataSrc[0];
-                if( cols % 2 == 0 )
-                    dataDst[j1] = dataSrc[j1]*dataSrc[j1];
+                dataDst[0] = dataSrc[0] * dataSrc[0];
+                if (cols % 2 == 0)
+                    dataDst[j1] = dataSrc[j1] * dataSrc[j1];
             }
 
-            for( j = j0; j < j1; j += 2 )
+            for (j = j0; j < j1; j += 2)
             {
-                dataDst[j] = std::sqrt(dataSrc[j]*dataSrc[j] + dataSrc[j+1]*dataSrc[j+1]);
+                dataDst[j] = std::sqrt(dataSrc[j] * dataSrc[j] + dataSrc[j + 1] * dataSrc[j + 1]);
             }
         }
     }
 }
 
-static void divSpectrums( InputArray _srcA, InputArray _srcB, OutputArray _dst, int flags, bool conjB)
+static void divSpectrums(InputArray _srcA, InputArray _srcB, OutputArray _dst, int flags, bool conjB)
 {
     Mat srcA = _srcA.getMat(), srcB = _srcB.getMat();
     int depth = srcA.depth(), cn = srcA.channels(), type = srcA.type();
     int rows = srcA.rows, cols = srcA.cols;
     int j, k;
 
-    CV_Assert( type == srcB.type() && srcA.size() == srcB.size() );
-    CV_Assert( type == CV_32FC1 || type == CV_32FC2 || type == CV_64FC1 || type == CV_64FC2 );
+    CV_Assert(type == srcB.type() && srcA.size() == srcB.size());
+    CV_Assert(type == CV_32FC1 || type == CV_32FC2 || type == CV_64FC1 || type == CV_64FC2);
 
-    _dst.create( srcA.rows, srcA.cols, type );
+    _dst.create(srcA.rows, srcA.cols, type);
     Mat dst = _dst.getMat();
 
     CV_Assert(dst.data != srcA.data); // non-inplace check
     CV_Assert(dst.data != srcB.data); // non-inplace check
 
-    bool is_1d = (flags & DFT_ROWS) || (rows == 1 || (cols == 1 &&
-             srcA.isContinuous() && srcB.isContinuous() && dst.isContinuous()));
+    bool is_1d = (flags & DFT_ROWS)
+                 || (rows == 1 || (cols == 1 && srcA.isContinuous() && srcB.isContinuous() && dst.isContinuous()));
 
-    if( is_1d && !(flags & DFT_ROWS) )
+    if (is_1d && !(flags & DFT_ROWS))
         cols = cols + rows - 1, rows = 1;
 
-    int ncols = cols*cn;
+    int ncols = cols * cn;
     int j0 = cn == 1;
     int j1 = ncols - (cols % 2 == 0 && cn == 1);
 
-    if( depth == CV_32F )
+    if (depth == CV_32F)
     {
         const float* dataA = srcA.ptr<float>();
         const float* dataB = srcB.ptr<float>();
         float* dataC = dst.ptr<float>();
         float eps = FLT_EPSILON; // prevent div0 problems
 
-        size_t stepA = srcA.step/sizeof(dataA[0]);
-        size_t stepB = srcB.step/sizeof(dataB[0]);
-        size_t stepC = dst.step/sizeof(dataC[0]);
+        size_t stepA = srcA.step / sizeof(dataA[0]);
+        size_t stepB = srcB.step / sizeof(dataB[0]);
+        size_t stepC = dst.step / sizeof(dataC[0]);
 
-        if( !is_1d && cn == 1 )
+        if (!is_1d && cn == 1)
         {
-            for( k = 0; k < (cols % 2 ? 1 : 2); k++ )
+            for (k = 0; k < (cols % 2 ? 1 : 2); k++)
             {
-                if( k == 1 )
+                if (k == 1)
                     dataA += cols - 1, dataB += cols - 1, dataC += cols - 1;
                 dataC[0] = dataA[0] / (dataB[0] + eps);
-                if( rows % 2 == 0 )
-                    dataC[(rows-1)*stepC] = dataA[(rows-1)*stepA] / (dataB[(rows-1)*stepB] + eps);
-                if( !conjB )
-                    for( j = 1; j <= rows - 2; j += 2 )
+                if (rows % 2 == 0)
+                    dataC[(rows - 1) * stepC] = dataA[(rows - 1) * stepA] / (dataB[(rows - 1) * stepB] + eps);
+                if (!conjB)
+                    for (j = 1; j <= rows - 2; j += 2)
                     {
-                        double denom = (double)dataB[j*stepB]*dataB[j*stepB] +
-                                       (double)dataB[(j+1)*stepB]*dataB[(j+1)*stepB] + (double)eps;
+                        double denom = (double)dataB[j * stepB] * dataB[j * stepB]
+                                       + (double)dataB[(j + 1) * stepB] * dataB[(j + 1) * stepB] + (double)eps;
 
-                        double re = (double)dataA[j*stepA]*dataB[j*stepB] +
-                                    (double)dataA[(j+1)*stepA]*dataB[(j+1)*stepB];
+                        double re = (double)dataA[j * stepA] * dataB[j * stepB]
+                                    + (double)dataA[(j + 1) * stepA] * dataB[(j + 1) * stepB];
 
-                        double im = (double)dataA[(j+1)*stepA]*dataB[j*stepB] -
-                                    (double)dataA[j*stepA]*dataB[(j+1)*stepB];
+                        double im = (double)dataA[(j + 1) * stepA] * dataB[j * stepB]
+                                    - (double)dataA[j * stepA] * dataB[(j + 1) * stepB];
 
-                        dataC[j*stepC] = (float)(re / denom);
-                        dataC[(j+1)*stepC] = (float)(im / denom);
+                        dataC[j * stepC] = (float)(re / denom);
+                        dataC[(j + 1) * stepC] = (float)(im / denom);
                     }
                 else
-                    for( j = 1; j <= rows - 2; j += 2 )
+                    for (j = 1; j <= rows - 2; j += 2)
                     {
 
-                        double denom = (double)dataB[j*stepB]*dataB[j*stepB] +
-                                       (double)dataB[(j+1)*stepB]*dataB[(j+1)*stepB] + (double)eps;
+                        double denom = (double)dataB[j * stepB] * dataB[j * stepB]
+                                       + (double)dataB[(j + 1) * stepB] * dataB[(j + 1) * stepB] + (double)eps;
 
-                        double re = (double)dataA[j*stepA]*dataB[j*stepB] -
-                                    (double)dataA[(j+1)*stepA]*dataB[(j+1)*stepB];
+                        double re = (double)dataA[j * stepA] * dataB[j * stepB]
+                                    - (double)dataA[(j + 1) * stepA] * dataB[(j + 1) * stepB];
 
-                        double im = (double)dataA[(j+1)*stepA]*dataB[j*stepB] +
-                                    (double)dataA[j*stepA]*dataB[(j+1)*stepB];
+                        double im = (double)dataA[(j + 1) * stepA] * dataB[j * stepB]
+                                    + (double)dataA[j * stepA] * dataB[(j + 1) * stepB];
 
-                        dataC[j*stepC] = (float)(re / denom);
-                        dataC[(j+1)*stepC] = (float)(im / denom);
+                        dataC[j * stepC] = (float)(re / denom);
+                        dataC[(j + 1) * stepC] = (float)(im / denom);
                     }
-                if( k == 1 )
+                if (k == 1)
                     dataA -= cols - 1, dataB -= cols - 1, dataC -= cols - 1;
             }
         }
 
-        for( ; rows--; dataA += stepA, dataB += stepB, dataC += stepC )
+        for (; rows--; dataA += stepA, dataB += stepB, dataC += stepC)
         {
-            if( is_1d && cn == 1 )
+            if (is_1d && cn == 1)
             {
                 dataC[0] = dataA[0] / (dataB[0] + eps);
-                if( cols % 2 == 0 )
+                if (cols % 2 == 0)
                     dataC[j1] = dataA[j1] / (dataB[j1] + eps);
             }
 
-            if( !conjB )
-                for( j = j0; j < j1; j += 2 )
+            if (!conjB)
+                for (j = j0; j < j1; j += 2)
                 {
-                    double denom = (double)(dataB[j]*dataB[j] + dataB[j+1]*dataB[j+1] + eps);
-                    double re = (double)(dataA[j]*dataB[j] + dataA[j+1]*dataB[j+1]);
-                    double im = (double)(dataA[j+1]*dataB[j] - dataA[j]*dataB[j+1]);
+                    double denom = (double)(dataB[j] * dataB[j] + dataB[j + 1] * dataB[j + 1] + eps);
+                    double re = (double)(dataA[j] * dataB[j] + dataA[j + 1] * dataB[j + 1]);
+                    double im = (double)(dataA[j + 1] * dataB[j] - dataA[j] * dataB[j + 1]);
                     dataC[j] = (float)(re / denom);
-                    dataC[j+1] = (float)(im / denom);
+                    dataC[j + 1] = (float)(im / denom);
                 }
             else
-                for( j = j0; j < j1; j += 2 )
+                for (j = j0; j < j1; j += 2)
                 {
-                    double denom = (double)(dataB[j]*dataB[j] + dataB[j+1]*dataB[j+1] + eps);
-                    double re = (double)(dataA[j]*dataB[j] - dataA[j+1]*dataB[j+1]);
-                    double im = (double)(dataA[j+1]*dataB[j] + dataA[j]*dataB[j+1]);
+                    double denom = (double)(dataB[j] * dataB[j] + dataB[j + 1] * dataB[j + 1] + eps);
+                    double re = (double)(dataA[j] * dataB[j] - dataA[j + 1] * dataB[j + 1]);
+                    double im = (double)(dataA[j + 1] * dataB[j] + dataA[j] * dataB[j + 1]);
                     dataC[j] = (float)(re / denom);
-                    dataC[j+1] = (float)(im / denom);
+                    dataC[j + 1] = (float)(im / denom);
                 }
         }
     }
@@ -272,91 +273,90 @@ static void divSpectrums( InputArray _srcA, InputArray _srcB, OutputArray _dst, 
         double* dataC = dst.ptr<double>();
         double eps = DBL_EPSILON; // prevent div0 problems
 
-        size_t stepA = srcA.step/sizeof(dataA[0]);
-        size_t stepB = srcB.step/sizeof(dataB[0]);
-        size_t stepC = dst.step/sizeof(dataC[0]);
+        size_t stepA = srcA.step / sizeof(dataA[0]);
+        size_t stepB = srcB.step / sizeof(dataB[0]);
+        size_t stepC = dst.step / sizeof(dataC[0]);
 
-        if( !is_1d && cn == 1 )
+        if (!is_1d && cn == 1)
         {
-            for( k = 0; k < (cols % 2 ? 1 : 2); k++ )
+            for (k = 0; k < (cols % 2 ? 1 : 2); k++)
             {
-                if( k == 1 )
+                if (k == 1)
                     dataA += cols - 1, dataB += cols - 1, dataC += cols - 1;
                 dataC[0] = dataA[0] / (dataB[0] + eps);
-                if( rows % 2 == 0 )
-                    dataC[(rows-1)*stepC] = dataA[(rows-1)*stepA] / (dataB[(rows-1)*stepB] + eps);
-                if( !conjB )
-                    for( j = 1; j <= rows - 2; j += 2 )
+                if (rows % 2 == 0)
+                    dataC[(rows - 1) * stepC] = dataA[(rows - 1) * stepA] / (dataB[(rows - 1) * stepB] + eps);
+                if (!conjB)
+                    for (j = 1; j <= rows - 2; j += 2)
                     {
-                        double denom = dataB[j*stepB]*dataB[j*stepB] +
-                                       dataB[(j+1)*stepB]*dataB[(j+1)*stepB] + eps;
+                        double denom = dataB[j * stepB] * dataB[j * stepB]
+                                       + dataB[(j + 1) * stepB] * dataB[(j + 1) * stepB] + eps;
 
-                        double re = dataA[j*stepA]*dataB[j*stepB] +
-                                    dataA[(j+1)*stepA]*dataB[(j+1)*stepB];
+                        double re = dataA[j * stepA] * dataB[j * stepB]
+                                    + dataA[(j + 1) * stepA] * dataB[(j + 1) * stepB];
 
-                        double im = dataA[(j+1)*stepA]*dataB[j*stepB] -
-                                    dataA[j*stepA]*dataB[(j+1)*stepB];
+                        double im = dataA[(j + 1) * stepA] * dataB[j * stepB]
+                                    - dataA[j * stepA] * dataB[(j + 1) * stepB];
 
-                        dataC[j*stepC] = re / denom;
-                        dataC[(j+1)*stepC] = im / denom;
+                        dataC[j * stepC] = re / denom;
+                        dataC[(j + 1) * stepC] = im / denom;
                     }
                 else
-                    for( j = 1; j <= rows - 2; j += 2 )
+                    for (j = 1; j <= rows - 2; j += 2)
                     {
-                        double denom = dataB[j*stepB]*dataB[j*stepB] +
-                                       dataB[(j+1)*stepB]*dataB[(j+1)*stepB] + eps;
+                        double denom = dataB[j * stepB] * dataB[j * stepB]
+                                       + dataB[(j + 1) * stepB] * dataB[(j + 1) * stepB] + eps;
 
-                        double re = dataA[j*stepA]*dataB[j*stepB] -
-                                    dataA[(j+1)*stepA]*dataB[(j+1)*stepB];
+                        double re = dataA[j * stepA] * dataB[j * stepB]
+                                    - dataA[(j + 1) * stepA] * dataB[(j + 1) * stepB];
 
-                        double im = dataA[(j+1)*stepA]*dataB[j*stepB] +
-                                    dataA[j*stepA]*dataB[(j+1)*stepB];
+                        double im = dataA[(j + 1) * stepA] * dataB[j * stepB]
+                                    + dataA[j * stepA] * dataB[(j + 1) * stepB];
 
-                        dataC[j*stepC] = re / denom;
-                        dataC[(j+1)*stepC] = im / denom;
+                        dataC[j * stepC] = re / denom;
+                        dataC[(j + 1) * stepC] = im / denom;
                     }
-                if( k == 1 )
+                if (k == 1)
                     dataA -= cols - 1, dataB -= cols - 1, dataC -= cols - 1;
             }
         }
 
-        for( ; rows--; dataA += stepA, dataB += stepB, dataC += stepC )
+        for (; rows--; dataA += stepA, dataB += stepB, dataC += stepC)
         {
-            if( is_1d && cn == 1 )
+            if (is_1d && cn == 1)
             {
                 dataC[0] = dataA[0] / (dataB[0] + eps);
-                if( cols % 2 == 0 )
+                if (cols % 2 == 0)
                     dataC[j1] = dataA[j1] / (dataB[j1] + eps);
             }
 
-            if( !conjB )
-                for( j = j0; j < j1; j += 2 )
+            if (!conjB)
+                for (j = j0; j < j1; j += 2)
                 {
-                    double denom = dataB[j]*dataB[j] + dataB[j+1]*dataB[j+1] + eps;
-                    double re = dataA[j]*dataB[j] + dataA[j+1]*dataB[j+1];
-                    double im = dataA[j+1]*dataB[j] - dataA[j]*dataB[j+1];
+                    double denom = dataB[j] * dataB[j] + dataB[j + 1] * dataB[j + 1] + eps;
+                    double re = dataA[j] * dataB[j] + dataA[j + 1] * dataB[j + 1];
+                    double im = dataA[j + 1] * dataB[j] - dataA[j] * dataB[j + 1];
                     dataC[j] = re / denom;
-                    dataC[j+1] = im / denom;
+                    dataC[j + 1] = im / denom;
                 }
             else
-                for( j = j0; j < j1; j += 2 )
+                for (j = j0; j < j1; j += 2)
                 {
-                    double denom = dataB[j]*dataB[j] + dataB[j+1]*dataB[j+1] + eps;
-                    double re = dataA[j]*dataB[j] - dataA[j+1]*dataB[j+1];
-                    double im = dataA[j+1]*dataB[j] + dataA[j]*dataB[j+1];
+                    double denom = dataB[j] * dataB[j] + dataB[j + 1] * dataB[j + 1] + eps;
+                    double re = dataA[j] * dataB[j] - dataA[j + 1] * dataB[j + 1];
+                    double im = dataA[j + 1] * dataB[j] + dataA[j] * dataB[j + 1];
                     dataC[j] = re / denom;
-                    dataC[j+1] = im / denom;
+                    dataC[j + 1] = im / denom;
                 }
         }
     }
-
 }
 
 static void fftShift(InputOutputArray _out)
 {
     Mat out = _out.getMat();
 
-    if(out.rows == 1 && out.cols == 1)
+    if (out.rows == 1 && out.cols == 1)
     {
         // trivially shifted.
         return;
@@ -370,12 +370,12 @@ static void fftShift(InputOutputArray _out)
 
     bool is_1d = xMid == 0 || yMid == 0;
 
-    if(is_1d)
+    if (is_1d)
     {
         int is_odd = (xMid > 0 && out.cols % 2 == 1) || (yMid > 0 && out.rows % 2 == 1);
         xMid = xMid + yMid;
 
-        for(size_t i = 0; i < planes.size(); i++)
+        for (size_t i = 0; i < planes.size(); i++)
         {
             Mat tmp;
             Mat half0(planes[i], Rect(0, 0, xMid + is_odd, 1));
@@ -390,15 +390,15 @@ static void fftShift(InputOutputArray _out)
     {
         int isXodd = out.cols % 2 == 1;
         int isYodd = out.rows % 2 == 1;
-        for(size_t i = 0; i < planes.size(); i++)
+        for (size_t i = 0; i < planes.size(); i++)
         {
             // perform quadrant swaps...
-            Mat q0(planes[i], Rect(0,    0,    xMid + isXodd, yMid + isYodd));
-            Mat q1(planes[i], Rect(xMid + isXodd, 0,    xMid, yMid + isYodd));
-            Mat q2(planes[i], Rect(0,    yMid + isYodd, xMid + isXodd, yMid));
+            Mat q0(planes[i], Rect(0, 0, xMid + isXodd, yMid + isYodd));
+            Mat q1(planes[i], Rect(xMid + isXodd, 0, xMid, yMid + isYodd));
+            Mat q2(planes[i], Rect(0, yMid + isYodd, xMid + isXodd, yMid));
             Mat q3(planes[i], Rect(xMid + isXodd, yMid + isYodd, xMid, yMid));
 
-            if(!(isXodd || isYodd))
+            if (!(isXodd || isYodd))
             {
                 Mat tmp;
                 q0.copyTo(tmp);
@@ -411,7 +411,7 @@ static void fftShift(InputOutputArray _out)
             }
             else
             {
-                Mat tmp0, tmp1, tmp2 ,tmp3;
+                Mat tmp0, tmp1, tmp2, tmp3;
                 q0.copyTo(tmp0);
                 q1.copyTo(tmp1);
                 q2.copyTo(tmp2);
@@ -434,47 +434,47 @@ static Point2d weightedCentroid(InputArray _src, cv::Point peakLocation, cv::Siz
     Mat src = _src.getMat();
 
     int type = src.type();
-    CV_Assert( type == CV_32FC1 || type == CV_64FC1 );
+    CV_Assert(type == CV_32FC1 || type == CV_64FC1);
 
     int minr = peakLocation.y - (weightBoxSize.height >> 1);
     int maxr = peakLocation.y + (weightBoxSize.height >> 1);
-    int minc = peakLocation.x - (weightBoxSize.width  >> 1);
-    int maxc = peakLocation.x + (weightBoxSize.width  >> 1);
+    int minc = peakLocation.x - (weightBoxSize.width >> 1);
+    int maxc = peakLocation.x + (weightBoxSize.width >> 1);
 
     Point2d centroid;
     double sumIntensity = 0.0;
 
     // clamp the values to min and max if needed.
-    if(minr < 0)
+    if (minr < 0)
     {
         minr = 0;
     }
 
-    if(minc < 0)
+    if (minc < 0)
     {
         minc = 0;
     }
 
-    if(maxr > src.rows - 1)
+    if (maxr > src.rows - 1)
     {
         maxr = src.rows - 1;
     }
 
-    if(maxc > src.cols - 1)
+    if (maxc > src.cols - 1)
     {
         maxc = src.cols - 1;
     }
 
-    if(type == CV_32FC1)
+    if (type == CV_32FC1)
     {
         const float* dataIn = src.ptr<float>();
-        dataIn += minr*src.cols;
-        for(int y = minr; y <= maxr; y++)
+        dataIn += minr * src.cols;
+        for (int y = minr; y <= maxr; y++)
         {
-            for(int x = minc; x <= maxc; x++)
+            for (int x = minc; x <= maxc; x++)
             {
-                centroid.x   += (double)x*dataIn[x];
-                centroid.y   += (double)y*dataIn[x];
+                centroid.x += (double)x * dataIn[x];
+                centroid.y += (double)y * dataIn[x];
                 sumIntensity += (double)dataIn[x];
             }
 
@@ -484,13 +484,13 @@ static Point2d weightedCentroid(InputArray _src, cv::Point peakLocation, cv::Siz
     else
     {
         const double* dataIn = src.ptr<double>();
-        dataIn += minr*src.cols;
-        for(int y = minr; y <= maxr; y++)
+        dataIn += minr * src.cols;
+        for (int y = minr; y <= maxr; y++)
         {
-            for(int x = minc; x <= maxc; x++)
+            for (int x = minc; x <= maxc; x++)
             {
-                centroid.x   += (double)x*dataIn[x];
-                centroid.y   += (double)y*dataIn[x];
+                centroid.x += (double)x * dataIn[x];
+                centroid.y += (double)y * dataIn[x];
                 sumIntensity += dataIn[x];
             }
 
@@ -498,7 +498,7 @@ static Point2d weightedCentroid(InputArray _src, cv::Point peakLocation, cv::Siz
         }
     }
 
-    if(response)
+    if (response)
         *response = sumIntensity;
 
     sumIntensity += DBL_EPSILON; // prevent div0 problems...
@@ -509,7 +509,7 @@ static Point2d weightedCentroid(InputArray _src, cv::Point peakLocation, cv::Siz
     return centroid;
 }
 
-}
+} // namespace cv
 
 cv::Point2d cv::phaseCorrelate(InputArray _src1, InputArray _src2, InputArray _window, double* response)
 {
@@ -519,14 +519,14 @@ cv::Point2d cv::phaseCorrelate(InputArray _src1, InputArray _src2, InputArray _w
     Mat src2 = _src2.getMat();
     Mat window = _window.getMat();
 
-    CV_Assert( src1.type() == src2.type());
-    CV_Assert( src1.type() == CV_32FC1 || src1.type() == CV_64FC1 );
-    CV_Assert( src1.size == src2.size);
+    CV_Assert(src1.type() == src2.type());
+    CV_Assert(src1.type() == CV_32FC1 || src1.type() == CV_64FC1);
+    CV_Assert(src1.size == src2.size);
 
-    if(!window.empty())
+    if (!window.empty())
     {
-        CV_Assert( src1.type() == window.type());
-        CV_Assert( src1.size == window.size);
+        CV_Assert(src1.type() == window.type());
+        CV_Assert(src1.size == window.size);
     }
 
     int M = getOptimalDFTSize(src1.rows);
@@ -534,14 +534,15 @@ cv::Point2d cv::phaseCorrelate(InputArray _src1, InputArray _src2, InputArray _w
 
     Mat padded1, padded2, paddedWin;
 
-    if(M != src1.rows || N != src1.cols)
+    if (M != src1.rows || N != src1.cols)
     {
         copyMakeBorder(src1, padded1, 0, M - src1.rows, 0, N - src1.cols, BORDER_CONSTANT, Scalar::all(0));
         copyMakeBorder(src2, padded2, 0, M - src2.rows, 0, N - src2.cols, BORDER_CONSTANT, Scalar::all(0));
 
-        if(!window.empty())
+        if (!window.empty())
         {
-            copyMakeBorder(window, paddedWin, 0, M - window.rows, 0, N - window.cols, BORDER_CONSTANT, Scalar::all(0));
+            copyMakeBorder(window, paddedWin, 0, M - window.rows, 0, N - window.cols, BORDER_CONSTANT,
+                           Scalar::all(0));
         }
     }
     else
@@ -554,7 +555,7 @@ cv::Point2d cv::phaseCorrelate(InputArray _src1, InputArray _src2, InputArray _w
     Mat FFT1, FFT2, P, Pm, C;
 
     // perform window multiplication if available
-    if(!paddedWin.empty())
+    if (!paddedWin.empty())
     {
         // apply window to both images before proceeding...
         multiply(paddedWin, padded1, padded1);
@@ -584,8 +585,8 @@ cv::Point2d cv::phaseCorrelate(InputArray _src1, InputArray _src2, InputArray _w
     t = weightedCentroid(C, peakLoc, Size(5, 5), response);
 
     // max response is M*N (not exactly, might be slightly larger due to rounding errors)
-    if(response)
-        *response /= M*N;
+    if (response)
+        *response /= M * N;
 
     // adjust shift relative to image center...
     Point2d center((double)padded1.cols / 2.0, (double)padded1.rows / 2.0);
@@ -598,8 +599,8 @@ void cv::createHanningWindow(OutputArray _dst, cv::Size winSize, int type)
 {
     CV_INSTRUMENT_REGION();
 
-    CV_Assert( type == CV_32FC1 || type == CV_64FC1 );
-    CV_Assert( winSize.width > 1 && winSize.height > 1 );
+    CV_Assert(type == CV_32FC1 || type == CV_64FC1);
+    CV_Assert(winSize.width > 1 && winSize.height > 1);
 
     _dst.create(winSize, type);
     Mat dst = _dst.getMat();
@@ -610,26 +611,26 @@ void cv::createHanningWindow(OutputArray _dst, cv::Size winSize, int type)
     double* const wc = _wc.data();
 
     double coeff0 = 2.0 * CV_PI / (double)(cols - 1), coeff1 = 2.0f * CV_PI / (double)(rows - 1);
-    for(int j = 0; j < cols; j++)
+    for (int j = 0; j < cols; j++)
         wc[j] = 0.5 * (1.0 - cos(coeff0 * j));
 
-    if(dst.depth() == CV_32F)
+    if (dst.depth() == CV_32F)
     {
-        for(int i = 0; i < rows; i++)
+        for (int i = 0; i < rows; i++)
         {
             float* dstData = dst.ptr<float>(i);
             double wr = 0.5 * (1.0 - cos(coeff1 * i));
-            for(int j = 0; j < cols; j++)
+            for (int j = 0; j < cols; j++)
                 dstData[j] = (float)(wr * wc[j]);
         }
     }
     else
     {
-        for(int i = 0; i < rows; i++)
+        for (int i = 0; i < rows; i++)
         {
             double* dstData = dst.ptr<double>(i);
             double wr = 0.5 * (1.0 - cos(coeff1 * i));
-            for(int j = 0; j < cols; j++)
+            for (int j = 0; j < cols; j++)
                 dstData[j] = wr * wc[j];
         }
     }

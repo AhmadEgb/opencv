@@ -1,4 +1,4 @@
- // This file is part of OpenCV project.
+// This file is part of OpenCV project.
 // It is subject to the license terms in the LICENSE file found in the top-level directory
 // of this distribution and at http://opencv.org/license.html.
 
@@ -17,4 +17,4 @@ DEF_ACC_FLT_FUNCS(32f, float, float)
 DEF_ACC_FLT_FUNCS(32f64f, float, double)
 DEF_ACC_FLT_FUNCS(64f, double, double)
 
-} //cv::hal
+} // namespace cv

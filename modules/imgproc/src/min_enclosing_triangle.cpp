@@ -77,20 +77,22 @@
 
 // Intersection of line and polygon
 
-#define INTERSECTS_BELOW        1
-#define INTERSECTS_ABOVE        2
-#define INTERSECTS_CRITICAL     3
+#define INTERSECTS_BELOW 1
+#define INTERSECTS_ABOVE 2
+#define INTERSECTS_CRITICAL 3
 
 // Error messages
 
-#define ERR_SIDE_B_GAMMA        "The position of side B could not be determined, because gamma(b) could not be computed."
-#define ERR_VERTEX_C_ON_SIDE_B  "The position of the vertex C on side B could not be determined, because the considered lines do not intersect."
+#define ERR_SIDE_B_GAMMA "The position of side B could not be determined, because gamma(b) could not be computed."
+#define ERR_VERTEX_C_ON_SIDE_B \
+    "The position of the vertex C on side B could not be determined, because the considered lines do not " \
+    "intersect."
 
 // Possible values for validation flag
 
-#define VALIDATION_SIDE_A_TANGENT   0
-#define VALIDATION_SIDE_B_TANGENT   1
-#define VALIDATION_SIDES_FLUSH      2
+#define VALIDATION_SIDE_A_TANGENT 0
+#define VALIDATION_SIDE_B_TANGENT 1
+#define VALIDATION_SIDES_FLUSH 2
 
 // Threshold value for comparisons
 
@@ -102,190 +104,174 @@
 
 namespace minEnclosingTriangle {
 
-static void advance(unsigned int &index, unsigned int nrOfPoints);
+static void advance(unsigned int& index, unsigned int nrOfPoints);
 
-static void advanceBToRightChain(const std::vector<cv::Point2f> &polygon,
-                                 unsigned int nrOfPoints, unsigned int &b,
+static void advanceBToRightChain(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int& b,
                                  unsigned int c);
 
 static bool almostEqual(double number1, double number2);
 
-static double angleOfLineWrtOxAxis(const cv::Point2f &a, const cv::Point2f &b);
+static double angleOfLineWrtOxAxis(const cv::Point2f& a, const cv::Point2f& b);
 
-static bool areEqualPoints(const cv::Point2f &point1, const cv::Point2f &point2);
+static bool areEqualPoints(const cv::Point2f& point1, const cv::Point2f& point2);
 
-static bool areIdenticalLines(const std::vector<double> &side1Params,
-                              const std::vector<double> &side2Params, double sideCExtraParam);
+static bool areIdenticalLines(const std::vector<double>& side1Params, const std::vector<double>& side2Params,
+                              double sideCExtraParam);
 
 static bool areIdenticalLines(double a1, double b1, double c1, double a2, double b2, double c2);
 
-static bool areIntersectingLines(const std::vector<double> &side1Params,
-                                 const std::vector<double> &side2Params,
-                                 double sideCExtraParam, cv::Point2f &intersectionPoint1,
-                                 cv::Point2f &intersectionPoint2);
+static bool areIntersectingLines(const std::vector<double>& side1Params, const std::vector<double>& side2Params,
+                                 double sideCExtraParam, cv::Point2f& intersectionPoint1,
+                                 cv::Point2f& intersectionPoint2);
 
-static bool areOnTheSameSideOfLine(const cv::Point2f &p1, const cv::Point2f &p2,
-                                   const cv::Point2f &a, const cv::Point2f &b);
+static bool areOnTheSameSideOfLine(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Point2f& a,
+                                   const cv::Point2f& b);
 
-static double areaOfTriangle(const cv::Point2f &a, const cv::Point2f &b, const cv::Point2f &c);
+static double areaOfTriangle(const cv::Point2f& a, const cv::Point2f& b, const cv::Point2f& c);
 
-static void createConvexHull(cv::InputArray points, std::vector<cv::Point2f> &polygon);
+static void createConvexHull(cv::InputArray points, std::vector<cv::Point2f>& polygon);
 
-static double distanceBtwPoints(const cv::Point2f &a, const cv::Point2f &b);
+static double distanceBtwPoints(const cv::Point2f& a, const cv::Point2f& b);
 
-static double distanceFromPointToLine(const cv::Point2f &a, const cv::Point2f &linePointB,
-                                      const cv::Point2f &linePointC);
+static double distanceFromPointToLine(const cv::Point2f& a, const cv::Point2f& linePointB,
+                                      const cv::Point2f& linePointC);
 
-static bool findGammaIntersectionPoints(const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
+static bool findGammaIntersectionPoints(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
                                         unsigned int c, unsigned int polygonPointIndex,
-                                        const cv::Point2f &side1StartVertex, const cv::Point2f &side1EndVertex,
-                                        const cv::Point2f &side2StartVertex, const cv::Point2f &side2EndVertex,
-                                        cv::Point2f &intersectionPoint1, cv::Point2f &intersectionPoint2);
+                                        const cv::Point2f& side1StartVertex, const cv::Point2f& side1EndVertex,
+                                        const cv::Point2f& side2StartVertex, const cv::Point2f& side2EndVertex,
+                                        cv::Point2f& intersectionPoint1, cv::Point2f& intersectionPoint2);
 
-static void findMinEnclosingTriangle(cv::InputArray points,
-                                     CV_OUT cv::OutputArray triangle, CV_OUT double &area);
+static void findMinEnclosingTriangle(cv::InputArray points, CV_OUT cv::OutputArray triangle, CV_OUT double& area);
 
-static void findMinEnclosingTriangle(const std::vector<cv::Point2f> &polygon,
-                                     std::vector<cv::Point2f> &triangle, double &area);
+static void findMinEnclosingTriangle(const std::vector<cv::Point2f>& polygon, std::vector<cv::Point2f>& triangle,
+                                     double& area);
 
-static void findMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f> &polygon,
-                                             std::vector<cv::Point2f> &triangle, double &area);
+static void findMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f>& polygon,
+                                             std::vector<cv::Point2f>& triangle, double& area);
 
-static cv::Point2f findVertexCOnSideB(const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                                      unsigned int a, unsigned int c,
-                                      const cv::Point2f &sideBStartVertex,
-                                      const cv::Point2f &sideBEndVertex,
-                                      const cv::Point2f &sideCStartVertex,
-                                      const cv::Point2f &sideCEndVertex);
+static cv::Point2f findVertexCOnSideB(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
+                                      unsigned int a, unsigned int c, const cv::Point2f& sideBStartVertex,
+                                      const cv::Point2f& sideBEndVertex, const cv::Point2f& sideCStartVertex,
+                                      const cv::Point2f& sideCEndVertex);
 
-static bool gamma(unsigned int polygonPointIndex, cv::Point2f &gammaPoint,
-                  const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                  unsigned int a, unsigned int c);
+static bool gamma(unsigned int polygonPointIndex, cv::Point2f& gammaPoint, const std::vector<cv::Point2f>& polygon,
+                  unsigned int nrOfPoints, unsigned int a, unsigned int c);
 
 static bool greaterOrEqual(double number1, double number2);
 
-static double height(const cv::Point2f &polygonPoint, const std::vector<cv::Point2f> &polygon,
+static double height(const cv::Point2f& polygonPoint, const std::vector<cv::Point2f>& polygon,
                      unsigned int nrOfPoints, unsigned int c);
 
-static double height(unsigned int polygonPointIndex, const std::vector<cv::Point2f> &polygon,
+static double height(unsigned int polygonPointIndex, const std::vector<cv::Point2f>& polygon,
                      unsigned int nrOfPoints, unsigned int c);
 
-static void initialise(std::vector<cv::Point2f> &triangle, double &area);
+static void initialise(std::vector<cv::Point2f>& triangle, double& area);
 
 static unsigned int intersects(double angleGammaAndPoint, unsigned int polygonPointIndex,
-                               const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                               unsigned int c);
+                               const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int c);
 
-static bool intersectsAbove(const cv::Point2f &gammaPoint, unsigned int polygonPointIndex,
-                            const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                            unsigned int c);
+static bool intersectsAbove(const cv::Point2f& gammaPoint, unsigned int polygonPointIndex,
+                            const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int c);
 
 static unsigned int intersectsAboveOrBelow(unsigned int succPredIndex, unsigned int pointIndex,
-                                           const std::vector<cv::Point2f> &polygon,
-                                           unsigned int nrOfPoints, unsigned int c);
+                                           const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
+                                           unsigned int c);
 
-static bool intersectsBelow(const cv::Point2f &gammaPoint, unsigned int polygonPointIndex,
-                            const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                            unsigned int c);
+static bool intersectsBelow(const cv::Point2f& gammaPoint, unsigned int polygonPointIndex,
+                            const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int c);
 
 static bool isAngleBetween(double angle1, double angle2, double angle3);
 
 static bool isAngleBetweenNonReflex(double angle1, double angle2, double angle3);
 
-static bool isFlushAngleBtwPredAndSucc(double &angleFlushEdge, double anglePred, double angleSucc);
+static bool isFlushAngleBtwPredAndSucc(double& angleFlushEdge, double anglePred, double angleSucc);
 
-static bool isGammaAngleBtw(double &gammaAngle, double angle1, double angle2);
+static bool isGammaAngleBtw(double& gammaAngle, double angle1, double angle2);
 
-static bool isGammaAngleEqualTo(double &gammaAngle, double angle);
+static bool isGammaAngleEqualTo(double& gammaAngle, double angle);
 
-static bool isLocalMinimalTriangle(cv::Point2f &vertexA, cv::Point2f &vertexB,
-                                   cv::Point2f &vertexC, const std::vector<cv::Point2f> &polygon,
-                                   unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                                   unsigned int validationFlag, const cv::Point2f &sideAStartVertex,
-                                   const cv::Point2f &sideAEndVertex, const cv::Point2f &sideBStartVertex,
-                                   const cv::Point2f &sideBEndVertex, const cv::Point2f &sideCStartVertex,
-                                   const cv::Point2f &sideCEndVertex);
+static bool isLocalMinimalTriangle(cv::Point2f& vertexA, cv::Point2f& vertexB, cv::Point2f& vertexC,
+                                   const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
+                                   unsigned int a, unsigned int b, unsigned int validationFlag,
+                                   const cv::Point2f& sideAStartVertex, const cv::Point2f& sideAEndVertex,
+                                   const cv::Point2f& sideBStartVertex, const cv::Point2f& sideBEndVertex,
+                                   const cv::Point2f& sideCStartVertex, const cv::Point2f& sideCEndVertex);
 
-static bool isNotBTangency(const std::vector<cv::Point2f> &polygon,
-                           unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                           unsigned int c);
+static bool isNotBTangency(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                           unsigned int b, unsigned int c);
 
 static bool isOppositeAngleBetweenNonReflex(double angle1, double angle2, double angle3);
 
-static bool isPointOnLineSegment(const cv::Point2f &point, const cv::Point2f &lineSegmentStart,
-                                 const cv::Point2f &lineSegmentEnd);
+static bool isPointOnLineSegment(const cv::Point2f& point, const cv::Point2f& lineSegmentStart,
+                                 const cv::Point2f& lineSegmentEnd);
 
-static bool isValidMinimalTriangle(const cv::Point2f &vertexA, const cv::Point2f &vertexB,
-                                   const cv::Point2f &vertexC, const std::vector<cv::Point2f> &polygon,
+static bool isValidMinimalTriangle(const cv::Point2f& vertexA, const cv::Point2f& vertexB,
+                                   const cv::Point2f& vertexC, const std::vector<cv::Point2f>& polygon,
                                    unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                                   unsigned int validationFlag, const cv::Point2f &sideAStartVertex,
-                                   const cv::Point2f &sideAEndVertex, const cv::Point2f &sideBStartVertex,
-                                   const cv::Point2f &sideBEndVertex, const cv::Point2f &sideCStartVertex,
-                                   const cv::Point2f &sideCEndVertex);
+                                   unsigned int validationFlag, const cv::Point2f& sideAStartVertex,
+                                   const cv::Point2f& sideAEndVertex, const cv::Point2f& sideBStartVertex,
+                                   const cv::Point2f& sideBEndVertex, const cv::Point2f& sideCStartVertex,
+                                   const cv::Point2f& sideCEndVertex);
 
 static bool lessOrEqual(double number1, double number2);
 
-static void lineEquationDeterminedByPoints(const cv::Point2f &p, const cv::Point2f &q,
-                                           double &a, double &b, double &c);
+static void lineEquationDeterminedByPoints(const cv::Point2f& p, const cv::Point2f& q, double& a, double& b,
+                                           double& c);
 
-static std::vector<double> lineEquationParameters(const cv::Point2f& p, const cv::Point2f &q);
+static std::vector<double> lineEquationParameters(const cv::Point2f& p, const cv::Point2f& q);
 
-static bool lineIntersection(const cv::Point2f &a1, const cv::Point2f &b1, const cv::Point2f &a2,
-                             const cv::Point2f &b2, cv::Point2f &intersection);
+static bool lineIntersection(const cv::Point2f& a1, const cv::Point2f& b1, const cv::Point2f& a2,
+                             const cv::Point2f& b2, cv::Point2f& intersection);
 
 static bool lineIntersection(double a1, double b1, double c1, double a2, double b2, double c2,
-                             cv::Point2f &intersection);
+                             cv::Point2f& intersection);
 
 static double maximum(double number1, double number2, double number3);
 
-static cv::Point2f middlePoint(const cv::Point2f &a, const cv::Point2f &b);
+static cv::Point2f middlePoint(const cv::Point2f& a, const cv::Point2f& b);
 
-static bool middlePointOfSideB(cv::Point2f &middlePointOfSideB, const cv::Point2f &sideAStartVertex,
-                               const cv::Point2f &sideAEndVertex, const cv::Point2f &sideBStartVertex,
-                               const cv::Point2f &sideBEndVertex, const cv::Point2f &sideCStartVertex,
-                               const cv::Point2f &sideCEndVertex);
+static bool middlePointOfSideB(cv::Point2f& middlePointOfSideB, const cv::Point2f& sideAStartVertex,
+                               const cv::Point2f& sideAEndVertex, const cv::Point2f& sideBStartVertex,
+                               const cv::Point2f& sideBEndVertex, const cv::Point2f& sideCStartVertex,
+                               const cv::Point2f& sideCEndVertex);
 
-static void moveAIfLowAndBIfHigh(const std::vector<cv::Point2f> &polygon,
-                                 unsigned int nrOfPoints, unsigned int &a, unsigned int &b,
-                                 unsigned int c);
+static void moveAIfLowAndBIfHigh(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int& a,
+                                 unsigned int& b, unsigned int c);
 
 static double oppositeAngle(double angle);
 
 static unsigned int predecessor(unsigned int index, unsigned int nrOfPoints);
 
-static void returnMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f> &polygon,
-                                               std::vector<cv::Point2f> &triangle, double &area);
+static void returnMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f>& polygon,
+                                               std::vector<cv::Point2f>& triangle, double& area);
 
-static void searchForBTangency(const std::vector<cv::Point2f> &polygon,
-                               unsigned int nrOfPoints, unsigned int a, unsigned int &b,
-                               unsigned int c);
+static void searchForBTangency(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                               unsigned int& b, unsigned int c);
 
 static int sign(double number);
 
 static unsigned int successor(unsigned int index, unsigned int nrOfPoints);
 
-static void updateMinimumAreaEnclosingTriangle(std::vector<cv::Point2f> &triangle, double &area,
-                                               const cv::Point2f &vertexA, const cv::Point2f &vertexB,
-                                               const cv::Point2f &vertexC);
+static void updateMinimumAreaEnclosingTriangle(std::vector<cv::Point2f>& triangle, double& area,
+                                               const cv::Point2f& vertexA, const cv::Point2f& vertexB,
+                                               const cv::Point2f& vertexC);
 
-static void updateSideB(const std::vector<cv::Point2f> &polygon,
-                        unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                        unsigned int c, unsigned int &validationFlag,
-                        cv::Point2f &sideBStartVertex, cv::Point2f &sideBEndVertex);
+static void updateSideB(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                        unsigned int b, unsigned int c, unsigned int& validationFlag,
+                        cv::Point2f& sideBStartVertex, cv::Point2f& sideBEndVertex);
 
-static void updateSidesBA(const std::vector<cv::Point2f> &polygon,
-                          unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                          unsigned int c, unsigned int &validationFlag,
-                          cv::Point2f &sideAStartVertex, cv::Point2f &sideAEndVertex,
-                          cv::Point2f &sideBStartVertex, cv::Point2f &sideBEndVertex,
-                          const cv::Point2f &sideCStartVertex, const cv::Point2f &sideCEndVertex);
+static void updateSidesBA(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                          unsigned int b, unsigned int c, unsigned int& validationFlag,
+                          cv::Point2f& sideAStartVertex, cv::Point2f& sideAEndVertex,
+                          cv::Point2f& sideBStartVertex, cv::Point2f& sideBEndVertex,
+                          const cv::Point2f& sideCStartVertex, const cv::Point2f& sideCEndVertex);
 
-static void updateSidesCA(const std::vector<cv::Point2f> &polygon,
-                          unsigned int nrOfPoints, unsigned int a, unsigned int c,
-                          cv::Point2f &sideAStartVertex, cv::Point2f &sideAEndVertex,
-                          cv::Point2f &sideCStartVertex, cv::Point2f &sideCEndVertex);
+static void updateSidesCA(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                          unsigned int c, cv::Point2f& sideAStartVertex, cv::Point2f& sideAEndVertex,
+                          cv::Point2f& sideCStartVertex, cv::Point2f& sideCEndVertex);
 
-}
+} // namespace minEnclosingTriangle
 
 
 ///////////////////////////////////// Main functions /////////////////////////////////////
@@ -296,7 +282,8 @@ static void updateSidesCA(const std::vector<cv::Point2f> &polygon,
 * @param points         Set of points
 * @param triangle       Minimum area triangle enclosing the given set of points
 */
-double cv::minEnclosingTriangle(cv::InputArray points, CV_OUT cv::OutputArray triangle) {
+double cv::minEnclosingTriangle(cv::InputArray points, CV_OUT cv::OutputArray triangle)
+{
     double area;
 
     minEnclosingTriangle::findMinEnclosingTriangle(points, triangle, area);
@@ -316,8 +303,8 @@ namespace minEnclosingTriangle {
 * @param triangle       Minimum area triangle enclosing the given set of points
 * @param area           Area of the minimum area enclosing triangle
 */
-static void findMinEnclosingTriangle(cv::InputArray points,
-                                     CV_OUT cv::OutputArray triangle, CV_OUT double &area) {
+static void findMinEnclosingTriangle(cv::InputArray points, CV_OUT cv::OutputArray triangle, CV_OUT double& area)
+{
     std::vector<cv::Point2f> resultingTriangle, polygon;
 
     createConvexHull(points, polygon);
@@ -330,12 +317,12 @@ static void findMinEnclosingTriangle(cv::InputArray points,
 * @param points     The provided set of points
 * @param polygon    The polygon representing the convex hull of the points
 */
-static void createConvexHull(cv::InputArray points, std::vector<cv::Point2f> &polygon) {
+static void createConvexHull(cv::InputArray points, std::vector<cv::Point2f>& polygon)
+{
     cv::Mat pointsMat = points.getMat();
     std::vector<cv::Point2f> pointsVector;
 
-    CV_Assert((pointsMat.checkVector(2) > 0) &&
-              ((pointsMat.depth() == CV_32F) || (pointsMat.depth() == CV_32S)));
+    CV_Assert((pointsMat.checkVector(2) > 0) && ((pointsMat.depth() == CV_32F) || (pointsMat.depth() == CV_32S)));
 
     pointsMat.convertTo(pointsVector, CV_32F);
 
@@ -351,13 +338,17 @@ static void createConvexHull(cv::InputArray points, std::vector<cv::Point2f> &po
 * @param triangle   Minimum area triangle enclosing the given polygon
 * @param area       Area of the minimum area enclosing triangle
 */
-static void findMinEnclosingTriangle(const std::vector<cv::Point2f> &polygon,
-                                     std::vector<cv::Point2f> &triangle, double &area) {
+static void findMinEnclosingTriangle(const std::vector<cv::Point2f>& polygon, std::vector<cv::Point2f>& triangle,
+                                     double& area)
+{
     initialise(triangle, area);
 
-    if (polygon.size() > 3) {
+    if (polygon.size() > 3)
+    {
         findMinimumAreaEnclosingTriangle(polygon, triangle, area);
-    } else {
+    }
+    else
+    {
         returnMinimumAreaEnclosingTriangle(polygon, triangle, area);
     }
 }
@@ -367,7 +358,8 @@ static void findMinEnclosingTriangle(const std::vector<cv::Point2f> &polygon,
 * @param triangle       Minimum area triangle enclosing the given polygon
 * @param area           Area of the minimum area enclosing triangle
 */
-static void initialise(std::vector<cv::Point2f> &triangle, double &area) {
+static void initialise(std::vector<cv::Point2f>& triangle, double& area)
+{
     area = std::numeric_limits<double>::max();
 
     // Clear all points previously stored in the vector
@@ -380,8 +372,9 @@ static void initialise(std::vector<cv::Point2f> &triangle, double &area) {
 * @param triangle   Minimum area triangle enclosing the given polygon
 * @param area       Area of the minimum area enclosing triangle
 */
-static void findMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f> &polygon,
-                                             std::vector<cv::Point2f> &triangle, double &area) {
+static void findMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f>& polygon,
+                                             std::vector<cv::Point2f>& triangle, double& area)
+{
     // Algorithm specific variables
 
     unsigned int validationFlag;
@@ -404,27 +397,28 @@ static void findMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f> &pol
 
     // Main algorithm steps
 
-    for (c = 0; c < nrOfPoints; c++) {
+    for (c = 0; c < nrOfPoints; c++)
+    {
         advanceBToRightChain(polygon, nrOfPoints, b, c);
         moveAIfLowAndBIfHigh(polygon, nrOfPoints, a, b, c);
-        searchForBTangency(polygon, nrOfPoints, a ,b, c);
+        searchForBTangency(polygon, nrOfPoints, a, b, c);
 
-        updateSidesCA(polygon, nrOfPoints, a, c, sideAStartVertex, sideAEndVertex,
-                      sideCStartVertex, sideCEndVertex);
+        updateSidesCA(polygon, nrOfPoints, a, c, sideAStartVertex, sideAEndVertex, sideCStartVertex, sideCEndVertex);
 
-        if (isNotBTangency(polygon, nrOfPoints, a, b, c)) {
-            updateSidesBA(polygon, nrOfPoints, a, b, c, validationFlag, sideAStartVertex,
-                          sideAEndVertex, sideBStartVertex, sideBEndVertex,
-                          sideCStartVertex, sideCEndVertex);
-        } else {
-            updateSideB(polygon, nrOfPoints, a, b, c, validationFlag,
-                        sideBStartVertex,  sideBEndVertex);
+        if (isNotBTangency(polygon, nrOfPoints, a, b, c))
+        {
+            updateSidesBA(polygon, nrOfPoints, a, b, c, validationFlag, sideAStartVertex, sideAEndVertex,
+                          sideBStartVertex, sideBEndVertex, sideCStartVertex, sideCEndVertex);
+        }
+        else
+        {
+            updateSideB(polygon, nrOfPoints, a, b, c, validationFlag, sideBStartVertex, sideBEndVertex);
         }
 
-        if (isLocalMinimalTriangle(vertexA, vertexB, vertexC, polygon, nrOfPoints, a, b,
-                                   validationFlag, sideAStartVertex, sideAEndVertex,
-                                   sideBStartVertex, sideBEndVertex, sideCStartVertex,
-                                   sideCEndVertex)) {
+        if (isLocalMinimalTriangle(vertexA, vertexB, vertexC, polygon, nrOfPoints, a, b, validationFlag,
+                                   sideAStartVertex, sideAEndVertex, sideBStartVertex, sideBEndVertex,
+                                   sideCStartVertex, sideCEndVertex))
+        {
             updateMinimumAreaEnclosingTriangle(triangle, area, vertexA, vertexB, vertexC);
         }
     }
@@ -436,11 +430,13 @@ static void findMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f> &pol
 * @param triangle   Minimum area triangle enclosing the given polygon
 * @param area       Area of the minimum area enclosing triangle
 */
-static void returnMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f> &polygon,
-                                               std::vector<cv::Point2f> &triangle, double &area) {
+static void returnMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f>& polygon,
+                                               std::vector<cv::Point2f>& triangle, double& area)
+{
     unsigned int nrOfPoints = static_cast<unsigned int>(polygon.size());
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         triangle.push_back(polygon[i % nrOfPoints]);
     }
 
@@ -456,11 +452,12 @@ static void returnMinimumAreaEnclosingTriangle(const std::vector<cv::Point2f> &p
 * @param b                  Index b
 * @param c                  Index c
 */
-static void advanceBToRightChain(const std::vector<cv::Point2f> &polygon,
-                                 unsigned int nrOfPoints, unsigned int &b,
-                                 unsigned int c) {
+static void advanceBToRightChain(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int& b,
+                                 unsigned int c)
+{
     while (greaterOrEqual(height(successor(b, nrOfPoints), polygon, nrOfPoints, c),
-                          height(b, polygon, nrOfPoints, c))) {
+                          height(b, polygon, nrOfPoints, c)))
+    {
         advance(b, nrOfPoints);
     }
 }
@@ -475,15 +472,19 @@ static void advanceBToRightChain(const std::vector<cv::Point2f> &polygon,
 * @param b                  Index b
 * @param c                  Index c
 */
-static void moveAIfLowAndBIfHigh(const std::vector<cv::Point2f> &polygon,
-                                 unsigned int nrOfPoints, unsigned int &a, unsigned int &b,
-                                 unsigned int c) {
+static void moveAIfLowAndBIfHigh(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int& a,
+                                 unsigned int& b, unsigned int c)
+{
     cv::Point2f gammaOfA;
 
-    while(height(b, polygon, nrOfPoints, c) > height(a, polygon, nrOfPoints, c)) {
-        if ((gamma(a, gammaOfA, polygon, nrOfPoints, a, c)) && (intersectsBelow(gammaOfA, b, polygon, nrOfPoints, c))) {
+    while (height(b, polygon, nrOfPoints, c) > height(a, polygon, nrOfPoints, c))
+    {
+        if ((gamma(a, gammaOfA, polygon, nrOfPoints, a, c)) && (intersectsBelow(gammaOfA, b, polygon, nrOfPoints, c)))
+        {
             advance(b, nrOfPoints);
-        } else {
+        }
+        else
+        {
             advance(a, nrOfPoints);
         }
     }
@@ -499,16 +500,15 @@ static void moveAIfLowAndBIfHigh(const std::vector<cv::Point2f> &polygon,
 * @param b                  Index b
 * @param c                  Index c
 */
-static void searchForBTangency(const std::vector<cv::Point2f> &polygon,
-                               unsigned int nrOfPoints, unsigned int a, unsigned int &b,
-                               unsigned int c) {
+static void searchForBTangency(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                               unsigned int& b, unsigned int c)
+{
     cv::Point2f gammaOfB;
 
-    while (((gamma(b, gammaOfB, polygon, nrOfPoints, a, c)) &&
-            (intersectsBelow(gammaOfB, b, polygon, nrOfPoints, c))) &&
-           (greaterOrEqual(height(b, polygon, nrOfPoints, c),
-                           height(predecessor(a, nrOfPoints), polygon, nrOfPoints, c)))
-          ) {
+    while (((gamma(b, gammaOfB, polygon, nrOfPoints, a, c)) && (intersectsBelow(gammaOfB, b, polygon, nrOfPoints, c)))
+           && (greaterOrEqual(height(b, polygon, nrOfPoints, c),
+                              height(predecessor(a, nrOfPoints), polygon, nrOfPoints, c))))
+    {
         advance(b, nrOfPoints);
     }
 }
@@ -523,14 +523,14 @@ static void searchForBTangency(const std::vector<cv::Point2f> &polygon,
 * @param b                  Index b
 * @param c                  Index c
 */
-static bool isNotBTangency(const std::vector<cv::Point2f> &polygon,
-                           unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                           unsigned int c) {
+static bool isNotBTangency(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                           unsigned int b, unsigned int c)
+{
     cv::Point2f gammaOfB;
 
-    if (((gamma(b, gammaOfB, polygon, nrOfPoints, a, c)) &&
-         (intersectsAbove(gammaOfB, b, polygon, nrOfPoints, c))) ||
-        (height(b, polygon, nrOfPoints, c) < height(predecessor(a, nrOfPoints), polygon, nrOfPoints, c))) {
+    if (((gamma(b, gammaOfB, polygon, nrOfPoints, a, c)) && (intersectsAbove(gammaOfB, b, polygon, nrOfPoints, c)))
+        || (height(b, polygon, nrOfPoints, c) < height(predecessor(a, nrOfPoints), polygon, nrOfPoints, c)))
+    {
         return true;
     }
 
@@ -551,10 +551,10 @@ static bool isNotBTangency(const std::vector<cv::Point2f> &polygon,
 * @param sideCStartVertex   Start vertex for defining side C
 * @param sideCEndVertex     End vertex for defining side C
 */
-static void updateSidesCA(const std::vector<cv::Point2f> &polygon,
-                          unsigned int nrOfPoints, unsigned int a, unsigned int c,
-                          cv::Point2f &sideAStartVertex, cv::Point2f &sideAEndVertex,
-                          cv::Point2f &sideCStartVertex, cv::Point2f &sideCEndVertex) {
+static void updateSidesCA(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                          unsigned int c, cv::Point2f& sideAStartVertex, cv::Point2f& sideAEndVertex,
+                          cv::Point2f& sideCStartVertex, cv::Point2f& sideCEndVertex)
+{
     sideCStartVertex = polygon[predecessor(c, nrOfPoints)];
     sideCEndVertex = polygon[c];
 
@@ -579,12 +579,12 @@ static void updateSidesCA(const std::vector<cv::Point2f> &polygon,
 * @param sideCStartVertex   Start vertex for defining side C
 * @param sideCEndVertex     End vertex for defining side C
 */
-static void updateSidesBA(const std::vector<cv::Point2f> &polygon,
-                          unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                          unsigned int c, unsigned int &validationFlag,
-                          cv::Point2f &sideAStartVertex, cv::Point2f &sideAEndVertex,
-                          cv::Point2f &sideBStartVertex, cv::Point2f &sideBEndVertex,
-                          const cv::Point2f &sideCStartVertex, const cv::Point2f &sideCEndVertex) {
+static void updateSidesBA(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                          unsigned int b, unsigned int c, unsigned int& validationFlag,
+                          cv::Point2f& sideAStartVertex, cv::Point2f& sideAEndVertex,
+                          cv::Point2f& sideBStartVertex, cv::Point2f& sideBEndVertex,
+                          const cv::Point2f& sideCStartVertex, const cv::Point2f& sideCEndVertex)
+{
     // Side B is flush with edge [b, b-1]
     sideBStartVertex = polygon[predecessor(b, nrOfPoints)];
     sideBEndVertex = polygon[b];
@@ -592,17 +592,19 @@ static void updateSidesBA(const std::vector<cv::Point2f> &polygon,
     // Find middle point of side B
     cv::Point2f sideBMiddlePoint;
 
-    if ((middlePointOfSideB(sideBMiddlePoint, sideAStartVertex, sideAEndVertex, sideBStartVertex,
-                            sideBEndVertex, sideCStartVertex, sideCEndVertex)) &&
-        (height(sideBMiddlePoint, polygon, nrOfPoints, c) <
-         height(predecessor(a, nrOfPoints), polygon, nrOfPoints, c))) {
+    if ((middlePointOfSideB(sideBMiddlePoint, sideAStartVertex, sideAEndVertex, sideBStartVertex, sideBEndVertex,
+                            sideCStartVertex, sideCEndVertex))
+        && (height(sideBMiddlePoint, polygon, nrOfPoints, c)
+            < height(predecessor(a, nrOfPoints), polygon, nrOfPoints, c)))
+    {
         sideAStartVertex = polygon[predecessor(a, nrOfPoints)];
-        sideAEndVertex = findVertexCOnSideB(polygon, nrOfPoints, a, c,
-                                            sideBStartVertex, sideBEndVertex,
+        sideAEndVertex = findVertexCOnSideB(polygon, nrOfPoints, a, c, sideBStartVertex, sideBEndVertex,
                                             sideCStartVertex, sideCEndVertex);
 
         validationFlag = VALIDATION_SIDE_A_TANGENT;
-    } else {
+    }
+    else
+    {
         validationFlag = VALIDATION_SIDES_FLUSH;
     }
 }
@@ -620,11 +622,12 @@ static void updateSidesBA(const std::vector<cv::Point2f> &polygon,
 * @param sideBStartVertex   Start vertex for defining side B
 * @param sideBEndVertex     End vertex for defining side B
 */
-static void updateSideB(const std::vector<cv::Point2f> &polygon,
-                        unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                        unsigned int c, unsigned int &validationFlag,
-                        cv::Point2f &sideBStartVertex, cv::Point2f &sideBEndVertex) {
-    if (!gamma(b, sideBStartVertex, polygon, nrOfPoints, a, c)) {
+static void updateSideB(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int a,
+                        unsigned int b, unsigned int c, unsigned int& validationFlag,
+                        cv::Point2f& sideBStartVertex, cv::Point2f& sideBEndVertex)
+{
+    if (!gamma(b, sideBStartVertex, polygon, nrOfPoints, a, c))
+    {
         CV_Error(cv::Error::StsInternal, ERR_SIDE_B_GAMMA);
     }
 
@@ -652,26 +655,23 @@ static void updateSideB(const std::vector<cv::Point2f> &polygon,
 * @param sideCStartVertex   Start vertex for defining side C
 * @param sideCEndVertex     End vertex for defining side C
 */
-static bool isLocalMinimalTriangle(cv::Point2f &vertexA, cv::Point2f &vertexB,
-                                   cv::Point2f &vertexC, const std::vector<cv::Point2f> &polygon,
-                                   unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                                   unsigned int validationFlag, const cv::Point2f &sideAStartVertex,
-                                   const cv::Point2f &sideAEndVertex, const cv::Point2f &sideBStartVertex,
-                                   const cv::Point2f &sideBEndVertex, const cv::Point2f &sideCStartVertex,
-                                   const cv::Point2f &sideCEndVertex) {
-    if ((!lineIntersection(sideAStartVertex, sideAEndVertex,
-                           sideBStartVertex, sideBEndVertex, vertexC)) ||
-        (!lineIntersection(sideAStartVertex, sideAEndVertex,
-                           sideCStartVertex, sideCEndVertex, vertexB)) ||
-        (!lineIntersection(sideBStartVertex, sideBEndVertex,
-                           sideCStartVertex, sideCEndVertex, vertexA))) {
+static bool isLocalMinimalTriangle(cv::Point2f& vertexA, cv::Point2f& vertexB, cv::Point2f& vertexC,
+                                   const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
+                                   unsigned int a, unsigned int b, unsigned int validationFlag,
+                                   const cv::Point2f& sideAStartVertex, const cv::Point2f& sideAEndVertex,
+                                   const cv::Point2f& sideBStartVertex, const cv::Point2f& sideBEndVertex,
+                                   const cv::Point2f& sideCStartVertex, const cv::Point2f& sideCEndVertex)
+{
+    if ((!lineIntersection(sideAStartVertex, sideAEndVertex, sideBStartVertex, sideBEndVertex, vertexC))
+        || (!lineIntersection(sideAStartVertex, sideAEndVertex, sideCStartVertex, sideCEndVertex, vertexB))
+        || (!lineIntersection(sideBStartVertex, sideBEndVertex, sideCStartVertex, sideCEndVertex, vertexA)))
+    {
         return false;
     }
 
-    return isValidMinimalTriangle(vertexA, vertexB, vertexC, polygon, nrOfPoints, a, b,
-                                  validationFlag, sideAStartVertex, sideAEndVertex,
-                                  sideBStartVertex, sideBEndVertex, sideCStartVertex,
-                                  sideCEndVertex);
+    return isValidMinimalTriangle(vertexA, vertexB, vertexC, polygon, nrOfPoints, a, b, validationFlag,
+                                  sideAStartVertex, sideAEndVertex, sideBStartVertex, sideBEndVertex,
+                                  sideCStartVertex, sideCEndVertex);
 }
 
 //! Check if the found minimal triangle is valid
@@ -695,26 +695,28 @@ static bool isLocalMinimalTriangle(cv::Point2f &vertexA, cv::Point2f &vertexB,
 * @param sideCStartVertex   Start vertex for defining side C
 * @param sideCEndVertex     End vertex for defining side C
 */
-static bool isValidMinimalTriangle(const cv::Point2f &vertexA, const cv::Point2f &vertexB,
-                                   const cv::Point2f &vertexC, const std::vector<cv::Point2f> &polygon,
+static bool isValidMinimalTriangle(const cv::Point2f& vertexA, const cv::Point2f& vertexB,
+                                   const cv::Point2f& vertexC, const std::vector<cv::Point2f>& polygon,
                                    unsigned int nrOfPoints, unsigned int a, unsigned int b,
-                                   unsigned int validationFlag, const cv::Point2f &sideAStartVertex,
-                                   const cv::Point2f &sideAEndVertex, const cv::Point2f &sideBStartVertex,
-                                   const cv::Point2f &sideBEndVertex, const cv::Point2f &sideCStartVertex,
-                                   const cv::Point2f &sideCEndVertex) {
+                                   unsigned int validationFlag, const cv::Point2f& sideAStartVertex,
+                                   const cv::Point2f& sideAEndVertex, const cv::Point2f& sideBStartVertex,
+                                   const cv::Point2f& sideBEndVertex, const cv::Point2f& sideCStartVertex,
+                                   const cv::Point2f& sideCEndVertex)
+{
     cv::Point2f midpointSideA = middlePoint(vertexB, vertexC);
     cv::Point2f midpointSideB = middlePoint(vertexA, vertexC);
     cv::Point2f midpointSideC = middlePoint(vertexA, vertexB);
 
     bool sideAValid = (validationFlag == VALIDATION_SIDE_A_TANGENT)
-                        ? (areEqualPoints(midpointSideA, polygon[predecessor(a, nrOfPoints)]))
-                        : (isPointOnLineSegment(midpointSideA, sideAStartVertex, sideAEndVertex));
+                          ? (areEqualPoints(midpointSideA, polygon[predecessor(a, nrOfPoints)]))
+                          : (isPointOnLineSegment(midpointSideA, sideAStartVertex, sideAEndVertex));
 
     bool sideBValid = (validationFlag == VALIDATION_SIDE_B_TANGENT)
                           ? (areEqualPoints(midpointSideB, polygon[b]))
                           : (isPointOnLineSegment(midpointSideB, sideBStartVertex, sideBEndVertex));
 
-    bool sideCValid = (validationFlag == VALIDATION_SIDES_FLUSH) || isPointOnLineSegment(midpointSideC, sideCStartVertex, sideCEndVertex);
+    bool sideCValid = (validationFlag == VALIDATION_SIDES_FLUSH)
+                      || isPointOnLineSegment(midpointSideC, sideCStartVertex, sideCEndVertex);
 
     return (sideAValid && sideBValid && sideCValid);
 }
@@ -727,12 +729,14 @@ static bool isValidMinimalTriangle(const cv::Point2f &vertexA, const cv::Point2f
 * @param vertexB    Vertex B of the enclosing triangle
 * @param vertexC    Vertex C of the enclosing triangle
 */
-static void updateMinimumAreaEnclosingTriangle(std::vector<cv::Point2f> &triangle, double &area,
-                                               const cv::Point2f &vertexA, const cv::Point2f &vertexB,
-                                               const cv::Point2f &vertexC) {
+static void updateMinimumAreaEnclosingTriangle(std::vector<cv::Point2f>& triangle, double& area,
+                                               const cv::Point2f& vertexA, const cv::Point2f& vertexB,
+                                               const cv::Point2f& vertexC)
+{
     double triangleArea = areaOfTriangle(vertexA, vertexB, vertexC);
 
-    if (triangleArea < area) {
+    if (triangleArea < area)
+    {
         triangle.clear();
 
         triangle.push_back(vertexA);
@@ -753,14 +757,16 @@ static void updateMinimumAreaEnclosingTriangle(std::vector<cv::Point2f> &triangl
 * @param sideCStartVertex   Start vertex for defining side C
 * @param sideCEndVertex     End vertex for defining side C
 */
-static bool middlePointOfSideB(cv::Point2f &middlePointOfSideB, const cv::Point2f &sideAStartVertex,
-                               const cv::Point2f &sideAEndVertex, const cv::Point2f &sideBStartVertex,
-                               const cv::Point2f &sideBEndVertex, const cv::Point2f &sideCStartVertex,
-                               const cv::Point2f &sideCEndVertex) {
+static bool middlePointOfSideB(cv::Point2f& middlePointOfSideB, const cv::Point2f& sideAStartVertex,
+                               const cv::Point2f& sideAEndVertex, const cv::Point2f& sideBStartVertex,
+                               const cv::Point2f& sideBEndVertex, const cv::Point2f& sideCStartVertex,
+                               const cv::Point2f& sideCEndVertex)
+{
     cv::Point2f vertexA, vertexC;
 
-    if ((!lineIntersection(sideBStartVertex, sideBEndVertex, sideCStartVertex, sideCEndVertex, vertexA)) ||
-        (!lineIntersection(sideBStartVertex, sideBEndVertex, sideAStartVertex, sideAEndVertex, vertexC))) {
+    if ((!lineIntersection(sideBStartVertex, sideBEndVertex, sideCStartVertex, sideCEndVertex, vertexA))
+        || (!lineIntersection(sideBStartVertex, sideBEndVertex, sideAStartVertex, sideAEndVertex, vertexC)))
+    {
         return false;
     }
 
@@ -780,9 +786,9 @@ static bool middlePointOfSideB(cv::Point2f &middlePointOfSideB, const cv::Point2
 * @param nrOfPoints         Number of points defining the convex polygon
 * @param c                  Index c
 */
-static bool intersectsBelow(const cv::Point2f &gammaPoint, unsigned int polygonPointIndex,
-                            const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                            unsigned int c) {
+static bool intersectsBelow(const cv::Point2f& gammaPoint, unsigned int polygonPointIndex,
+                            const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int c)
+{
     double angleOfGammaAndPoint = angleOfLineWrtOxAxis(polygon[polygonPointIndex], gammaPoint);
 
     return (intersects(angleOfGammaAndPoint, polygonPointIndex, polygon, nrOfPoints, c) == INTERSECTS_BELOW);
@@ -799,9 +805,9 @@ static bool intersectsBelow(const cv::Point2f &gammaPoint, unsigned int polygonP
 * @param nrOfPoints         Number of points defining the convex polygon
 * @param c                  Index c
 */
-static bool intersectsAbove(const cv::Point2f &gammaPoint, unsigned int polygonPointIndex,
-                            const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                            unsigned int c) {
+static bool intersectsAbove(const cv::Point2f& gammaPoint, unsigned int polygonPointIndex,
+                            const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int c)
+{
     double angleOfGammaAndPoint = angleOfLineWrtOxAxis(gammaPoint, polygon[polygonPointIndex]);
 
     return (intersects(angleOfGammaAndPoint, polygonPointIndex, polygon, nrOfPoints, c) == INTERSECTS_ABOVE);
@@ -816,37 +822,37 @@ static bool intersectsAbove(const cv::Point2f &gammaPoint, unsigned int polygonP
 * @param c                      Index c
 */
 static unsigned int intersects(double angleGammaAndPoint, unsigned int polygonPointIndex,
-                               const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                               unsigned int c) {
+                               const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints, unsigned int c)
+{
     double anglePointPredecessor = angleOfLineWrtOxAxis(polygon[predecessor(polygonPointIndex, nrOfPoints)],
                                                         polygon[polygonPointIndex]);
-    double anglePointSuccessor   = angleOfLineWrtOxAxis(polygon[successor(polygonPointIndex, nrOfPoints)],
-                                                        polygon[polygonPointIndex]);
-    double angleFlushEdge        = angleOfLineWrtOxAxis(polygon[predecessor(c, nrOfPoints)],
-                                                        polygon[c]);
+    double anglePointSuccessor = angleOfLineWrtOxAxis(polygon[successor(polygonPointIndex, nrOfPoints)],
+                                                      polygon[polygonPointIndex]);
+    double angleFlushEdge = angleOfLineWrtOxAxis(polygon[predecessor(c, nrOfPoints)], polygon[c]);
 
-    if (isFlushAngleBtwPredAndSucc(angleFlushEdge, anglePointPredecessor, anglePointSuccessor)) {
-        if ((isGammaAngleBtw(angleGammaAndPoint, anglePointPredecessor, angleFlushEdge)) ||
-            (almostEqual(angleGammaAndPoint, anglePointPredecessor))) {
-            return intersectsAboveOrBelow(predecessor(polygonPointIndex, nrOfPoints),
-                                          polygonPointIndex, polygon, nrOfPoints, c);
-        } else if ((isGammaAngleBtw(angleGammaAndPoint, anglePointSuccessor, angleFlushEdge)) ||
-                  (almostEqual(angleGammaAndPoint, anglePointSuccessor))) {
-            return intersectsAboveOrBelow(successor(polygonPointIndex, nrOfPoints),
-                                          polygonPointIndex, polygon, nrOfPoints, c);
+    if (isFlushAngleBtwPredAndSucc(angleFlushEdge, anglePointPredecessor, anglePointSuccessor))
+    {
+        if ((isGammaAngleBtw(angleGammaAndPoint, anglePointPredecessor, angleFlushEdge))
+            || (almostEqual(angleGammaAndPoint, anglePointPredecessor)))
+        {
+            return intersectsAboveOrBelow(predecessor(polygonPointIndex, nrOfPoints), polygonPointIndex, polygon,
+                                          nrOfPoints, c);
         }
-    } else {
-        if (
-            (isGammaAngleBtw(angleGammaAndPoint, anglePointPredecessor, anglePointSuccessor)) ||
-            (
-                (isGammaAngleEqualTo(angleGammaAndPoint, anglePointPredecessor)) &&
-                (!isGammaAngleEqualTo(angleGammaAndPoint, angleFlushEdge))
-            ) ||
-            (
-                (isGammaAngleEqualTo(angleGammaAndPoint, anglePointSuccessor)) &&
-                (!isGammaAngleEqualTo(angleGammaAndPoint, angleFlushEdge))
-            )
-           ) {
+        else if ((isGammaAngleBtw(angleGammaAndPoint, anglePointSuccessor, angleFlushEdge))
+                 || (almostEqual(angleGammaAndPoint, anglePointSuccessor)))
+        {
+            return intersectsAboveOrBelow(successor(polygonPointIndex, nrOfPoints), polygonPointIndex, polygon,
+                                          nrOfPoints, c);
+        }
+    }
+    else
+    {
+        if ((isGammaAngleBtw(angleGammaAndPoint, anglePointPredecessor, anglePointSuccessor))
+            || ((isGammaAngleEqualTo(angleGammaAndPoint, anglePointPredecessor))
+                && (!isGammaAngleEqualTo(angleGammaAndPoint, angleFlushEdge)))
+            || ((isGammaAngleEqualTo(angleGammaAndPoint, anglePointSuccessor))
+                && (!isGammaAngleEqualTo(angleGammaAndPoint, angleFlushEdge))))
+        {
             return INTERSECTS_BELOW;
         }
     }
@@ -863,11 +869,15 @@ static unsigned int intersects(double angleGammaAndPoint, unsigned int polygonPo
 * @param c              Index c
 */
 static unsigned int intersectsAboveOrBelow(unsigned int succPredIndex, unsigned int pointIndex,
-                                           const std::vector<cv::Point2f> &polygon,
-                                           unsigned int nrOfPoints, unsigned int c) {
-    if (height(succPredIndex, polygon, nrOfPoints, c) > height(pointIndex, polygon, nrOfPoints, c)) {
+                                           const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
+                                           unsigned int c)
+{
+    if (height(succPredIndex, polygon, nrOfPoints, c) > height(pointIndex, polygon, nrOfPoints, c))
+    {
         return INTERSECTS_ABOVE;
-    } else {
+    }
+    else
+    {
         return INTERSECTS_BELOW;
     }
 }
@@ -892,24 +902,27 @@ static unsigned int intersectsAboveOrBelow(unsigned int succPredIndex, unsigned 
 * @param a                 Index a
 * @param c                 Index c
 */
-static bool gamma(unsigned int polygonPointIndex, cv::Point2f &gammaPoint,
-                  const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                  unsigned int a, unsigned int c) {
+static bool gamma(unsigned int polygonPointIndex, cv::Point2f& gammaPoint, const std::vector<cv::Point2f>& polygon,
+                  unsigned int nrOfPoints, unsigned int a, unsigned int c)
+{
     cv::Point2f intersectionPoint1, intersectionPoint2;
 
     // Get intersection points if they exist
-    if (!findGammaIntersectionPoints(polygon, nrOfPoints, c, polygonPointIndex,
-                                     polygon[a], polygon[predecessor(a, nrOfPoints)],
-                                     polygon[c], polygon[predecessor(c, nrOfPoints)],
-                                     intersectionPoint1, intersectionPoint2)) {
+    if (!findGammaIntersectionPoints(polygon, nrOfPoints, c, polygonPointIndex, polygon[a],
+                                     polygon[predecessor(a, nrOfPoints)], polygon[c],
+                                     polygon[predecessor(c, nrOfPoints)], intersectionPoint1, intersectionPoint2))
+    {
         return false;
     }
 
     // Select the point which is on the same side of line C as the polygon
-    if (areOnTheSameSideOfLine(intersectionPoint1, polygon[successor(c, nrOfPoints)],
-                               polygon[c], polygon[predecessor(c, nrOfPoints)])) {
+    if (areOnTheSameSideOfLine(intersectionPoint1, polygon[successor(c, nrOfPoints)], polygon[c],
+                               polygon[predecessor(c, nrOfPoints)]))
+    {
         gammaPoint = intersectionPoint1;
-    } else {
+    }
+    else
+    {
         gammaPoint = intersectionPoint2;
     }
 
@@ -935,27 +948,29 @@ static bool gamma(unsigned int polygonPointIndex, cv::Point2f &gammaPoint,
 * @param sideCStartVertex   Start vertex for defining side C
 * @param sideCEndVertex     End vertex for defining side C
 */
-static cv::Point2f findVertexCOnSideB(const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
-                                      unsigned int a, unsigned int c,
-                                      const cv::Point2f &sideBStartVertex,
-                                      const cv::Point2f &sideBEndVertex,
-                                      const cv::Point2f &sideCStartVertex,
-                                      const cv::Point2f &sideCEndVertex) {
+static cv::Point2f findVertexCOnSideB(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
+                                      unsigned int a, unsigned int c, const cv::Point2f& sideBStartVertex,
+                                      const cv::Point2f& sideBEndVertex, const cv::Point2f& sideCStartVertex,
+                                      const cv::Point2f& sideCEndVertex)
+{
     cv::Point2f intersectionPoint1, intersectionPoint2;
 
     // Get intersection points if they exist
-    if (!findGammaIntersectionPoints(polygon, nrOfPoints, c, predecessor(a, nrOfPoints),
-                                     sideBStartVertex, sideBEndVertex,
-                                     sideCStartVertex, sideCEndVertex,
-                                     intersectionPoint1, intersectionPoint2)) {
+    if (!findGammaIntersectionPoints(polygon, nrOfPoints, c, predecessor(a, nrOfPoints), sideBStartVertex,
+                                     sideBEndVertex, sideCStartVertex, sideCEndVertex, intersectionPoint1,
+                                     intersectionPoint2))
+    {
         CV_Error(cv::Error::StsInternal, ERR_VERTEX_C_ON_SIDE_B);
     }
 
     // Select the point which is on the same side of line C as the polygon
-    if (areOnTheSameSideOfLine(intersectionPoint1, polygon[successor(c, nrOfPoints)],
-                               polygon[c], polygon[predecessor(c, nrOfPoints)])) {
+    if (areOnTheSameSideOfLine(intersectionPoint1, polygon[successor(c, nrOfPoints)], polygon[c],
+                               polygon[predecessor(c, nrOfPoints)]))
+    {
         return intersectionPoint1;
-    } else {
+    }
+    else
+    {
         return intersectionPoint2;
     }
 }
@@ -973,11 +988,12 @@ static cv::Point2f findVertexCOnSideB(const std::vector<cv::Point2f> &polygon, u
 * @param intersectionPoint1     First intersection point between one pair of lines
 * @param intersectionPoint2     Second intersection point between other pair of lines
 */
-static bool findGammaIntersectionPoints(const std::vector<cv::Point2f> &polygon, unsigned int nrOfPoints,
+static bool findGammaIntersectionPoints(const std::vector<cv::Point2f>& polygon, unsigned int nrOfPoints,
                                         unsigned int c, unsigned int polygonPointIndex,
-                                        const cv::Point2f &side1StartVertex, const cv::Point2f &side1EndVertex,
-                                        const cv::Point2f &side2StartVertex, const cv::Point2f &side2EndVertex,
-                                        cv::Point2f &intersectionPoint1, cv::Point2f &intersectionPoint2) {
+                                        const cv::Point2f& side1StartVertex, const cv::Point2f& side1EndVertex,
+                                        const cv::Point2f& side2StartVertex, const cv::Point2f& side2EndVertex,
+                                        cv::Point2f& intersectionPoint1, cv::Point2f& intersectionPoint2)
+{
     std::vector<double> side1Params = lineEquationParameters(side1StartVertex, side1EndVertex);
     std::vector<double> side2Params = lineEquationParameters(side2StartVertex, side2EndVertex);
 
@@ -987,9 +1003,12 @@ static bool findGammaIntersectionPoints(const std::vector<cv::Point2f> &polygon,
     double sideCExtraParam = 2 * polygonPointHeight * distFormulaDenom;
 
     // Get intersection points if they exist or if lines are identical
-    if (areIntersectingLines(side1Params, side2Params, sideCExtraParam, intersectionPoint1, intersectionPoint2)) {
+    if (areIntersectingLines(side1Params, side2Params, sideCExtraParam, intersectionPoint1, intersectionPoint2))
+    {
         return true;
-    } else if (areIdenticalLines(side1Params, side2Params, sideCExtraParam)) {
+    }
+    else if (areIdenticalLines(side1Params, side2Params, sideCExtraParam))
+    {
         intersectionPoint1 = side1StartVertex;
         intersectionPoint2 = side1EndVertex;
         return true;
@@ -1009,14 +1028,13 @@ static bool findGammaIntersectionPoints(const std::vector<cv::Point2f> &polygon,
 * @param side2Params       Vector containing the values of a, b and c for side 2
 * @param sideCExtraParam   Extra parameter for the flush edge C
 */
-static bool areIdenticalLines(const std::vector<double> &side1Params,
-                              const std::vector<double> &side2Params, double sideCExtraParam) {
-    return (
-        (areIdenticalLines(side1Params[0], side1Params[1], -(side1Params[2]),
-                           side2Params[0], side2Params[1], -(side2Params[2]) - sideCExtraParam)) ||
-        (areIdenticalLines(side1Params[0], side1Params[1], -(side1Params[2]),
-                           side2Params[0], side2Params[1], -(side2Params[2]) + sideCExtraParam))
-    );
+static bool areIdenticalLines(const std::vector<double>& side1Params, const std::vector<double>& side2Params,
+                              double sideCExtraParam)
+{
+    return ((areIdenticalLines(side1Params[0], side1Params[1], -(side1Params[2]), side2Params[0], side2Params[1],
+                               -(side2Params[2]) - sideCExtraParam))
+            || (areIdenticalLines(side1Params[0], side1Params[1], -(side1Params[2]), side2Params[0],
+                                  side2Params[1], -(side2Params[2]) + sideCExtraParam)));
 }
 
 //! Check if the given lines intersect or not. If the lines intersect find their intersection points.
@@ -1032,18 +1050,14 @@ static bool areIdenticalLines(const std::vector<double> &side1Params,
 * @param intersectionPoint1    The first intersection point, if it exists
 * @param intersectionPoint2    The second intersection point, if it exists
 */
-static bool areIntersectingLines(const std::vector<double> &side1Params,
-                                 const std::vector<double> &side2Params,
-                                 double sideCExtraParam, cv::Point2f &intersectionPoint1,
-                                 cv::Point2f &intersectionPoint2) {
-    return (
-        (lineIntersection(side1Params[0], side1Params[1], -(side1Params[2]),
-                          side2Params[0], side2Params[1], -(side2Params[2]) - sideCExtraParam,
-                          intersectionPoint1)) &&
-        (lineIntersection(side1Params[0], side1Params[1], -(side1Params[2]),
-                          side2Params[0], side2Params[1], -(side2Params[2]) + sideCExtraParam,
-                          intersectionPoint2))
-    );
+static bool areIntersectingLines(const std::vector<double>& side1Params, const std::vector<double>& side2Params,
+                                 double sideCExtraParam, cv::Point2f& intersectionPoint1,
+                                 cv::Point2f& intersectionPoint2)
+{
+    return ((lineIntersection(side1Params[0], side1Params[1], -(side1Params[2]), side2Params[0], side2Params[1],
+                              -(side2Params[2]) - sideCExtraParam, intersectionPoint1))
+            && (lineIntersection(side1Params[0], side1Params[1], -(side1Params[2]), side2Params[0], side2Params[1],
+                                 -(side2Params[2]) + sideCExtraParam, intersectionPoint2)));
 }
 
 //! Get the line equation parameters "a", "b" and "c" for the line determined by points "p" and "q"
@@ -1054,7 +1068,8 @@ static bool areIntersectingLines(const std::vector<double> &side1Params,
 * @param p One point for defining the equation of the line
 * @param q Second point for defining the equation of the line
 */
-static std::vector<double> lineEquationParameters(const cv::Point2f& p, const cv::Point2f &q) {
+static std::vector<double> lineEquationParameters(const cv::Point2f& p, const cv::Point2f& q)
+{
     std::vector<double> lineEquationParameters;
     double a, b, c;
 
@@ -1076,8 +1091,9 @@ static std::vector<double> lineEquationParameters(const cv::Point2f& p, const cv
 * @param nrOfPoints         Number of points defining the convex polygon
 * @param c                  Index c
 */
-static double height(const cv::Point2f &polygonPoint, const std::vector<cv::Point2f> &polygon,
-                     unsigned int nrOfPoints, unsigned int c) {
+static double height(const cv::Point2f& polygonPoint, const std::vector<cv::Point2f>& polygon,
+                     unsigned int nrOfPoints, unsigned int c)
+{
     cv::Point2f pointC = polygon[c];
     cv::Point2f pointCPredecessor = polygon[predecessor(c, nrOfPoints)];
 
@@ -1093,8 +1109,9 @@ static double height(const cv::Point2f &polygonPoint, const std::vector<cv::Poin
 * @param nrOfPoints         Number of points defining the convex polygon
 * @param c                  Index c
 */
-static double height(unsigned int polygonPointIndex, const std::vector<cv::Point2f> &polygon,
-                     unsigned int nrOfPoints, unsigned int c) {
+static double height(unsigned int polygonPointIndex, const std::vector<cv::Point2f>& polygon,
+                     unsigned int nrOfPoints, unsigned int c)
+{
     cv::Point2f pointC = polygon[c];
     cv::Point2f pointCPredecessor = polygon[predecessor(c, nrOfPoints)];
 
@@ -1108,9 +1125,7 @@ static double height(unsigned int polygonPointIndex, const std::vector<cv::Point
 * @param index          Index of the point
 * @param nrOfPoints     Number of points defining the convex polygon
 */
-static void advance(unsigned int &index, unsigned int nrOfPoints) {
-    index = successor(index, nrOfPoints);
-}
+static void advance(unsigned int& index, unsigned int nrOfPoints) { index = successor(index, nrOfPoints); }
 
 //! Return the successor of the provided point index
 /*!
@@ -1120,9 +1135,7 @@ static void advance(unsigned int &index, unsigned int nrOfPoints) {
 * @param index          Index of the point
 * @param nrOfPoints     Number of points defining the convex polygon
 */
-static unsigned int successor(unsigned int index, unsigned int nrOfPoints) {
-    return ((index + 1) % nrOfPoints);
-}
+static unsigned int successor(unsigned int index, unsigned int nrOfPoints) { return ((index + 1) % nrOfPoints); }
 
 //! Return the predecessor of the provided point index
 /*!
@@ -1132,9 +1145,9 @@ static unsigned int successor(unsigned int index, unsigned int nrOfPoints) {
 * @param index          Index of the point
 * @param nrOfPoints     Number of points defining the convex polygon
 */
-static unsigned int predecessor(unsigned int index, unsigned int nrOfPoints) {
-    return (index == 0) ? (nrOfPoints - 1)
-                        : (index - 1);
+static unsigned int predecessor(unsigned int index, unsigned int nrOfPoints)
+{
+    return (index == 0) ? (nrOfPoints - 1) : (index - 1);
 }
 
 //! Check if the flush edge angle/opposite angle lie between the predecessor and successor angle
@@ -1146,10 +1159,14 @@ static unsigned int predecessor(unsigned int index, unsigned int nrOfPoints) {
 * @param anglePred         Angle of the predecessor
 * @param angleSucc         Angle of the successor
 */
-static bool isFlushAngleBtwPredAndSucc(double &angleFlushEdge, double anglePred, double angleSucc) {
-    if (isAngleBetweenNonReflex(angleFlushEdge, anglePred, angleSucc)) {
+static bool isFlushAngleBtwPredAndSucc(double& angleFlushEdge, double anglePred, double angleSucc)
+{
+    if (isAngleBetweenNonReflex(angleFlushEdge, anglePred, angleSucc))
+    {
         return true;
-    } else if (isOppositeAngleBetweenNonReflex(angleFlushEdge, anglePred, angleSucc)) {
+    }
+    else if (isOppositeAngleBetweenNonReflex(angleFlushEdge, anglePred, angleSucc))
+    {
         angleFlushEdge = oppositeAngle(angleFlushEdge);
 
         return true;
@@ -1163,9 +1180,7 @@ static bool isFlushAngleBtwPredAndSucc(double &angleFlushEdge, double anglePred,
 * @param gammaAngle    Angle of the line (gamma(p) p)
 * @param angle         Angle to compare against
 */
-static bool isGammaAngleEqualTo(double &gammaAngle, double angle) {
-    return (almostEqual(gammaAngle, angle));
-}
+static bool isGammaAngleEqualTo(double& gammaAngle, double angle) { return (almostEqual(gammaAngle, angle)); }
 
 //! Check if the angle of the line (gamma(p) p) or its opposite angle lie between angle1 and angle2
 /*!
@@ -1173,7 +1188,8 @@ static bool isGammaAngleEqualTo(double &gammaAngle, double angle) {
 * @param angle1        One of the boundary angles
 * @param angle2        Another boundary angle
 */
-static bool isGammaAngleBtw(double &gammaAngle, double angle1, double angle2) {
+static bool isGammaAngleBtw(double& gammaAngle, double angle1, double angle2)
+{
     return (isAngleBetweenNonReflex(gammaAngle, angle1, angle2));
 }
 
@@ -1184,14 +1200,14 @@ static bool isGammaAngleBtw(double &gammaAngle, double angle1, double angle2) {
 * @param a Point a
 * @param b Point b
 */
-static double angleOfLineWrtOxAxis(const cv::Point2f &a, const cv::Point2f &b) {
+static double angleOfLineWrtOxAxis(const cv::Point2f& a, const cv::Point2f& b)
+{
     double y = b.y - a.y;
     double x = b.x - a.x;
 
     double angle = (std::atan2(y, x) * 180 / CV_PI);
 
-    return (angle < 0) ? (angle + 360)
-                       : angle;
+    return (angle < 0) ? (angle + 360) : angle;
 }
 
 //! Check if angle1 lies between non reflex angle determined by angles 2 and 3
@@ -1200,16 +1216,23 @@ static double angleOfLineWrtOxAxis(const cv::Point2f &a, const cv::Point2f &b) {
 * @param angle2 One of the boundary angles
 * @param angle3 The other boundary angle
 */
-static bool isAngleBetweenNonReflex(double angle1, double angle2, double angle3) {
-    if (std::abs(angle2 - angle3) > 180) {
-        if (angle2 > angle3) {
-            return (((angle2 < angle1) && (lessOrEqual(angle1, 360))) ||
-                    ((lessOrEqual(0, angle1)) && (angle1 < angle3)));
-        } else {
-            return (((angle3 < angle1) && (lessOrEqual(angle1, 360))) ||
-                    ((lessOrEqual(0, angle1)) && (angle1 < angle2)));
+static bool isAngleBetweenNonReflex(double angle1, double angle2, double angle3)
+{
+    if (std::abs(angle2 - angle3) > 180)
+    {
+        if (angle2 > angle3)
+        {
+            return (((angle2 < angle1) && (lessOrEqual(angle1, 360)))
+                    || ((lessOrEqual(0, angle1)) && (angle1 < angle3)));
         }
-    } else {
+        else
+        {
+            return (((angle3 < angle1) && (lessOrEqual(angle1, 360)))
+                    || ((lessOrEqual(0, angle1)) && (angle1 < angle2)));
+        }
+    }
+    else
+    {
         return isAngleBetween(angle1, angle2, angle3);
     }
 }
@@ -1220,7 +1243,8 @@ static bool isAngleBetweenNonReflex(double angle1, double angle2, double angle3)
 * @param angle2 One of the boundary angles
 * @param angle3 The other boundary angle
 */
-static bool isOppositeAngleBetweenNonReflex(double angle1, double angle2, double angle3) {
+static bool isOppositeAngleBetweenNonReflex(double angle1, double angle2, double angle3)
+{
     double angle1Opposite = oppositeAngle(angle1);
 
     return (isAngleBetweenNonReflex(angle1Opposite, angle2, angle3));
@@ -1232,10 +1256,14 @@ static bool isOppositeAngleBetweenNonReflex(double angle1, double angle2, double
 * @param angle2 One of the boundary angles
 * @param angle3 The other boundary angle
 */
-static bool isAngleBetween(double angle1, double angle2, double angle3) {
-    if ((((int)(angle2 - angle3)) % 180) > 0) {
+static bool isAngleBetween(double angle1, double angle2, double angle3)
+{
+    if ((((int)(angle2 - angle3)) % 180) > 0)
+    {
         return ((angle3 < angle1) && (angle1 < angle2));
-    } else {
+    }
+    else
+    {
         return ((angle2 < angle1) && (angle1 < angle3));
     }
 }
@@ -1250,10 +1278,7 @@ static bool isAngleBetween(double angle1, double angle2, double angle3) {
 *
 * @param angle Angle
 */
-static double oppositeAngle(double angle) {
-    return (angle > 180) ? (angle - 180)
-                         : (angle + 180);
-}
+static double oppositeAngle(double angle) { return (angle > 180) ? (angle - 180) : (angle + 180); }
 
 //! Compute the distance from a point "a" to a line specified by two points "B" and "C"
 /*!
@@ -1270,8 +1295,9 @@ static double oppositeAngle(double angle) {
 * @param linePointB    One of the points determining the line
 * @param linePointC    One of the points determining the line
 */
-static double distanceFromPointToLine(const cv::Point2f &a, const cv::Point2f &linePointB,
-                                      const cv::Point2f &linePointC) {
+static double distanceFromPointToLine(const cv::Point2f& a, const cv::Point2f& linePointB,
+                                      const cv::Point2f& linePointC)
+{
     double term1 = linePointC.x - linePointB.x;
     double term2 = linePointB.y - a.y;
     double term3 = linePointB.x - a.x;
@@ -1280,8 +1306,7 @@ static double distanceFromPointToLine(const cv::Point2f &a, const cv::Point2f &l
     double nominator = std::abs((term1 * term2) - (term3 * term4));
     double denominator = std::sqrt((term1 * term1) + (term4 * term4));
 
-    return (denominator != 0) ? (nominator / denominator)
-                              : 0;
+    return (denominator != 0) ? (nominator / denominator) : 0;
 }
 
 //! Compute the distance between two points
@@ -1290,7 +1315,8 @@ static double distanceFromPointToLine(const cv::Point2f &a, const cv::Point2f &l
 * @param a Point a
 * @param b Point b
 */
-static double distanceBtwPoints(const cv::Point2f &a, const cv::Point2f &b) {
+static double distanceBtwPoints(const cv::Point2f& a, const cv::Point2f& b)
+{
     double xDiff = a.x - b.x;
     double yDiff = a.y - b.y;
 
@@ -1307,7 +1333,8 @@ static double distanceBtwPoints(const cv::Point2f &a, const cv::Point2f &b) {
 * @param b Point b
 * @param c Point c
 */
-static double areaOfTriangle(const cv::Point2f &a, const cv::Point2f &b, const cv::Point2f &c) {
+static double areaOfTriangle(const cv::Point2f& a, const cv::Point2f& b, const cv::Point2f& c)
+{
     double posTerm = (a.x * b.y) + (a.y * c.x) + (b.x * c.y);
     double negTerm = (b.y * c.x) + (a.x * c.y) + (a.y * b.x);
 
@@ -1321,7 +1348,8 @@ static double areaOfTriangle(const cv::Point2f &a, const cv::Point2f &b, const c
 * @param a Point a
 * @param b Point b
 */
-static cv::Point2f middlePoint(const cv::Point2f &a, const cv::Point2f &b) {
+static cv::Point2f middlePoint(const cv::Point2f& a, const cv::Point2f& b)
+{
     double middleX = static_cast<double>((a.x + b.x) / 2);
     double middleY = static_cast<double>((a.y + b.y) / 2);
 
@@ -1352,10 +1380,12 @@ static cv::Point2f middlePoint(const cv::Point2f &a, const cv::Point2f &b) {
 * @param intersection The intersection point, if this point exists
 */
 static bool lineIntersection(double a1, double b1, double c1, double a2, double b2, double c2,
-                             cv::Point2f &intersection) {
+                             cv::Point2f& intersection)
+{
     double det = (a1 * b2) - (a2 * b1);
 
-    if (!(almostEqual(det, 0))) {
+    if (!(almostEqual(det, 0)))
+    {
         intersection.x = static_cast<float>(((c1 * b2) - (c2 * b1)) / (det));
         intersection.y = static_cast<float>(((c2 * a1) - (c1 * a2)) / (det));
 
@@ -1389,8 +1419,9 @@ static bool lineIntersection(double a1, double b1, double c1, double a2, double 
 * @param b2 Second point for determining the second line
 * @param intersection The intersection point, if this point exists
 */
-static bool lineIntersection(const cv::Point2f &a1, const cv::Point2f &b1, const cv::Point2f &a2,
-                             const cv::Point2f &b2, cv::Point2f &intersection) {
+static bool lineIntersection(const cv::Point2f& a1, const cv::Point2f& b1, const cv::Point2f& a2,
+                             const cv::Point2f& b2, cv::Point2f& intersection)
+{
     double A1 = b1.y - a1.y;
     double B1 = a1.x - b1.x;
     double C1 = (a1.x * A1) + (a1.y * B1);
@@ -1401,7 +1432,8 @@ static bool lineIntersection(const cv::Point2f &a1, const cv::Point2f &b1, const
 
     double det = (A1 * B2) - (A2 * B1);
 
-    if (!almostEqual(det, 0)) {
+    if (!almostEqual(det, 0))
+    {
         intersection.x = static_cast<float>(((C1 * B2) - (C2 * B1)) / (det));
         intersection.y = static_cast<float>(((C2 * A1) - (C1 * A2)) / (det));
 
@@ -1423,8 +1455,9 @@ static bool lineIntersection(const cv::Point2f &a1, const cv::Point2f &b1, const
 * @param b Parameter "b" from the line equation
 * @param c Parameter "c" from the line equation
 */
-static void lineEquationDeterminedByPoints(const cv::Point2f &p, const cv::Point2f &q,
-                                           double &a, double &b, double &c) {
+static void lineEquationDeterminedByPoints(const cv::Point2f& p, const cv::Point2f& q, double& a, double& b,
+                                           double& c)
+{
     CV_Assert(areEqualPoints(p, q) == false);
 
     a = q.y - p.y;
@@ -1439,8 +1472,9 @@ static void lineEquationDeterminedByPoints(const cv::Point2f &p, const cv::Point
 * @param a     First point for determining line
 * @param b     Second point for determining line
 */
-static bool areOnTheSameSideOfLine(const cv::Point2f &p1, const cv::Point2f &p2,
-                                   const cv::Point2f &a, const cv::Point2f &b) {
+static bool areOnTheSameSideOfLine(const cv::Point2f& p1, const cv::Point2f& p2, const cv::Point2f& a,
+                                   const cv::Point2f& b)
+{
     double a1, b1, c1;
 
     lineEquationDeterminedByPoints(a, b, a1, b1, c1);
@@ -1457,8 +1491,9 @@ static bool areOnTheSameSideOfLine(const cv::Point2f &p1, const cv::Point2f &p2,
 * @param lineSegmentStart  First point determining the line segment
 * @param lineSegmentEnd    Second point determining the line segment
 */
-static bool isPointOnLineSegment(const cv::Point2f &point, const cv::Point2f &lineSegmentStart,
-                                 const cv::Point2f &lineSegmentEnd) {
+static bool isPointOnLineSegment(const cv::Point2f& point, const cv::Point2f& lineSegmentStart,
+                                 const cv::Point2f& lineSegmentEnd)
+{
     double d1 = distanceBtwPoints(point, lineSegmentStart);
     double d2 = distanceBtwPoints(point, lineSegmentEnd);
     double lineSegmentLength = distanceBtwPoints(lineSegmentStart, lineSegmentEnd);
@@ -1482,7 +1517,8 @@ static bool isPointOnLineSegment(const cv::Point2f &point, const cv::Point2f &li
 * @param b2 B2
 * @param c2 C2
 */
-static bool areIdenticalLines(double a1, double b1, double c1, double a2, double b2, double c2) {
+static bool areIdenticalLines(double a1, double b1, double c1, double a2, double b2, double c2)
+{
     double a1B2 = a1 * b2;
     double a2B1 = a2 * b1;
     double a1C2 = a1 * c2;
@@ -1498,7 +1534,8 @@ static bool areIdenticalLines(double a1, double b1, double c1, double a2, double
 * @param point1 One point
 * @param point2 The other point
 */
-static bool areEqualPoints(const cv::Point2f &point1, const cv::Point2f &point2) {
+static bool areEqualPoints(const cv::Point2f& point1, const cv::Point2f& point2)
+{
     return (almostEqual(point1.x, point2.x) && almostEqual(point1.y, point2.y));
 }
 
@@ -1509,12 +1546,11 @@ static bool areEqualPoints(const cv::Point2f &point1, const cv::Point2f &point2)
 *  +1, if number > 0
 *  0, otherwise
 */
-static int sign(double number) {
-    return (number > 0) ? 1 : ((number < 0) ? -1 : 0);
-}
+static int sign(double number) { return (number > 0) ? 1 : ((number < 0) ? -1 : 0); }
 
 //! Return the maximum of the provided numbers
-static double maximum(double number1, double number2, double number3) {
+static double maximum(double number1, double number2, double number3)
+{
     return std::max(std::max(number1, number2), number3);
 }
 
@@ -1526,7 +1562,8 @@ static double maximum(double number1, double number2, double number3) {
 * @param number1 First number
 * @param number2 Second number
 */
-static bool almostEqual(double number1, double number2) {
+static bool almostEqual(double number1, double number2)
+{
     return (std::abs(number1 - number2) <= (EPSILON * maximum(1.0, std::abs(number1), std::abs(number2))));
 }
 
@@ -1535,7 +1572,8 @@ static bool almostEqual(double number1, double number2) {
 * @param number1 First number
 * @param number2 Second number
 */
-static bool greaterOrEqual(double number1, double number2) {
+static bool greaterOrEqual(double number1, double number2)
+{
     return ((number1 > number2) || (almostEqual(number1, number2)));
 }
 
@@ -1544,8 +1582,9 @@ static bool greaterOrEqual(double number1, double number2) {
 * @param number1 First number
 * @param number2 Second number
 */
-static bool lessOrEqual(double number1, double number2) {
+static bool lessOrEqual(double number1, double number2)
+{
     return ((number1 < number2) || (almostEqual(number1, number2)));
 }
 
-}
+} // namespace minEnclosingTriangle

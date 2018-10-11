@@ -48,28 +48,25 @@
 // */
 
 #ifndef OPENCV_IMGPROC_RESIZE_HPP
-#define OPENCV_IMGPROC_RESIZE_HPP
-#include "precomp.hpp"
+#    define OPENCV_IMGPROC_RESIZE_HPP
+#    include "precomp.hpp"
 
-namespace cv
-{
-namespace opt_AVX2
-{
-#if CV_TRY_AVX2
+namespace cv {
+namespace opt_AVX2 {
+#    if CV_TRY_AVX2
 void resizeNN2_AVX2(const Range&, const Mat&, Mat&, int*, int, double);
 void resizeNN4_AVX2(const Range&, const Mat&, Mat&, int*, int, double);
-#endif
-}
+#    endif
+} // namespace opt_AVX2
 
-namespace opt_SSE4_1
-{
-#if CV_TRY_SSE4_1
+namespace opt_SSE4_1 {
+#    if CV_TRY_SSE4_1
 void resizeNN2_SSE4_1(const Range&, const Mat&, Mat&, int*, int, double);
 void resizeNN4_SSE4_1(const Range&, const Mat&, Mat&, int*, int, double);
 
 int VResizeLanczos4Vec_32f16u_SSE41(const uchar** _src, uchar* _dst, const uchar* _beta, int width);
-#endif
-}
-}
+#    endif
+} // namespace opt_SSE4_1
+} // namespace cv
 #endif
 /* End of file. */

@@ -190,8 +190,7 @@ location of points on the plane, building special graphs (such as NNG,RNG), and 
   @}
 */
 
-namespace cv
-{
+namespace cv {
 
 /** @addtogroup imgproc
 @{
@@ -201,30 +200,32 @@ namespace cv
 //! @{
 
 //! type of morphological operation
-enum MorphTypes{
-    MORPH_ERODE    = 0, //!< see #erode
-    MORPH_DILATE   = 1, //!< see #dilate
-    MORPH_OPEN     = 2, //!< an opening operation
-                        //!< \f[\texttt{dst} = \mathrm{open} ( \texttt{src} , \texttt{element} )= \mathrm{dilate} ( \mathrm{erode} ( \texttt{src} , \texttt{element} ))\f]
-    MORPH_CLOSE    = 3, //!< a closing operation
-                        //!< \f[\texttt{dst} = \mathrm{close} ( \texttt{src} , \texttt{element} )= \mathrm{erode} ( \mathrm{dilate} ( \texttt{src} , \texttt{element} ))\f]
+enum MorphTypes
+{
+    MORPH_ERODE = 0, //!< see #erode
+    MORPH_DILATE = 1, //!< see #dilate
+    MORPH_OPEN = 2, //!< an opening operation
+    //!< \f[\texttt{dst} = \mathrm{open} ( \texttt{src} , \texttt{element} )= \mathrm{dilate} ( \mathrm{erode} ( \texttt{src} , \texttt{element} ))\f]
+    MORPH_CLOSE = 3, //!< a closing operation
+    //!< \f[\texttt{dst} = \mathrm{close} ( \texttt{src} , \texttt{element} )= \mathrm{erode} ( \mathrm{dilate} ( \texttt{src} , \texttt{element} ))\f]
     MORPH_GRADIENT = 4, //!< a morphological gradient
-                        //!< \f[\texttt{dst} = \mathrm{morph\_grad} ( \texttt{src} , \texttt{element} )= \mathrm{dilate} ( \texttt{src} , \texttt{element} )- \mathrm{erode} ( \texttt{src} , \texttt{element} )\f]
-    MORPH_TOPHAT   = 5, //!< "top hat"
-                        //!< \f[\texttt{dst} = \mathrm{tophat} ( \texttt{src} , \texttt{element} )= \texttt{src} - \mathrm{open} ( \texttt{src} , \texttt{element} )\f]
+    //!< \f[\texttt{dst} = \mathrm{morph\_grad} ( \texttt{src} , \texttt{element} )= \mathrm{dilate} ( \texttt{src} , \texttt{element} )- \mathrm{erode} ( \texttt{src} , \texttt{element} )\f]
+    MORPH_TOPHAT = 5, //!< "top hat"
+    //!< \f[\texttt{dst} = \mathrm{tophat} ( \texttt{src} , \texttt{element} )= \texttt{src} - \mathrm{open} ( \texttt{src} , \texttt{element} )\f]
     MORPH_BLACKHAT = 6, //!< "black hat"
-                        //!< \f[\texttt{dst} = \mathrm{blackhat} ( \texttt{src} , \texttt{element} )= \mathrm{close} ( \texttt{src} , \texttt{element} )- \texttt{src}\f]
-    MORPH_HITMISS  = 7  //!< "hit or miss"
-                        //!<   .- Only supported for CV_8UC1 binary images. A tutorial can be found in the documentation
+    //!< \f[\texttt{dst} = \mathrm{blackhat} ( \texttt{src} , \texttt{element} )= \mathrm{close} ( \texttt{src} , \texttt{element} )- \texttt{src}\f]
+    MORPH_HITMISS = 7 //!< "hit or miss"
+    //!<   .- Only supported for CV_8UC1 binary images. A tutorial can be found in the documentation
 };
 
 //! shape of the structuring element
-enum MorphShapes {
-    MORPH_RECT    = 0, //!< a rectangular structuring element:  \f[E_{ij}=1\f]
-    MORPH_CROSS   = 1, //!< a cross-shaped structuring element:
-                       //!< \f[E_{ij} =  \fork{1}{if i=\texttt{anchor.y} or j=\texttt{anchor.x}}{0}{otherwise}\f]
+enum MorphShapes
+{
+    MORPH_RECT = 0, //!< a rectangular structuring element:  \f[E_{ij}=1\f]
+    MORPH_CROSS = 1, //!< a cross-shaped structuring element:
+    //!< \f[E_{ij} =  \fork{1}{if i=\texttt{anchor.y} or j=\texttt{anchor.x}}{0}{otherwise}\f]
     MORPH_ELLIPSE = 2 //!< an elliptic structuring element, that is, a filled ellipse inscribed
-                      //!< into the rectangle Rect(0, 0, esize.width, 0.esize.height)
+    //!< into the rectangle Rect(0, 0, esize.width, 0.esize.height)
 };
 
 //! @} imgproc_filter
@@ -233,33 +234,34 @@ enum MorphShapes {
 //! @{
 
 //! interpolation algorithm
-enum InterpolationFlags{
+enum InterpolationFlags
+{
     /** nearest neighbor interpolation */
-    INTER_NEAREST        = 0,
+    INTER_NEAREST = 0,
     /** bilinear interpolation */
-    INTER_LINEAR         = 1,
+    INTER_LINEAR = 1,
     /** bicubic interpolation */
-    INTER_CUBIC          = 2,
+    INTER_CUBIC = 2,
     /** resampling using pixel area relation. It may be a preferred method for image decimation, as
     it gives moire'-free results. But when the image is zoomed, it is similar to the INTER_NEAREST
     method. */
-    INTER_AREA           = 3,
+    INTER_AREA = 3,
     /** Lanczos interpolation over 8x8 neighborhood */
-    INTER_LANCZOS4       = 4,
+    INTER_LANCZOS4 = 4,
     /** Bit exact bilinear interpolation */
     INTER_LINEAR_EXACT = 5,
     /** mask for interpolation codes */
-    INTER_MAX            = 7,
+    INTER_MAX = 7,
     /** flag, fills all of the destination image pixels. If some of them correspond to outliers in the
     source image, they are set to zero */
-    WARP_FILL_OUTLIERS   = 8,
+    WARP_FILL_OUTLIERS = 8,
     /** flag, inverse transformation
 
     For example, #linearPolar or #logPolar transforms:
     - flag is __not__ set: \f$dst( \rho , \phi ) = src(x,y)\f$
     - flag is set: \f$dst(x,y) = src( \rho , \phi )\f$
     */
-    WARP_INVERSE_MAP     = 16
+    WARP_INVERSE_MAP = 16
 };
 
 /** \brief Specify the polar mapping mode
@@ -268,15 +270,16 @@ enum InterpolationFlags{
 enum WarpPolarMode
 {
     WARP_POLAR_LINEAR = 0, ///< Remaps an image to/from polar space.
-    WARP_POLAR_LOG = 256   ///< Remaps an image to/from semilog-polar space.
+    WARP_POLAR_LOG = 256 ///< Remaps an image to/from semilog-polar space.
 };
 
-enum InterpolationMasks {
-       INTER_BITS      = 5,
-       INTER_BITS2     = INTER_BITS * 2,
-       INTER_TAB_SIZE  = 1 << INTER_BITS,
-       INTER_TAB_SIZE2 = INTER_TAB_SIZE * INTER_TAB_SIZE
-     };
+enum InterpolationMasks
+{
+    INTER_BITS = 5,
+    INTER_BITS2 = INTER_BITS * 2,
+    INTER_TAB_SIZE = 1 << INTER_BITS,
+    INTER_TAB_SIZE2 = INTER_TAB_SIZE * INTER_TAB_SIZE
+};
 
 //! @} imgproc_transform
 
@@ -285,43 +288,52 @@ enum InterpolationMasks {
 
 //! Distance types for Distance Transform and M-estimators
 //! @see distanceTransform, fitLine
-enum DistanceTypes {
-    DIST_USER    = -1,  //!< User defined distance
-    DIST_L1      = 1,   //!< distance = |x1-x2| + |y1-y2|
-    DIST_L2      = 2,   //!< the simple euclidean distance
-    DIST_C       = 3,   //!< distance = max(|x1-x2|,|y1-y2|)
-    DIST_L12     = 4,   //!< L1-L2 metric: distance = 2(sqrt(1+x*x/2) - 1))
-    DIST_FAIR    = 5,   //!< distance = c^2(|x|/c-log(1+|x|/c)), c = 1.3998
-    DIST_WELSCH  = 6,   //!< distance = c^2/2(1-exp(-(x/c)^2)), c = 2.9846
-    DIST_HUBER   = 7    //!< distance = |x|<c ? x^2/2 : c(|x|-c/2), c=1.345
+enum DistanceTypes
+{
+    DIST_USER = -1, //!< User defined distance
+    DIST_L1 = 1, //!< distance = |x1-x2| + |y1-y2|
+    DIST_L2 = 2, //!< the simple euclidean distance
+    DIST_C = 3, //!< distance = max(|x1-x2|,|y1-y2|)
+    DIST_L12 = 4, //!< L1-L2 metric: distance = 2(sqrt(1+x*x/2) - 1))
+    DIST_FAIR = 5, //!< distance = c^2(|x|/c-log(1+|x|/c)), c = 1.3998
+    DIST_WELSCH = 6, //!< distance = c^2/2(1-exp(-(x/c)^2)), c = 2.9846
+    DIST_HUBER = 7 //!< distance = |x|<c ? x^2/2 : c(|x|-c/2), c=1.345
 };
 
 //! Mask size for distance transform
-enum DistanceTransformMasks {
-    DIST_MASK_3       = 3, //!< mask=3
-    DIST_MASK_5       = 5, //!< mask=5
-    DIST_MASK_PRECISE = 0  //!<
+enum DistanceTransformMasks
+{
+    DIST_MASK_3 = 3, //!< mask=3
+    DIST_MASK_5 = 5, //!< mask=5
+    DIST_MASK_PRECISE = 0 //!<
 };
 
 //! type of the threshold operation
 //! ![threshold types](pics/threshold.png)
-enum ThresholdTypes {
-    THRESH_BINARY     = 0, //!< \f[\texttt{dst} (x,y) =  \fork{\texttt{maxval}}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{0}{otherwise}\f]
-    THRESH_BINARY_INV = 1, //!< \f[\texttt{dst} (x,y) =  \fork{0}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{\texttt{maxval}}{otherwise}\f]
-    THRESH_TRUNC      = 2, //!< \f[\texttt{dst} (x,y) =  \fork{\texttt{threshold}}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{\texttt{src}(x,y)}{otherwise}\f]
-    THRESH_TOZERO     = 3, //!< \f[\texttt{dst} (x,y) =  \fork{\texttt{src}(x,y)}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{0}{otherwise}\f]
-    THRESH_TOZERO_INV = 4, //!< \f[\texttt{dst} (x,y) =  \fork{0}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{\texttt{src}(x,y)}{otherwise}\f]
-    THRESH_MASK       = 7,
-    THRESH_OTSU       = 8, //!< flag, use Otsu algorithm to choose the optimal threshold value
-    THRESH_TRIANGLE   = 16 //!< flag, use Triangle algorithm to choose the optimal threshold value
+enum ThresholdTypes
+{
+    THRESH_BINARY =
+        0, //!< \f[\texttt{dst} (x,y) =  \fork{\texttt{maxval}}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{0}{otherwise}\f]
+    THRESH_BINARY_INV =
+        1, //!< \f[\texttt{dst} (x,y) =  \fork{0}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{\texttt{maxval}}{otherwise}\f]
+    THRESH_TRUNC =
+        2, //!< \f[\texttt{dst} (x,y) =  \fork{\texttt{threshold}}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{\texttt{src}(x,y)}{otherwise}\f]
+    THRESH_TOZERO =
+        3, //!< \f[\texttt{dst} (x,y) =  \fork{\texttt{src}(x,y)}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{0}{otherwise}\f]
+    THRESH_TOZERO_INV =
+        4, //!< \f[\texttt{dst} (x,y) =  \fork{0}{if \(\texttt{src}(x,y) > \texttt{thresh}\)}{\texttt{src}(x,y)}{otherwise}\f]
+    THRESH_MASK = 7,
+    THRESH_OTSU = 8, //!< flag, use Otsu algorithm to choose the optimal threshold value
+    THRESH_TRIANGLE = 16 //!< flag, use Triangle algorithm to choose the optimal threshold value
 };
 
 //! adaptive threshold algorithm
 //! @see adaptiveThreshold
-enum AdaptiveThresholdTypes {
+enum AdaptiveThresholdTypes
+{
     /** the threshold value \f$T(x,y)\f$ is a mean of the \f$\texttt{blockSize} \times
     \texttt{blockSize}\f$ neighborhood of \f$(x, y)\f$ minus C */
-    ADAPTIVE_THRESH_MEAN_C     = 0,
+    ADAPTIVE_THRESH_MEAN_C = 0,
     /** the threshold value \f$T(x, y)\f$ is a weighted sum (cross-correlation with a Gaussian
     window) of the \f$\texttt{blockSize} \times \texttt{blockSize}\f$ neighborhood of \f$(x, y)\f$
     minus C . The default sigma (standard deviation) is used for the specified blockSize . See
@@ -330,30 +342,33 @@ enum AdaptiveThresholdTypes {
 };
 
 //! class of the pixel in GrabCut algorithm
-enum GrabCutClasses {
-    GC_BGD    = 0,  //!< an obvious background pixels
-    GC_FGD    = 1,  //!< an obvious foreground (object) pixel
-    GC_PR_BGD = 2,  //!< a possible background pixel
-    GC_PR_FGD = 3   //!< a possible foreground pixel
+enum GrabCutClasses
+{
+    GC_BGD = 0, //!< an obvious background pixels
+    GC_FGD = 1, //!< an obvious foreground (object) pixel
+    GC_PR_BGD = 2, //!< a possible background pixel
+    GC_PR_FGD = 3 //!< a possible foreground pixel
 };
 
 //! GrabCut algorithm flags
-enum GrabCutModes {
+enum GrabCutModes
+{
     /** The function initializes the state and the mask using the provided rectangle. After that it
     runs iterCount iterations of the algorithm. */
-    GC_INIT_WITH_RECT  = 0,
+    GC_INIT_WITH_RECT = 0,
     /** The function initializes the state using the provided mask. Note that GC_INIT_WITH_RECT
     and GC_INIT_WITH_MASK can be combined. Then, all the pixels outside of the ROI are
     automatically initialized with GC_BGD .*/
-    GC_INIT_WITH_MASK  = 1,
+    GC_INIT_WITH_MASK = 1,
     /** The value means that the algorithm should just resume. */
-    GC_EVAL            = 2,
+    GC_EVAL = 2,
     /** The value means that the algorithm should just run the grabCut algorithm (a single iteration) with the fixed model */
     GC_EVAL_FREEZE_MODEL = 3
 };
 
 //! distanceTransform algorithm flags
-enum DistanceTransformLabelTypes {
+enum DistanceTransformLabelTypes
+{
     /** each connected component of zeros in src (as well as all the non-zero pixels closest to the
     connected component) will be assigned the same label */
     DIST_LABEL_CCOMP = 0,
@@ -362,14 +377,15 @@ enum DistanceTransformLabelTypes {
 };
 
 //! floodfill algorithm flags
-enum FloodFillFlags {
+enum FloodFillFlags
+{
     /** If set, the difference between the current pixel and seed pixel is considered. Otherwise,
     the difference between neighbor pixels is considered (that is, the range is floating). */
     FLOODFILL_FIXED_RANGE = 1 << 16,
     /** If set, the function does not change the image ( newVal is ignored), and only fills the
     mask with the value specified in bits 8-16 of flags as described above. This option only make
     sense in function variants that have the mask parameter. */
-    FLOODFILL_MASK_ONLY   = 1 << 17
+    FLOODFILL_MASK_ONLY = 1 << 17
 };
 
 //! @} imgproc_misc
@@ -378,52 +394,56 @@ enum FloodFillFlags {
 //! @{
 
 //! connected components algorithm output formats
-enum ConnectedComponentsTypes {
-    CC_STAT_LEFT   = 0, //!< The leftmost (x) coordinate which is the inclusive start of the bounding
-                        //!< box in the horizontal direction.
-    CC_STAT_TOP    = 1, //!< The topmost (y) coordinate which is the inclusive start of the bounding
-                        //!< box in the vertical direction.
-    CC_STAT_WIDTH  = 2, //!< The horizontal size of the bounding box
+enum ConnectedComponentsTypes
+{
+    CC_STAT_LEFT = 0, //!< The leftmost (x) coordinate which is the inclusive start of the bounding
+    //!< box in the horizontal direction.
+    CC_STAT_TOP = 1, //!< The topmost (y) coordinate which is the inclusive start of the bounding
+    //!< box in the vertical direction.
+    CC_STAT_WIDTH = 2, //!< The horizontal size of the bounding box
     CC_STAT_HEIGHT = 3, //!< The vertical size of the bounding box
-    CC_STAT_AREA   = 4, //!< The total area (in pixels) of the connected component
-    CC_STAT_MAX    = 5
+    CC_STAT_AREA = 4, //!< The total area (in pixels) of the connected component
+    CC_STAT_MAX = 5
 };
 
 //! connected components algorithm
-enum ConnectedComponentsAlgorithmsTypes {
-    CCL_WU      = 0,  //!< SAUF algorithm for 8-way connectivity, SAUF algorithm for 4-way connectivity
+enum ConnectedComponentsAlgorithmsTypes
+{
+    CCL_WU = 0, //!< SAUF algorithm for 8-way connectivity, SAUF algorithm for 4-way connectivity
     CCL_DEFAULT = -1, //!< BBDT algorithm for 8-way connectivity, SAUF algorithm for 4-way connectivity
-    CCL_GRANA   = 1   //!< BBDT algorithm for 8-way connectivity, SAUF algorithm for 4-way connectivity
+    CCL_GRANA = 1 //!< BBDT algorithm for 8-way connectivity, SAUF algorithm for 4-way connectivity
 };
 
 //! mode of the contour retrieval algorithm
-enum RetrievalModes {
+enum RetrievalModes
+{
     /** retrieves only the extreme outer contours. It sets `hierarchy[i][2]=hierarchy[i][3]=-1` for
     all the contours. */
-    RETR_EXTERNAL  = 0,
+    RETR_EXTERNAL = 0,
     /** retrieves all of the contours without establishing any hierarchical relationships. */
-    RETR_LIST      = 1,
+    RETR_LIST = 1,
     /** retrieves all of the contours and organizes them into a two-level hierarchy. At the top
     level, there are external boundaries of the components. At the second level, there are
     boundaries of the holes. If there is another contour inside a hole of a connected component, it
     is still put at the top level. */
-    RETR_CCOMP     = 2,
+    RETR_CCOMP = 2,
     /** retrieves all of the contours and reconstructs a full hierarchy of nested contours.*/
-    RETR_TREE      = 3,
+    RETR_TREE = 3,
     RETR_FLOODFILL = 4 //!<
 };
 
 //! the contour approximation algorithm
-enum ContourApproximationModes {
+enum ContourApproximationModes
+{
     /** stores absolutely all the contour points. That is, any 2 subsequent points (x1,y1) and
     (x2,y2) of the contour will be either horizontal, vertical or diagonal neighbors, that is,
     max(abs(x1-x2),abs(y2-y1))==1. */
-    CHAIN_APPROX_NONE      = 1,
+    CHAIN_APPROX_NONE = 1,
     /** compresses horizontal, vertical, and diagonal segments and leaves only their end points.
     For example, an up-right rectangular contour is encoded with 4 points. */
-    CHAIN_APPROX_SIMPLE    = 2,
+    CHAIN_APPROX_SIMPLE = 2,
     /** applies one of the flavors of the Teh-Chin chain approximation algorithm @cite TehChin89 */
-    CHAIN_APPROX_TC89_L1   = 3,
+    CHAIN_APPROX_TC89_L1 = 3,
     /** applies one of the flavors of the Teh-Chin chain approximation algorithm @cite TehChin89 */
     CHAIN_APPROX_TC89_KCOS = 4
 };
@@ -436,22 +456,25 @@ enum ContourApproximationModes {
 
 and \f$h^A_i, h^B_i\f$ are the Hu moments of \f$A\f$ and \f$B\f$ , respectively.
 */
-enum ShapeMatchModes {
-    CONTOURS_MATCH_I1  =1, //!< \f[I_1(A,B) =  \sum _{i=1...7}  \left |  \frac{1}{m^A_i} -  \frac{1}{m^B_i} \right |\f]
-    CONTOURS_MATCH_I2  =2, //!< \f[I_2(A,B) =  \sum _{i=1...7}  \left | m^A_i - m^B_i  \right |\f]
-    CONTOURS_MATCH_I3  =3  //!< \f[I_3(A,B) =  \max _{i=1...7}  \frac{ \left| m^A_i - m^B_i \right| }{ \left| m^A_i \right| }\f]
+enum ShapeMatchModes
+{
+    CONTOURS_MATCH_I1 = 1, //!< \f[I_1(A,B) =  \sum _{i=1...7}  \left |  \frac{1}{m^A_i} -  \frac{1}{m^B_i} \right |\f]
+    CONTOURS_MATCH_I2 = 2, //!< \f[I_2(A,B) =  \sum _{i=1...7}  \left | m^A_i - m^B_i  \right |\f]
+    CONTOURS_MATCH_I3 =
+        3 //!< \f[I_3(A,B) =  \max _{i=1...7}  \frac{ \left| m^A_i - m^B_i \right| }{ \left| m^A_i \right| }\f]
 };
 
 //! @} imgproc_shape
 
 //! Variants of a Hough transform
-enum HoughModes {
+enum HoughModes
+{
 
     /** classical or standard Hough transform. Every line is represented by two floating-point
     numbers \f$(\rho, \theta)\f$ , where \f$\rho\f$ is a distance between (0,0) point and the line,
     and \f$\theta\f$ is the angle between x-axis and the normal to the line. Thus, the matrix must
     be (the created sequence will be) of CV_32FC2 type */
-    HOUGH_STANDARD      = 0,
+    HOUGH_STANDARD = 0,
     /** probabilistic Hough transform (more efficient in case if the picture contains a few long
     linear segments). It returns line segments rather than the whole line. Each segment is
     represented by starting and ending points, and the matrix must be (the created sequence will
@@ -459,135 +482,140 @@ enum HoughModes {
     HOUGH_PROBABILISTIC = 1,
     /** multi-scale variant of the classical Hough transform. The lines are encoded the same way as
     HOUGH_STANDARD. */
-    HOUGH_MULTI_SCALE   = 2,
-    HOUGH_GRADIENT      = 3 //!< basically *21HT*, described in @cite Yuen90
+    HOUGH_MULTI_SCALE = 2,
+    HOUGH_GRADIENT = 3 //!< basically *21HT*, described in @cite Yuen90
 };
 
 //! Variants of Line Segment %Detector
 //! @ingroup imgproc_feature
-enum LineSegmentDetectorModes {
+enum LineSegmentDetectorModes
+{
     LSD_REFINE_NONE = 0, //!< No refinement applied
-    LSD_REFINE_STD  = 1, //!< Standard refinement is applied. E.g. breaking arches into smaller straighter line approximations.
-    LSD_REFINE_ADV  = 2  //!< Advanced refinement. Number of false alarms is calculated, lines are
-                         //!< refined through increase of precision, decrement in size, etc.
+    LSD_REFINE_STD =
+        1, //!< Standard refinement is applied. E.g. breaking arches into smaller straighter line approximations.
+    LSD_REFINE_ADV = 2 //!< Advanced refinement. Number of false alarms is calculated, lines are
+    //!< refined through increase of precision, decrement in size, etc.
 };
 
 /** Histogram comparison methods
   @ingroup imgproc_hist
 */
-enum HistCompMethods {
+enum HistCompMethods
+{
     /** Correlation
     \f[d(H_1,H_2) =  \frac{\sum_I (H_1(I) - \bar{H_1}) (H_2(I) - \bar{H_2})}{\sqrt{\sum_I(H_1(I) - \bar{H_1})^2 \sum_I(H_2(I) - \bar{H_2})^2}}\f]
     where
     \f[\bar{H_k} =  \frac{1}{N} \sum _J H_k(J)\f]
     and \f$N\f$ is a total number of histogram bins. */
-    HISTCMP_CORREL        = 0,
+    HISTCMP_CORREL = 0,
     /** Chi-Square
     \f[d(H_1,H_2) =  \sum _I  \frac{\left(H_1(I)-H_2(I)\right)^2}{H_1(I)}\f] */
-    HISTCMP_CHISQR        = 1,
+    HISTCMP_CHISQR = 1,
     /** Intersection
     \f[d(H_1,H_2) =  \sum _I  \min (H_1(I), H_2(I))\f] */
-    HISTCMP_INTERSECT     = 2,
+    HISTCMP_INTERSECT = 2,
     /** Bhattacharyya distance
     (In fact, OpenCV computes Hellinger distance, which is related to Bhattacharyya coefficient.)
     \f[d(H_1,H_2) =  \sqrt{1 - \frac{1}{\sqrt{\bar{H_1} \bar{H_2} N^2}} \sum_I \sqrt{H_1(I) \cdot H_2(I)}}\f] */
     HISTCMP_BHATTACHARYYA = 3,
-    HISTCMP_HELLINGER     = HISTCMP_BHATTACHARYYA, //!< Synonym for HISTCMP_BHATTACHARYYA
+    HISTCMP_HELLINGER = HISTCMP_BHATTACHARYYA, //!< Synonym for HISTCMP_BHATTACHARYYA
     /** Alternative Chi-Square
     \f[d(H_1,H_2) =  2 * \sum _I  \frac{\left(H_1(I)-H_2(I)\right)^2}{H_1(I)+H_2(I)}\f]
     This alternative formula is regularly used for texture comparison. See e.g. @cite Puzicha1997 */
-    HISTCMP_CHISQR_ALT    = 4,
+    HISTCMP_CHISQR_ALT = 4,
     /** Kullback-Leibler divergence
     \f[d(H_1,H_2) = \sum _I H_1(I) \log \left(\frac{H_1(I)}{H_2(I)}\right)\f] */
-    HISTCMP_KL_DIV        = 5
+    HISTCMP_KL_DIV = 5
 };
 
 /** the color conversion code
 @see @ref imgproc_color_conversions
 @ingroup imgproc_misc
  */
-enum ColorConversionCodes {
-    COLOR_BGR2BGRA     = 0, //!< add alpha channel to RGB or BGR image
-    COLOR_RGB2RGBA     = COLOR_BGR2BGRA,
+enum ColorConversionCodes
+{
+    COLOR_BGR2BGRA = 0, //!< add alpha channel to RGB or BGR image
+    COLOR_RGB2RGBA = COLOR_BGR2BGRA,
 
-    COLOR_BGRA2BGR     = 1, //!< remove alpha channel from RGB or BGR image
-    COLOR_RGBA2RGB     = COLOR_BGRA2BGR,
+    COLOR_BGRA2BGR = 1, //!< remove alpha channel from RGB or BGR image
+    COLOR_RGBA2RGB = COLOR_BGRA2BGR,
 
-    COLOR_BGR2RGBA     = 2, //!< convert between RGB and BGR color spaces (with or without alpha channel)
-    COLOR_RGB2BGRA     = COLOR_BGR2RGBA,
+    COLOR_BGR2RGBA = 2, //!< convert between RGB and BGR color spaces (with or without alpha channel)
+    COLOR_RGB2BGRA = COLOR_BGR2RGBA,
 
-    COLOR_RGBA2BGR     = 3,
-    COLOR_BGRA2RGB     = COLOR_RGBA2BGR,
+    COLOR_RGBA2BGR = 3,
+    COLOR_BGRA2RGB = COLOR_RGBA2BGR,
 
-    COLOR_BGR2RGB      = 4,
-    COLOR_RGB2BGR      = COLOR_BGR2RGB,
+    COLOR_BGR2RGB = 4,
+    COLOR_RGB2BGR = COLOR_BGR2RGB,
 
-    COLOR_BGRA2RGBA    = 5,
-    COLOR_RGBA2BGRA    = COLOR_BGRA2RGBA,
+    COLOR_BGRA2RGBA = 5,
+    COLOR_RGBA2BGRA = COLOR_BGRA2RGBA,
 
-    COLOR_BGR2GRAY     = 6, //!< convert between RGB/BGR and grayscale, @ref color_convert_rgb_gray "color conversions"
-    COLOR_RGB2GRAY     = 7,
-    COLOR_GRAY2BGR     = 8,
-    COLOR_GRAY2RGB     = COLOR_GRAY2BGR,
-    COLOR_GRAY2BGRA    = 9,
-    COLOR_GRAY2RGBA    = COLOR_GRAY2BGRA,
-    COLOR_BGRA2GRAY    = 10,
-    COLOR_RGBA2GRAY    = 11,
+    COLOR_BGR2GRAY = 6, //!< convert between RGB/BGR and grayscale, @ref color_convert_rgb_gray "color conversions"
+    COLOR_RGB2GRAY = 7,
+    COLOR_GRAY2BGR = 8,
+    COLOR_GRAY2RGB = COLOR_GRAY2BGR,
+    COLOR_GRAY2BGRA = 9,
+    COLOR_GRAY2RGBA = COLOR_GRAY2BGRA,
+    COLOR_BGRA2GRAY = 10,
+    COLOR_RGBA2GRAY = 11,
 
-    COLOR_BGR2BGR565   = 12, //!< convert between RGB/BGR and BGR565 (16-bit images)
-    COLOR_RGB2BGR565   = 13,
-    COLOR_BGR5652BGR   = 14,
-    COLOR_BGR5652RGB   = 15,
-    COLOR_BGRA2BGR565  = 16,
-    COLOR_RGBA2BGR565  = 17,
-    COLOR_BGR5652BGRA  = 18,
-    COLOR_BGR5652RGBA  = 19,
+    COLOR_BGR2BGR565 = 12, //!< convert between RGB/BGR and BGR565 (16-bit images)
+    COLOR_RGB2BGR565 = 13,
+    COLOR_BGR5652BGR = 14,
+    COLOR_BGR5652RGB = 15,
+    COLOR_BGRA2BGR565 = 16,
+    COLOR_RGBA2BGR565 = 17,
+    COLOR_BGR5652BGRA = 18,
+    COLOR_BGR5652RGBA = 19,
 
-    COLOR_GRAY2BGR565  = 20, //!< convert between grayscale to BGR565 (16-bit images)
-    COLOR_BGR5652GRAY  = 21,
+    COLOR_GRAY2BGR565 = 20, //!< convert between grayscale to BGR565 (16-bit images)
+    COLOR_BGR5652GRAY = 21,
 
-    COLOR_BGR2BGR555   = 22,  //!< convert between RGB/BGR and BGR555 (16-bit images)
-    COLOR_RGB2BGR555   = 23,
-    COLOR_BGR5552BGR   = 24,
-    COLOR_BGR5552RGB   = 25,
-    COLOR_BGRA2BGR555  = 26,
-    COLOR_RGBA2BGR555  = 27,
-    COLOR_BGR5552BGRA  = 28,
-    COLOR_BGR5552RGBA  = 29,
+    COLOR_BGR2BGR555 = 22, //!< convert between RGB/BGR and BGR555 (16-bit images)
+    COLOR_RGB2BGR555 = 23,
+    COLOR_BGR5552BGR = 24,
+    COLOR_BGR5552RGB = 25,
+    COLOR_BGRA2BGR555 = 26,
+    COLOR_RGBA2BGR555 = 27,
+    COLOR_BGR5552BGRA = 28,
+    COLOR_BGR5552RGBA = 29,
 
-    COLOR_GRAY2BGR555  = 30, //!< convert between grayscale and BGR555 (16-bit images)
-    COLOR_BGR5552GRAY  = 31,
+    COLOR_GRAY2BGR555 = 30, //!< convert between grayscale and BGR555 (16-bit images)
+    COLOR_BGR5552GRAY = 31,
 
-    COLOR_BGR2XYZ      = 32, //!< convert RGB/BGR to CIE XYZ, @ref color_convert_rgb_xyz "color conversions"
-    COLOR_RGB2XYZ      = 33,
-    COLOR_XYZ2BGR      = 34,
-    COLOR_XYZ2RGB      = 35,
+    COLOR_BGR2XYZ = 32, //!< convert RGB/BGR to CIE XYZ, @ref color_convert_rgb_xyz "color conversions"
+    COLOR_RGB2XYZ = 33,
+    COLOR_XYZ2BGR = 34,
+    COLOR_XYZ2RGB = 35,
 
-    COLOR_BGR2YCrCb    = 36, //!< convert RGB/BGR to luma-chroma (aka YCC), @ref color_convert_rgb_ycrcb "color conversions"
-    COLOR_RGB2YCrCb    = 37,
-    COLOR_YCrCb2BGR    = 38,
-    COLOR_YCrCb2RGB    = 39,
+    COLOR_BGR2YCrCb = 36, //!< convert RGB/BGR to luma-chroma (aka YCC), @ref color_convert_rgb_ycrcb "color conversions"
+    COLOR_RGB2YCrCb = 37,
+    COLOR_YCrCb2BGR = 38,
+    COLOR_YCrCb2RGB = 39,
 
-    COLOR_BGR2HSV      = 40, //!< convert RGB/BGR to HSV (hue saturation value), @ref color_convert_rgb_hsv "color conversions"
-    COLOR_RGB2HSV      = 41,
+    COLOR_BGR2HSV = 40, //!< convert RGB/BGR to HSV (hue saturation value), @ref color_convert_rgb_hsv "color conversions"
+    COLOR_RGB2HSV = 41,
 
-    COLOR_BGR2Lab      = 44, //!< convert RGB/BGR to CIE Lab, @ref color_convert_rgb_lab "color conversions"
-    COLOR_RGB2Lab      = 45,
+    COLOR_BGR2Lab = 44, //!< convert RGB/BGR to CIE Lab, @ref color_convert_rgb_lab "color conversions"
+    COLOR_RGB2Lab = 45,
 
-    COLOR_BGR2Luv      = 50, //!< convert RGB/BGR to CIE Luv, @ref color_convert_rgb_luv "color conversions"
-    COLOR_RGB2Luv      = 51,
-    COLOR_BGR2HLS      = 52, //!< convert RGB/BGR to HLS (hue lightness saturation), @ref color_convert_rgb_hls "color conversions"
-    COLOR_RGB2HLS      = 53,
+    COLOR_BGR2Luv = 50, //!< convert RGB/BGR to CIE Luv, @ref color_convert_rgb_luv "color conversions"
+    COLOR_RGB2Luv = 51,
+    COLOR_BGR2HLS =
+        52, //!< convert RGB/BGR to HLS (hue lightness saturation), @ref color_convert_rgb_hls "color conversions"
+    COLOR_RGB2HLS = 53,
 
-    COLOR_HSV2BGR      = 54, //!< backward conversions to RGB/BGR
-    COLOR_HSV2RGB      = 55,
+    COLOR_HSV2BGR = 54, //!< backward conversions to RGB/BGR
+    COLOR_HSV2RGB = 55,
 
-    COLOR_Lab2BGR      = 56,
-    COLOR_Lab2RGB      = 57,
-    COLOR_Luv2BGR      = 58,
-    COLOR_Luv2RGB      = 59,
-    COLOR_HLS2BGR      = 60,
-    COLOR_HLS2RGB      = 61,
+    COLOR_Lab2BGR = 56,
+    COLOR_Lab2RGB = 57,
+    COLOR_Luv2BGR = 58,
+    COLOR_Luv2RGB = 59,
+    COLOR_HLS2BGR = 60,
+    COLOR_HLS2RGB = 61,
 
     COLOR_BGR2HSV_FULL = 66, //!<
     COLOR_RGB2HSV_FULL = 67,
@@ -599,28 +627,28 @@ enum ColorConversionCodes {
     COLOR_HLS2BGR_FULL = 72,
     COLOR_HLS2RGB_FULL = 73,
 
-    COLOR_LBGR2Lab     = 74,
-    COLOR_LRGB2Lab     = 75,
-    COLOR_LBGR2Luv     = 76,
-    COLOR_LRGB2Luv     = 77,
+    COLOR_LBGR2Lab = 74,
+    COLOR_LRGB2Lab = 75,
+    COLOR_LBGR2Luv = 76,
+    COLOR_LRGB2Luv = 77,
 
-    COLOR_Lab2LBGR     = 78,
-    COLOR_Lab2LRGB     = 79,
-    COLOR_Luv2LBGR     = 80,
-    COLOR_Luv2LRGB     = 81,
+    COLOR_Lab2LBGR = 78,
+    COLOR_Lab2LRGB = 79,
+    COLOR_Luv2LBGR = 80,
+    COLOR_Luv2LRGB = 81,
 
-    COLOR_BGR2YUV      = 82, //!< convert between RGB/BGR and YUV
-    COLOR_RGB2YUV      = 83,
-    COLOR_YUV2BGR      = 84,
-    COLOR_YUV2RGB      = 85,
+    COLOR_BGR2YUV = 82, //!< convert between RGB/BGR and YUV
+    COLOR_RGB2YUV = 83,
+    COLOR_YUV2BGR = 84,
+    COLOR_YUV2RGB = 85,
 
     //! YUV 4:2:0 family to RGB
-    COLOR_YUV2RGB_NV12  = 90,
-    COLOR_YUV2BGR_NV12  = 91,
-    COLOR_YUV2RGB_NV21  = 92,
-    COLOR_YUV2BGR_NV21  = 93,
-    COLOR_YUV420sp2RGB  = COLOR_YUV2RGB_NV21,
-    COLOR_YUV420sp2BGR  = COLOR_YUV2BGR_NV21,
+    COLOR_YUV2RGB_NV12 = 90,
+    COLOR_YUV2BGR_NV12 = 91,
+    COLOR_YUV2RGB_NV21 = 92,
+    COLOR_YUV2BGR_NV21 = 93,
+    COLOR_YUV420sp2RGB = COLOR_YUV2RGB_NV21,
+    COLOR_YUV420sp2BGR = COLOR_YUV2BGR_NV21,
 
     COLOR_YUV2RGBA_NV12 = 94,
     COLOR_YUV2BGRA_NV12 = 95,
@@ -629,14 +657,14 @@ enum ColorConversionCodes {
     COLOR_YUV420sp2RGBA = COLOR_YUV2RGBA_NV21,
     COLOR_YUV420sp2BGRA = COLOR_YUV2BGRA_NV21,
 
-    COLOR_YUV2RGB_YV12  = 98,
-    COLOR_YUV2BGR_YV12  = 99,
-    COLOR_YUV2RGB_IYUV  = 100,
-    COLOR_YUV2BGR_IYUV  = 101,
-    COLOR_YUV2RGB_I420  = COLOR_YUV2RGB_IYUV,
-    COLOR_YUV2BGR_I420  = COLOR_YUV2BGR_IYUV,
-    COLOR_YUV420p2RGB   = COLOR_YUV2RGB_YV12,
-    COLOR_YUV420p2BGR   = COLOR_YUV2BGR_YV12,
+    COLOR_YUV2RGB_YV12 = 98,
+    COLOR_YUV2BGR_YV12 = 99,
+    COLOR_YUV2RGB_IYUV = 100,
+    COLOR_YUV2BGR_IYUV = 101,
+    COLOR_YUV2RGB_I420 = COLOR_YUV2RGB_IYUV,
+    COLOR_YUV2BGR_I420 = COLOR_YUV2BGR_IYUV,
+    COLOR_YUV420p2RGB = COLOR_YUV2RGB_YV12,
+    COLOR_YUV420p2BGR = COLOR_YUV2BGR_YV12,
 
     COLOR_YUV2RGBA_YV12 = 102,
     COLOR_YUV2BGRA_YV12 = 103,
@@ -644,17 +672,17 @@ enum ColorConversionCodes {
     COLOR_YUV2BGRA_IYUV = 105,
     COLOR_YUV2RGBA_I420 = COLOR_YUV2RGBA_IYUV,
     COLOR_YUV2BGRA_I420 = COLOR_YUV2BGRA_IYUV,
-    COLOR_YUV420p2RGBA  = COLOR_YUV2RGBA_YV12,
-    COLOR_YUV420p2BGRA  = COLOR_YUV2BGRA_YV12,
+    COLOR_YUV420p2RGBA = COLOR_YUV2RGBA_YV12,
+    COLOR_YUV420p2BGRA = COLOR_YUV2BGRA_YV12,
 
-    COLOR_YUV2GRAY_420  = 106,
+    COLOR_YUV2GRAY_420 = 106,
     COLOR_YUV2GRAY_NV21 = COLOR_YUV2GRAY_420,
     COLOR_YUV2GRAY_NV12 = COLOR_YUV2GRAY_420,
     COLOR_YUV2GRAY_YV12 = COLOR_YUV2GRAY_420,
     COLOR_YUV2GRAY_IYUV = COLOR_YUV2GRAY_420,
     COLOR_YUV2GRAY_I420 = COLOR_YUV2GRAY_420,
     COLOR_YUV420sp2GRAY = COLOR_YUV2GRAY_420,
-    COLOR_YUV420p2GRAY  = COLOR_YUV2GRAY_420,
+    COLOR_YUV420p2GRAY = COLOR_YUV2GRAY_420,
 
     //! YUV 4:2:2 family to RGB
     COLOR_YUV2RGB_UYVY = 107,
@@ -703,21 +731,21 @@ enum ColorConversionCodes {
     COLOR_YUV2GRAY_YUNV = COLOR_YUV2GRAY_YUY2,
 
     //! alpha premultiplication
-    COLOR_RGBA2mRGBA    = 125,
-    COLOR_mRGBA2RGBA    = 126,
+    COLOR_RGBA2mRGBA = 125,
+    COLOR_mRGBA2RGBA = 126,
 
     //! RGB to YUV 4:2:0 family
-    COLOR_RGB2YUV_I420  = 127,
-    COLOR_BGR2YUV_I420  = 128,
-    COLOR_RGB2YUV_IYUV  = COLOR_RGB2YUV_I420,
-    COLOR_BGR2YUV_IYUV  = COLOR_BGR2YUV_I420,
+    COLOR_RGB2YUV_I420 = 127,
+    COLOR_BGR2YUV_I420 = 128,
+    COLOR_RGB2YUV_IYUV = COLOR_RGB2YUV_I420,
+    COLOR_BGR2YUV_IYUV = COLOR_BGR2YUV_I420,
 
     COLOR_RGBA2YUV_I420 = 129,
     COLOR_BGRA2YUV_I420 = 130,
     COLOR_RGBA2YUV_IYUV = COLOR_RGBA2YUV_I420,
     COLOR_BGRA2YUV_IYUV = COLOR_BGRA2YUV_I420,
-    COLOR_RGB2YUV_YV12  = 131,
-    COLOR_BGR2YUV_YV12  = 132,
+    COLOR_RGB2YUV_YV12 = 131,
+    COLOR_BGR2YUV_YV12 = 132,
     COLOR_RGBA2YUV_YV12 = 133,
     COLOR_BGRA2YUV_YV12 = 134,
 
@@ -749,15 +777,15 @@ enum ColorConversionCodes {
     COLOR_BayerGR2RGB_VNG = COLOR_BayerGB2BGR_VNG,
 
     //! Edge-Aware Demosaicing
-    COLOR_BayerBG2BGR_EA  = 135,
-    COLOR_BayerGB2BGR_EA  = 136,
-    COLOR_BayerRG2BGR_EA  = 137,
-    COLOR_BayerGR2BGR_EA  = 138,
+    COLOR_BayerBG2BGR_EA = 135,
+    COLOR_BayerGB2BGR_EA = 136,
+    COLOR_BayerRG2BGR_EA = 137,
+    COLOR_BayerGR2BGR_EA = 138,
 
-    COLOR_BayerBG2RGB_EA  = COLOR_BayerRG2BGR_EA,
-    COLOR_BayerGB2RGB_EA  = COLOR_BayerGR2BGR_EA,
-    COLOR_BayerRG2RGB_EA  = COLOR_BayerBG2BGR_EA,
-    COLOR_BayerGR2RGB_EA  = COLOR_BayerGB2BGR_EA,
+    COLOR_BayerBG2RGB_EA = COLOR_BayerRG2BGR_EA,
+    COLOR_BayerGB2RGB_EA = COLOR_BayerGR2BGR_EA,
+    COLOR_BayerRG2RGB_EA = COLOR_BayerBG2BGR_EA,
+    COLOR_BayerGR2RGB_EA = COLOR_BayerGB2BGR_EA,
 
     //! Demosaicing with alpha channel
     COLOR_BayerBG2BGRA = 139,
@@ -770,42 +798,45 @@ enum ColorConversionCodes {
     COLOR_BayerRG2RGBA = COLOR_BayerBG2BGRA,
     COLOR_BayerGR2RGBA = COLOR_BayerGB2BGRA,
 
-    COLOR_COLORCVT_MAX  = 143
+    COLOR_COLORCVT_MAX = 143
 };
 
 /** types of intersection between rectangles
 @ingroup imgproc_shape
 */
-enum RectanglesIntersectTypes {
+enum RectanglesIntersectTypes
+{
     INTERSECT_NONE = 0, //!< No intersection
-    INTERSECT_PARTIAL  = 1, //!< There is a partial intersection
-    INTERSECT_FULL  = 2 //!< One of the rectangle is fully enclosed in the other
+    INTERSECT_PARTIAL = 1, //!< There is a partial intersection
+    INTERSECT_FULL = 2 //!< One of the rectangle is fully enclosed in the other
 };
 
 
 /** types of line
 @ingroup imgproc_draw
 */
-enum LineTypes {
-    FILLED  = -1,
-    LINE_4  = 4, //!< 4-connected line
-    LINE_8  = 8, //!< 8-connected line
+enum LineTypes
+{
+    FILLED = -1,
+    LINE_4 = 4, //!< 4-connected line
+    LINE_8 = 8, //!< 8-connected line
     LINE_AA = 16 //!< antialiased line
 };
 
 /** Only a subset of Hershey fonts <https://en.wikipedia.org/wiki/Hershey_fonts> are supported
 @ingroup imgproc_draw
 */
-enum HersheyFonts {
-    FONT_HERSHEY_SIMPLEX        = 0, //!< normal size sans-serif font
-    FONT_HERSHEY_PLAIN          = 1, //!< small size sans-serif font
-    FONT_HERSHEY_DUPLEX         = 2, //!< normal size sans-serif font (more complex than FONT_HERSHEY_SIMPLEX)
-    FONT_HERSHEY_COMPLEX        = 3, //!< normal size serif font
-    FONT_HERSHEY_TRIPLEX        = 4, //!< normal size serif font (more complex than FONT_HERSHEY_COMPLEX)
-    FONT_HERSHEY_COMPLEX_SMALL  = 5, //!< smaller version of FONT_HERSHEY_COMPLEX
+enum HersheyFonts
+{
+    FONT_HERSHEY_SIMPLEX = 0, //!< normal size sans-serif font
+    FONT_HERSHEY_PLAIN = 1, //!< small size sans-serif font
+    FONT_HERSHEY_DUPLEX = 2, //!< normal size sans-serif font (more complex than FONT_HERSHEY_SIMPLEX)
+    FONT_HERSHEY_COMPLEX = 3, //!< normal size serif font
+    FONT_HERSHEY_TRIPLEX = 4, //!< normal size serif font (more complex than FONT_HERSHEY_COMPLEX)
+    FONT_HERSHEY_COMPLEX_SMALL = 5, //!< smaller version of FONT_HERSHEY_COMPLEX
     FONT_HERSHEY_SCRIPT_SIMPLEX = 6, //!< hand-writing style font
     FONT_HERSHEY_SCRIPT_COMPLEX = 7, //!< more complex variant of FONT_HERSHEY_SCRIPT_SIMPLEX
-    FONT_ITALIC                 = 16 //!< flag for italic font
+    FONT_ITALIC = 16 //!< flag for italic font
 };
 
 /** Possible set of marker types used for the cv::drawMarker function
@@ -813,13 +844,13 @@ enum HersheyFonts {
 */
 enum MarkerTypes
 {
-    MARKER_CROSS = 0,           //!< A crosshair marker shape
-    MARKER_TILTED_CROSS = 1,    //!< A 45 degree tilted crosshair marker shape
-    MARKER_STAR = 2,            //!< A star marker shape, combination of cross and tilted cross
-    MARKER_DIAMOND = 3,         //!< A diamond marker shape
-    MARKER_SQUARE = 4,          //!< A square marker shape
-    MARKER_TRIANGLE_UP = 5,     //!< An upwards pointing triangle marker shape
-    MARKER_TRIANGLE_DOWN = 6    //!< A downwards pointing triangle marker shape
+    MARKER_CROSS = 0, //!< A crosshair marker shape
+    MARKER_TILTED_CROSS = 1, //!< A 45 degree tilted crosshair marker shape
+    MARKER_STAR = 2, //!< A star marker shape, combination of cross and tilted cross
+    MARKER_DIAMOND = 3, //!< A diamond marker shape
+    MARKER_SQUARE = 4, //!< A square marker shape
+    MARKER_TRIANGLE_UP = 5, //!< An upwards pointing triangle marker shape
+    MARKER_TRIANGLE_DOWN = 6 //!< A downwards pointing triangle marker shape
 };
 
 //! finds arbitrary template in the grayscale image using Generalized Hough Transform
@@ -828,11 +859,13 @@ class CV_EXPORTS_W GeneralizedHough : public Algorithm
 public:
     //! set template to search
     CV_WRAP virtual void setTemplate(InputArray templ, Point templCenter = Point(-1, -1)) = 0;
-    CV_WRAP virtual void setTemplate(InputArray edges, InputArray dx, InputArray dy, Point templCenter = Point(-1, -1)) = 0;
+    CV_WRAP virtual void setTemplate(InputArray edges, InputArray dx, InputArray dy,
+                                     Point templCenter = Point(-1, -1)) = 0;
 
     //! find template on image
     CV_WRAP virtual void detect(InputArray image, OutputArray positions, OutputArray votes = noArray()) = 0;
-    CV_WRAP virtual void detect(InputArray edges, InputArray dx, InputArray dy, OutputArray positions, OutputArray votes = noArray()) = 0;
+    CV_WRAP virtual void detect(InputArray edges, InputArray dx, InputArray dy, OutputArray positions,
+                                OutputArray votes = noArray()) = 0;
 
     //! Canny low threshold.
     CV_WRAP virtual void setCannyLowThresh(int cannyLowThresh) = 0;
@@ -965,23 +998,27 @@ class CV_EXPORTS_W Subdiv2D
 {
 public:
     /** Subdiv2D point location cases */
-    enum { PTLOC_ERROR        = -2, //!< Point location error
-           PTLOC_OUTSIDE_RECT = -1, //!< Point outside the subdivision bounding rect
-           PTLOC_INSIDE       = 0, //!< Point inside some facet
-           PTLOC_VERTEX       = 1, //!< Point coincides with one of the subdivision vertices
-           PTLOC_ON_EDGE      = 2  //!< Point on some edge
-         };
+    enum
+    {
+        PTLOC_ERROR = -2, //!< Point location error
+        PTLOC_OUTSIDE_RECT = -1, //!< Point outside the subdivision bounding rect
+        PTLOC_INSIDE = 0, //!< Point inside some facet
+        PTLOC_VERTEX = 1, //!< Point coincides with one of the subdivision vertices
+        PTLOC_ON_EDGE = 2 //!< Point on some edge
+    };
 
     /** Subdiv2D edge type navigation (see: getEdge()) */
-    enum { NEXT_AROUND_ORG   = 0x00,
-           NEXT_AROUND_DST   = 0x22,
-           PREV_AROUND_ORG   = 0x11,
-           PREV_AROUND_DST   = 0x33,
-           NEXT_AROUND_LEFT  = 0x13,
-           NEXT_AROUND_RIGHT = 0x31,
-           PREV_AROUND_LEFT  = 0x20,
-           PREV_AROUND_RIGHT = 0x02
-         };
+    enum
+    {
+        NEXT_AROUND_ORG = 0x00,
+        NEXT_AROUND_DST = 0x22,
+        PREV_AROUND_ORG = 0x11,
+        PREV_AROUND_DST = 0x33,
+        NEXT_AROUND_LEFT = 0x13,
+        NEXT_AROUND_RIGHT = 0x31,
+        PREV_AROUND_LEFT = 0x20,
+        PREV_AROUND_RIGHT = 0x02
+    };
 
     /** creates an empty Subdiv2D object.
     To create a new empty Delaunay subdivision you need to use the #initDelaunay function.
@@ -1095,7 +1132,8 @@ public:
     @param facetCenters Output vector of the Voroni facets center points.
 
      */
-    CV_WRAP void getVoronoiFacetList(const std::vector<int>& idx, CV_OUT std::vector<std::vector<Point2f> >& facetList,
+    CV_WRAP void getVoronoiFacetList(const std::vector<int>& idx,
+                                     CV_OUT std::vector<std::vector<Point2f>>& facetList,
                                      CV_OUT std::vector<Point2f>& facetCenters);
 
     /** @brief Returns vertex location from vertex ID.
@@ -1125,7 +1163,7 @@ public:
 
     @returns edge ID related to the input edge.
      */
-    CV_WRAP int getEdge( int edge, int nextEdgeType ) const;
+    CV_WRAP int getEdge(int edge, int nextEdgeType) const;
 
     /** @brief Returns next edge around the edge origin.
 
@@ -1174,10 +1212,10 @@ protected:
     void deleteEdge(int edge);
     int newPoint(Point2f pt, bool isvirtual, int firstEdge = 0);
     void deletePoint(int vtx);
-    void setEdgePoints( int edge, int orgPt, int dstPt );
-    void splice( int edgeA, int edgeB );
-    int connectEdges( int edgeA, int edgeB );
-    void swapEdges( int edge );
+    void setEdgePoints(int edge, int orgPt, int dstPt);
+    void splice(int edgeA, int edgeB);
+    int connectEdges(int edgeA, int edgeB);
+    void swapEdges(int edge);
     int isRightOf(Point2f pt, int edge) const;
     void calcVoronoi();
     void clearVoronoi();
@@ -1186,7 +1224,7 @@ protected:
     struct CV_EXPORTS Vertex
     {
         Vertex();
-        Vertex(Point2f pt, bool _isvirtual, int _firstEdge=0);
+        Vertex(Point2f pt, bool _isvirtual, int _firstEdge = 0);
         bool isvirtual() const;
         bool isfree() const;
 
@@ -1237,7 +1275,6 @@ following the algorithm described at @cite Rafael12 .
 class CV_EXPORTS_W LineSegmentDetector : public Algorithm
 {
 public:
-
     /** @brief Finds lines in the input image.
 
     This is the output of the default parameters of the algorithm on the above shown image.
@@ -1258,9 +1295,8 @@ public:
     - 1 corresponds to 0.1 mean false alarms
     This vector will be calculated only when the objects type is #LSD_REFINE_ADV.
     */
-    CV_WRAP virtual void detect(InputArray _image, OutputArray _lines,
-                        OutputArray width = noArray(), OutputArray prec = noArray(),
-                        OutputArray nfa = noArray()) = 0;
+    CV_WRAP virtual void detect(InputArray _image, OutputArray _lines, OutputArray width = noArray(),
+                                OutputArray prec = noArray(), OutputArray nfa = noArray()) = 0;
 
     /** @brief Draws the line segments on a given image.
     @param _image The image, where the lines will be drawn. Should be bigger or equal to the image,
@@ -1277,9 +1313,10 @@ public:
     @param _image Optional image, where the lines will be drawn. The image should be color(3-channel)
     in order for lines1 and lines2 to be drawn in the above mentioned colors.
      */
-    CV_WRAP virtual int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = noArray()) = 0;
+    CV_WRAP virtual int compareSegments(const Size& size, InputArray lines1, InputArray lines2,
+                                        InputOutputArray _image = noArray()) = 0;
 
-    virtual ~LineSegmentDetector() { }
+    virtual ~LineSegmentDetector() {}
 };
 
 /** @brief Creates a smart pointer to a LineSegmentDetector object and initializes it.
@@ -1297,10 +1334,10 @@ is chosen.
 @param _density_th Minimal density of aligned region points in the enclosing rectangle.
 @param _n_bins Number of bins in pseudo-ordering of gradient modulus.
  */
-CV_EXPORTS_W Ptr<LineSegmentDetector> createLineSegmentDetector(
-    int _refine = LSD_REFINE_STD, double _scale = 0.8,
-    double _sigma_scale = 0.6, double _quant = 2.0, double _ang_th = 22.5,
-    double _log_eps = 0, double _density_th = 0.7, int _n_bins = 1024);
+CV_EXPORTS_W Ptr<LineSegmentDetector> createLineSegmentDetector(int _refine = LSD_REFINE_STD, double _scale = 0.8,
+                                                                double _sigma_scale = 0.6, double _quant = 2.0,
+                                                                double _ang_th = 22.5, double _log_eps = 0,
+                                                                double _density_th = 0.7, int _n_bins = 1024);
 
 //! @} imgproc_feature
 
@@ -1325,7 +1362,7 @@ You may also use the higher-level GaussianBlur.
 @param ktype Type of filter coefficients. It can be CV_32F or CV_64F .
 @sa  sepFilter2D, getDerivKernels, getStructuringElement, GaussianBlur
  */
-CV_EXPORTS_W Mat getGaussianKernel( int ksize, double sigma, int ktype = CV_64F );
+CV_EXPORTS_W Mat getGaussianKernel(int ksize, double sigma, int ktype = CV_64F);
 
 /** @brief Returns filter coefficients for computing spatial image derivatives.
 
@@ -1345,9 +1382,8 @@ compute derivatives of an 8-bit image, store the results in a 16-bit image, and 
 all the fractional bits, you may want to set normalize=false .
 @param ktype Type of filter coefficients. It can be CV_32f or CV_64F .
  */
-CV_EXPORTS_W void getDerivKernels( OutputArray kx, OutputArray ky,
-                                   int dx, int dy, int ksize,
-                                   bool normalize = false, int ktype = CV_32F );
+CV_EXPORTS_W void getDerivKernels(OutputArray kx, OutputArray ky, int dx, int dy, int ksize,
+                                  bool normalize = false, int ktype = CV_32F);
 
 /** @brief Returns Gabor filter coefficients.
 
@@ -1362,8 +1398,8 @@ Filter](http://en.wikipedia.org/wiki/Gabor_filter).
 @param psi Phase offset.
 @param ktype Type of filter coefficients. It can be CV_32F or CV_64F .
  */
-CV_EXPORTS_W Mat getGaborKernel( Size ksize, double sigma, double theta, double lambd,
-                                 double gamma, double psi = CV_PI*0.5, int ktype = CV_64F );
+CV_EXPORTS_W Mat getGaborKernel(Size ksize, double sigma, double theta, double lambd, double gamma,
+                                double psi = CV_PI * 0.5, int ktype = CV_64F);
 
 //! returns "magic" border value for erosion and dilation. It is automatically transformed to Scalar::all(-DBL_MAX) for dilation.
 static inline Scalar morphologyDefaultBorderValue() { return Scalar::all(DBL_MAX); }
@@ -1381,7 +1417,7 @@ anchor is at the center. Note that only the shape of a cross-shaped element depe
 position. In other cases the anchor just regulates how much the result of the morphological
 operation is shifted.
  */
-CV_EXPORTS_W Mat getStructuringElement(int shape, Size ksize, Point anchor = Point(-1,-1));
+CV_EXPORTS_W Mat getStructuringElement(int shape, Size ksize, Point anchor = Point(-1, -1));
 
 /** @example samples/cpp/tutorial_code/ImgProc/Smoothing/Smoothing.cpp
 Sample code for simple filters
@@ -1403,7 +1439,7 @@ CV_8U, CV_16U, or CV_32F, for larger aperture sizes, it can only be CV_8U.
 @param ksize aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
 @sa  bilateralFilter, blur, boxFilter, GaussianBlur
  */
-CV_EXPORTS_W void medianBlur( InputArray src, OutputArray dst, int ksize );
+CV_EXPORTS_W void medianBlur(InputArray src, OutputArray dst, int ksize);
 
 /** @brief Blurs an image using a Gaussian filter.
 
@@ -1425,9 +1461,8 @@ sigmaX, and sigmaY.
 
 @sa  sepFilter2D, filter2D, blur, boxFilter, bilateralFilter, medianBlur
  */
-CV_EXPORTS_W void GaussianBlur( InputArray src, OutputArray dst, Size ksize,
-                                double sigmaX, double sigmaY = 0,
-                                int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void GaussianBlur(InputArray src, OutputArray dst, Size ksize, double sigmaX, double sigmaY = 0,
+                               int borderType = BORDER_DEFAULT);
 
 /** @brief Applies the bilateral filter to an image.
 
@@ -1457,9 +1492,8 @@ farther pixels will influence each other as long as their colors are close enoug
 proportional to sigmaSpace.
 @param borderType border mode used to extrapolate pixels outside of the image, see #BorderTypes
  */
-CV_EXPORTS_W void bilateralFilter( InputArray src, OutputArray dst, int d,
-                                   double sigmaColor, double sigmaSpace,
-                                   int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void bilateralFilter(InputArray src, OutputArray dst, int d, double sigmaColor, double sigmaSpace,
+                                  int borderType = BORDER_DEFAULT);
 
 /** @brief Blurs an image using the box filter.
 
@@ -1485,10 +1519,8 @@ center.
 @param borderType border mode used to extrapolate pixels outside of the image, see #BorderTypes
 @sa  blur, bilateralFilter, GaussianBlur, medianBlur, integral
  */
-CV_EXPORTS_W void boxFilter( InputArray src, OutputArray dst, int ddepth,
-                             Size ksize, Point anchor = Point(-1,-1),
-                             bool normalize = true,
-                             int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void boxFilter(InputArray src, OutputArray dst, int ddepth, Size ksize, Point anchor = Point(-1, -1),
+                            bool normalize = true, int borderType = BORDER_DEFAULT);
 
 /** @brief Calculates the normalized sum of squares of the pixel values overlapping the filter.
 
@@ -1508,10 +1540,8 @@ center.
 @param borderType border mode used to extrapolate pixels outside of the image, see #BorderTypes
 @sa boxFilter
 */
-CV_EXPORTS_W void sqrBoxFilter( InputArray _src, OutputArray _dst, int ddepth,
-                                Size ksize, Point anchor = Point(-1, -1),
-                                bool normalize = true,
-                                int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void sqrBoxFilter(InputArray _src, OutputArray _dst, int ddepth, Size ksize,
+                               Point anchor = Point(-1, -1), bool normalize = true, int borderType = BORDER_DEFAULT);
 
 /** @brief Blurs an image using the normalized box filter.
 
@@ -1531,9 +1561,8 @@ center.
 @param borderType border mode used to extrapolate pixels outside of the image, see #BorderTypes
 @sa  boxFilter, bilateralFilter, GaussianBlur, medianBlur
  */
-CV_EXPORTS_W void blur( InputArray src, OutputArray dst,
-                        Size ksize, Point anchor = Point(-1,-1),
-                        int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void blur(InputArray src, OutputArray dst, Size ksize, Point anchor = Point(-1, -1),
+                       int borderType = BORDER_DEFAULT);
 
 /** @brief Convolves an image with the kernel.
 
@@ -1565,9 +1594,8 @@ is at the kernel center.
 @param borderType pixel extrapolation method, see #BorderTypes
 @sa  sepFilter2D, dft, matchTemplate
  */
-CV_EXPORTS_W void filter2D( InputArray src, OutputArray dst, int ddepth,
-                            InputArray kernel, Point anchor = Point(-1,-1),
-                            double delta = 0, int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void filter2D(InputArray src, OutputArray dst, int ddepth, InputArray kernel,
+                           Point anchor = Point(-1, -1), double delta = 0, int borderType = BORDER_DEFAULT);
 
 /** @brief Applies a separable linear filter to an image.
 
@@ -1586,10 +1614,8 @@ is at the kernel center.
 @param borderType Pixel extrapolation method, see #BorderTypes
 @sa  filter2D, Sobel, GaussianBlur, boxFilter, blur
  */
-CV_EXPORTS_W void sepFilter2D( InputArray src, OutputArray dst, int ddepth,
-                               InputArray kernelX, InputArray kernelY,
-                               Point anchor = Point(-1,-1),
-                               double delta = 0, int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void sepFilter2D(InputArray src, OutputArray dst, int ddepth, InputArray kernelX, InputArray kernelY,
+                              Point anchor = Point(-1, -1), double delta = 0, int borderType = BORDER_DEFAULT);
 
 /** @example samples/cpp/tutorial_code/ImgTrans/Sobel_Demo.cpp
 Sample code using Sobel and/or Scharr OpenCV functions to make a simple Edge Detector
@@ -1639,10 +1665,8 @@ applied (see #getDerivKernels for details).
 @param borderType pixel extrapolation method, see #BorderTypes
 @sa  Scharr, Laplacian, sepFilter2D, filter2D, GaussianBlur, cartToPolar
  */
-CV_EXPORTS_W void Sobel( InputArray src, OutputArray dst, int ddepth,
-                         int dx, int dy, int ksize = 3,
-                         double scale = 1, double delta = 0,
-                         int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void Sobel(InputArray src, OutputArray dst, int ddepth, int dx, int dy, int ksize = 3,
+                        double scale = 1, double delta = 0, int borderType = BORDER_DEFAULT);
 
 /** @brief Calculates the first order image derivative in both x and y using a Sobel operator
 
@@ -1662,9 +1686,8 @@ Sobel( src, dy, CV_16SC1, 0, 1, 3 );
 @sa Sobel
  */
 
-CV_EXPORTS_W void spatialGradient( InputArray src, OutputArray dx,
-                                   OutputArray dy, int ksize = 3,
-                                   int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void spatialGradient(InputArray src, OutputArray dx, OutputArray dy, int ksize = 3,
+                                  int borderType = BORDER_DEFAULT);
 
 /** @brief Calculates the first x- or y- image derivative using Scharr operator.
 
@@ -1688,9 +1711,8 @@ applied (see #getDerivKernels for details).
 @param borderType pixel extrapolation method, see #BorderTypes
 @sa  cartToPolar
  */
-CV_EXPORTS_W void Scharr( InputArray src, OutputArray dst, int ddepth,
-                          int dx, int dy, double scale = 1, double delta = 0,
-                          int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void Scharr(InputArray src, OutputArray dst, int ddepth, int dx, int dy, double scale = 1,
+                         double delta = 0, int borderType = BORDER_DEFAULT);
 
 /** @example samples/cpp/laplace.cpp
 An example using Laplace transformations for edge detection
@@ -1719,9 +1741,8 @@ applied. See #getDerivKernels for details.
 @param borderType Pixel extrapolation method, see #BorderTypes
 @sa  Sobel, Scharr
  */
-CV_EXPORTS_W void Laplacian( InputArray src, OutputArray dst, int ddepth,
-                             int ksize = 1, double scale = 1, double delta = 0,
-                             int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void Laplacian(InputArray src, OutputArray dst, int ddepth, int ksize = 1, double scale = 1,
+                            double delta = 0, int borderType = BORDER_DEFAULT);
 
 //! @} imgproc_filter
 
@@ -1751,9 +1772,8 @@ largest value is used to find initial segments of strong edges. See
 L2gradient=true ), or whether the default \f$L_1\f$ norm \f$=|dI/dx|+|dI/dy|\f$ is enough (
 L2gradient=false ).
  */
-CV_EXPORTS_W void Canny( InputArray image, OutputArray edges,
-                         double threshold1, double threshold2,
-                         int apertureSize = 3, bool L2gradient = false );
+CV_EXPORTS_W void Canny(InputArray image, OutputArray edges, double threshold1, double threshold2,
+                        int apertureSize = 3, bool L2gradient = false);
 
 /** \overload
 
@@ -1769,10 +1789,8 @@ Finds edges in an image using the Canny algorithm with custom image gradient.
 L2gradient=true ), or whether the default \f$L_1\f$ norm \f$=|dI/dx|+|dI/dy|\f$ is enough (
 L2gradient=false ).
  */
-CV_EXPORTS_W void Canny( InputArray dx, InputArray dy,
-                         OutputArray edges,
-                         double threshold1, double threshold2,
-                         bool L2gradient = false );
+CV_EXPORTS_W void Canny(InputArray dx, InputArray dy, OutputArray edges, double threshold1, double threshold2,
+                        bool L2gradient = false);
 
 /** @brief Calculates the minimal eigenvalue of gradient matrices for corner detection.
 
@@ -1787,9 +1805,8 @@ src .
 @param ksize Aperture parameter for the Sobel operator.
 @param borderType Pixel extrapolation method. See #BorderTypes.
  */
-CV_EXPORTS_W void cornerMinEigenVal( InputArray src, OutputArray dst,
-                                     int blockSize, int ksize = 3,
-                                     int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void cornerMinEigenVal(InputArray src, OutputArray dst, int blockSize, int ksize = 3,
+                                    int borderType = BORDER_DEFAULT);
 
 /** @brief Harris corner detector.
 
@@ -1810,9 +1827,8 @@ size as src .
 @param k Harris detector free parameter. See the formula above.
 @param borderType Pixel extrapolation method. See #BorderTypes.
  */
-CV_EXPORTS_W void cornerHarris( InputArray src, OutputArray dst, int blockSize,
-                                int ksize, double k,
-                                int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void cornerHarris(InputArray src, OutputArray dst, int blockSize, int ksize, double k,
+                               int borderType = BORDER_DEFAULT);
 
 /** @brief Calculates eigenvalues and eigenvectors of image blocks for corner detection.
 
@@ -1840,9 +1856,8 @@ The output of the function can be used for robust edge or corner detection.
 
 @sa  cornerMinEigenVal, cornerHarris, preCornerDetect
  */
-CV_EXPORTS_W void cornerEigenValsAndVecs( InputArray src, OutputArray dst,
-                                          int blockSize, int ksize,
-                                          int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void cornerEigenValsAndVecs(InputArray src, OutputArray dst, int blockSize, int ksize,
+                                         int borderType = BORDER_DEFAULT);
 
 /** @brief Calculates a feature map for corner detection.
 
@@ -1867,8 +1882,7 @@ The corners can be found as local maximums of the functions, as shown below:
 @param ksize %Aperture size of the Sobel .
 @param borderType Pixel extrapolation method. See #BorderTypes.
  */
-CV_EXPORTS_W void preCornerDetect( InputArray src, OutputArray dst, int ksize,
-                                   int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void preCornerDetect(InputArray src, OutputArray dst, int ksize, int borderType = BORDER_DEFAULT);
 
 /** @brief Refines the corner locations.
 
@@ -1910,9 +1924,8 @@ a size.
 the process of corner position refinement stops either after criteria.maxCount iterations or when
 the corner position moves by less than criteria.epsilon on some iteration.
  */
-CV_EXPORTS_W void cornerSubPix( InputArray image, InputOutputArray corners,
-                                Size winSize, Size zeroZone,
-                                TermCriteria criteria );
+CV_EXPORTS_W void cornerSubPix(InputArray image, InputOutputArray corners, Size winSize, Size zeroZone,
+                               TermCriteria criteria);
 
 /** @brief Determines strong corners on an image.
 
@@ -1958,16 +1971,13 @@ or #cornerMinEigenVal.
 @sa  cornerMinEigenVal, cornerHarris, calcOpticalFlowPyrLK, estimateRigidTransform,
  */
 
-CV_EXPORTS_W void goodFeaturesToTrack( InputArray image, OutputArray corners,
-                                     int maxCorners, double qualityLevel, double minDistance,
-                                     InputArray mask = noArray(), int blockSize = 3,
-                                     bool useHarrisDetector = false, double k = 0.04 );
+CV_EXPORTS_W void goodFeaturesToTrack(InputArray image, OutputArray corners, int maxCorners, double qualityLevel,
+                                      double minDistance, InputArray mask = noArray(), int blockSize = 3,
+                                      bool useHarrisDetector = false, double k = 0.04);
 
-CV_EXPORTS_W void goodFeaturesToTrack( InputArray image, OutputArray corners,
-                                     int maxCorners, double qualityLevel, double minDistance,
-                                     InputArray mask, int blockSize,
-                                     int gradientSize, bool useHarrisDetector = false,
-                                     double k = 0.04 );
+CV_EXPORTS_W void goodFeaturesToTrack(InputArray image, OutputArray corners, int maxCorners, double qualityLevel,
+                                      double minDistance, InputArray mask, int blockSize, int gradientSize,
+                                      bool useHarrisDetector = false, double k = 0.04);
 /** @example samples/cpp/tutorial_code/ImgTrans/houghlines.cpp
 An example using the Hough line detector
 ![Sample input image](Hough_Lines_Tutorial_Original_Image.jpg) ![Output image](Hough_Lines_Tutorial_Result.jpg)
@@ -1999,10 +2009,8 @@ Must fall between 0 and max_theta.
 @param max_theta For standard and multi-scale Hough transform, maximum angle to check for lines.
 Must fall between min_theta and CV_PI.
  */
-CV_EXPORTS_W void HoughLines( InputArray image, OutputArray lines,
-                              double rho, double theta, int threshold,
-                              double srn = 0, double stn = 0,
-                              double min_theta = 0, double max_theta = CV_PI );
+CV_EXPORTS_W void HoughLines(InputArray image, OutputArray lines, double rho, double theta, int threshold,
+                             double srn = 0, double stn = 0, double min_theta = 0, double max_theta = CV_PI);
 
 /** @brief Finds line segments in a binary image using the probabilistic Hough transform.
 
@@ -2032,9 +2040,8 @@ votes ( \f$>\texttt{threshold}\f$ ).
 
 @sa LineSegmentDetector
  */
-CV_EXPORTS_W void HoughLinesP( InputArray image, OutputArray lines,
-                               double rho, double theta, int threshold,
-                               double minLineLength = 0, double maxLineGap = 0 );
+CV_EXPORTS_W void HoughLinesP(InputArray image, OutputArray lines, double rho, double theta, int threshold,
+                              double minLineLength = 0, double maxLineGap = 0);
 
 /** @brief Finds lines in a set of points using the standard Hough transform.
 
@@ -2053,9 +2060,9 @@ votes ( \f$>\texttt{threshold}\f$ )
 @param max_theta Maximum angle value of the accumulator in radians.
 @param theta_step Angle resolution of the accumulator in radians.
  */
-CV_EXPORTS_W void HoughLinesPointSet( InputArray _point, OutputArray _lines, int lines_max, int threshold,
-                                      double min_rho, double max_rho, double rho_step,
-                                      double min_theta, double max_theta, double theta_step );
+CV_EXPORTS_W void HoughLinesPointSet(InputArray _point, OutputArray _lines, int lines_max, int threshold,
+                                     double min_rho, double max_rho, double rho_step, double min_theta,
+                                     double max_theta, double theta_step);
 
 /** @example samples/cpp/tutorial_code/ImgTrans/houghcircles.cpp
 An example using the Hough circle detector
@@ -2095,10 +2102,8 @@ centers without finding the radius.
 
 @sa fitEllipse, minEnclosingCircle
  */
-CV_EXPORTS_W void HoughCircles( InputArray image, OutputArray circles,
-                               int method, double dp, double minDist,
-                               double param1 = 100, double param2 = 100,
-                               int minRadius = 0, int maxRadius = 0 );
+CV_EXPORTS_W void HoughCircles(InputArray image, OutputArray circles, int method, double dp, double minDist,
+                               double param1 = 100, double param2 = 100, int minRadius = 0, int maxRadius = 0);
 
 //! @} imgproc_feature
 
@@ -2133,10 +2138,9 @@ anchor is at the element center.
 @param borderValue border value in case of a constant border
 @sa  dilate, morphologyEx, getStructuringElement
  */
-CV_EXPORTS_W void erode( InputArray src, OutputArray dst, InputArray kernel,
-                         Point anchor = Point(-1,-1), int iterations = 1,
-                         int borderType = BORDER_CONSTANT,
-                         const Scalar& borderValue = morphologyDefaultBorderValue() );
+CV_EXPORTS_W void erode(InputArray src, OutputArray dst, InputArray kernel, Point anchor = Point(-1, -1),
+                        int iterations = 1, int borderType = BORDER_CONSTANT,
+                        const Scalar& borderValue = morphologyDefaultBorderValue());
 
 /** @example samples/cpp/tutorial_code/ImgProc/Morphology_1.cpp
 Erosion and Dilation sample code
@@ -2165,10 +2169,9 @@ anchor is at the element center.
 @param borderValue border value in case of a constant border
 @sa  erode, morphologyEx, getStructuringElement
  */
-CV_EXPORTS_W void dilate( InputArray src, OutputArray dst, InputArray kernel,
-                          Point anchor = Point(-1,-1), int iterations = 1,
-                          int borderType = BORDER_CONSTANT,
-                          const Scalar& borderValue = morphologyDefaultBorderValue() );
+CV_EXPORTS_W void dilate(InputArray src, OutputArray dst, InputArray kernel, Point anchor = Point(-1, -1),
+                         int iterations = 1, int borderType = BORDER_CONSTANT,
+                         const Scalar& borderValue = morphologyDefaultBorderValue());
 
 /** @brief Performs advanced morphological transformations.
 
@@ -2194,11 +2197,9 @@ meaning.
 For instance, an opening operation (#MORPH_OPEN) with two iterations is equivalent to apply
 successively: erode -> erode -> dilate -> dilate (and not erode -> dilate -> erode -> dilate).
  */
-CV_EXPORTS_W void morphologyEx( InputArray src, OutputArray dst,
-                                int op, InputArray kernel,
-                                Point anchor = Point(-1,-1), int iterations = 1,
-                                int borderType = BORDER_CONSTANT,
-                                const Scalar& borderValue = morphologyDefaultBorderValue() );
+CV_EXPORTS_W void morphologyEx(InputArray src, OutputArray dst, int op, InputArray kernel,
+                               Point anchor = Point(-1, -1), int iterations = 1, int borderType = BORDER_CONSTANT,
+                               const Scalar& borderValue = morphologyDefaultBorderValue());
 
 //! @} imgproc_filter
 
@@ -2239,9 +2240,8 @@ src.size(), fx, and fy; the type of dst is the same as of src.
 
 @sa  warpAffine, warpPerspective, remap
  */
-CV_EXPORTS_W void resize( InputArray src, OutputArray dst,
-                          Size dsize, double fx = 0, double fy = 0,
-                          int interpolation = INTER_LINEAR );
+CV_EXPORTS_W void resize(InputArray src, OutputArray dst, Size dsize, double fx = 0, double fy = 0,
+                         int interpolation = INTER_LINEAR);
 
 /** @brief Applies an affine transformation to an image.
 
@@ -2267,11 +2267,8 @@ the "outliers" in the source image are not modified by the function.
 
 @sa  warpPerspective, resize, remap, getRectSubPix, transform
  */
-CV_EXPORTS_W void warpAffine( InputArray src, OutputArray dst,
-                              InputArray M, Size dsize,
-                              int flags = INTER_LINEAR,
-                              int borderMode = BORDER_CONSTANT,
-                              const Scalar& borderValue = Scalar());
+CV_EXPORTS_W void warpAffine(InputArray src, OutputArray dst, InputArray M, Size dsize, int flags = INTER_LINEAR,
+                             int borderMode = BORDER_CONSTANT, const Scalar& borderValue = Scalar());
 
 /** @example samples/cpp/warpPerspective_demo.cpp
 An example program shows using cv::findHomography and cv::warpPerspective for image warping
@@ -2299,11 +2296,9 @@ optional flag #WARP_INVERSE_MAP, that sets M as the inverse transformation (
 
 @sa  warpAffine, resize, remap, getRectSubPix, perspectiveTransform
  */
-CV_EXPORTS_W void warpPerspective( InputArray src, OutputArray dst,
-                                   InputArray M, Size dsize,
-                                   int flags = INTER_LINEAR,
-                                   int borderMode = BORDER_CONSTANT,
-                                   const Scalar& borderValue = Scalar());
+CV_EXPORTS_W void warpPerspective(InputArray src, OutputArray dst, InputArray M, Size dsize,
+                                  int flags = INTER_LINEAR, int borderMode = BORDER_CONSTANT,
+                                  const Scalar& borderValue = Scalar());
 
 /** @brief Applies a generic geometrical transformation to an image.
 
@@ -2337,10 +2332,8 @@ corresponds to the "outliers" in the source image are not modified by the functi
 @note
 Due to current implementation limitations the size of an input and output images should be less than 32767x32767.
  */
-CV_EXPORTS_W void remap( InputArray src, OutputArray dst,
-                         InputArray map1, InputArray map2,
-                         int interpolation, int borderMode = BORDER_CONSTANT,
-                         const Scalar& borderValue = Scalar());
+CV_EXPORTS_W void remap(InputArray src, OutputArray dst, InputArray map1, InputArray map2, int interpolation,
+                        int borderMode = BORDER_CONSTANT, const Scalar& borderValue = Scalar());
 
 /** @brief Converts image transformation maps from one representation to another.
 
@@ -2372,9 +2365,8 @@ nearest-neighbor or for a more complex interpolation.
 
 @sa  remap, undistort, initUndistortRectifyMap
  */
-CV_EXPORTS_W void convertMaps( InputArray map1, InputArray map2,
-                               OutputArray dstmap1, OutputArray dstmap2,
-                               int dstmap1type, bool nninterpolation = false );
+CV_EXPORTS_W void convertMaps(InputArray map1, InputArray map2, OutputArray dstmap1, OutputArray dstmap2,
+                              int dstmap1type, bool nninterpolation = false);
 
 /** @brief Calculates an affine matrix of 2D rotation.
 
@@ -2395,7 +2387,7 @@ coordinate origin is assumed to be the top-left corner).
 
 @sa  getAffineTransform, warpAffine, transform
  */
-CV_EXPORTS_W Mat getRotationMatrix2D( Point2f center, double angle, double scale );
+CV_EXPORTS_W Mat getRotationMatrix2D(Point2f center, double angle, double scale);
 
 /** @brief Calculates an affine transform from three pairs of the corresponding points.
 
@@ -2412,7 +2404,7 @@ where
 
 @sa  warpAffine, transform
  */
-CV_EXPORTS Mat getAffineTransform( const Point2f src[], const Point2f dst[] );
+CV_EXPORTS Mat getAffineTransform(const Point2f src[], const Point2f dst[]);
 
 /** @brief Inverts an affine transformation.
 
@@ -2425,7 +2417,7 @@ The result is also a \f$2 \times 3\f$ matrix of the same type as M.
 @param M Original affine transformation.
 @param iM Output reverse affine transformation.
  */
-CV_EXPORTS_W void invertAffineTransform( InputArray M, OutputArray iM );
+CV_EXPORTS_W void invertAffineTransform(InputArray M, OutputArray iM);
 
 /** @brief Calculates a perspective transform from four pairs of the corresponding points.
 
@@ -2449,7 +2441,7 @@ CV_EXPORTS_W Mat getPerspectiveTransform(InputArray src, InputArray dst, int sol
 CV_EXPORTS Mat getPerspectiveTransform(const Point2f src[], const Point2f dst[], int solveMethod = DECOMP_LU);
 
 
-CV_EXPORTS_W Mat getAffineTransform( InputArray src, InputArray dst );
+CV_EXPORTS_W Mat getAffineTransform(InputArray src, InputArray dst);
 
 /** @brief Retrieves a pixel rectangle from an image with sub-pixel accuracy.
 
@@ -2471,8 +2463,8 @@ source image. The center must be inside the image.
 
 @sa  warpAffine, warpPerspective
  */
-CV_EXPORTS_W void getRectSubPix( InputArray image, Size patchSize,
-                                 Point2f center, OutputArray patch, int patchType = -1 );
+CV_EXPORTS_W void getRectSubPix(InputArray image, Size patchSize, Point2f center, OutputArray patch,
+                                int patchType = -1);
 
 /** @example samples/cpp/polar_transforms.cpp
 An example using the cv::linearPolar and cv::logPolar operations
@@ -2517,8 +2509,7 @@ rotation-invariant template matching, for object tracking and so forth.
 @sa cv::linearPolar
 @endinternal
 */
-CV_EXPORTS_W void logPolar( InputArray src, OutputArray dst,
-                            Point2f center, double M, int flags );
+CV_EXPORTS_W void logPolar(InputArray src, OutputArray dst, Point2f center, double M, int flags);
 
 /** @brief Remaps an image to polar coordinates space.
 
@@ -2558,8 +2549,7 @@ and
 @sa cv::logPolar
 @endinternal
 */
-CV_EXPORTS_W void linearPolar( InputArray src, OutputArray dst,
-                               Point2f center, double maxRadius, int flags );
+CV_EXPORTS_W void linearPolar(InputArray src, OutputArray dst, Point2f center, double maxRadius, int flags);
 
 
 /** \brief Remaps an image to polar or semilog-polar coordinates space
@@ -2649,8 +2639,8 @@ In addiction, to calculate the original coordinate from a polar mapped coordinat
 
 @sa cv::remap
 */
-CV_EXPORTS_W void warpPolar(InputArray src, OutputArray dst, Size dsize,
-                            Point2f center, double maxRadius, int flags);
+CV_EXPORTS_W void warpPolar(InputArray src, OutputArray dst, Size dsize, Point2f center, double maxRadius,
+                            int flags);
 
 
 //! @} imgproc_transform
@@ -2659,11 +2649,11 @@ CV_EXPORTS_W void warpPolar(InputArray src, OutputArray dst, Size dsize,
 //! @{
 
 /** @overload */
-CV_EXPORTS_W void integral( InputArray src, OutputArray sum, int sdepth = -1 );
+CV_EXPORTS_W void integral(InputArray src, OutputArray sum, int sdepth = -1);
 
 /** @overload */
-CV_EXPORTS_AS(integral2) void integral( InputArray src, OutputArray sum,
-                                        OutputArray sqsum, int sdepth = -1, int sqdepth = -1 );
+CV_EXPORTS_AS(integral2)
+void integral(InputArray src, OutputArray sum, OutputArray sqsum, int sdepth = -1, int sqdepth = -1);
 
 /** @brief Calculates the integral of an image.
 
@@ -2699,9 +2689,9 @@ the same data type as sum.
 CV_64F.
 @param sqdepth desired depth of the integral image of squared pixel values, CV_32F or CV_64F.
  */
-CV_EXPORTS_AS(integral3) void integral( InputArray src, OutputArray sum,
-                                        OutputArray sqsum, OutputArray tilted,
-                                        int sdepth = -1, int sqdepth = -1 );
+CV_EXPORTS_AS(integral3)
+void integral(InputArray src, OutputArray sum, OutputArray sqsum, OutputArray tilted, int sdepth = -1,
+              int sqdepth = -1);
 
 //! @} imgproc_misc
 
@@ -2725,8 +2715,7 @@ viewed by a still camera and for the further foreground-background segmentation.
 
 @sa  accumulateSquare, accumulateProduct, accumulateWeighted
  */
-CV_EXPORTS_W void accumulate( InputArray src, InputOutputArray dst,
-                              InputArray mask = noArray() );
+CV_EXPORTS_W void accumulate(InputArray src, InputOutputArray dst, InputArray mask = noArray());
 
 /** @brief Adds the square of a source image to the accumulator image.
 
@@ -2744,8 +2733,7 @@ floating-point.
 
 @sa  accumulateSquare, accumulateProduct, accumulateWeighted
  */
-CV_EXPORTS_W void accumulateSquare( InputArray src, InputOutputArray dst,
-                                    InputArray mask = noArray() );
+CV_EXPORTS_W void accumulateSquare(InputArray src, InputOutputArray dst, InputArray mask = noArray());
 
 /** @brief Adds the per-element product of two input images to the accumulator image.
 
@@ -2763,8 +2751,8 @@ floating-point.
 
 @sa  accumulate, accumulateSquare, accumulateWeighted
  */
-CV_EXPORTS_W void accumulateProduct( InputArray src1, InputArray src2,
-                                     InputOutputArray dst, InputArray mask=noArray() );
+CV_EXPORTS_W void accumulateProduct(InputArray src1, InputArray src2, InputOutputArray dst,
+                                    InputArray mask = noArray());
 
 /** @brief Updates a running average.
 
@@ -2784,8 +2772,8 @@ floating-point.
 
 @sa  accumulate, accumulateSquare, accumulateProduct
  */
-CV_EXPORTS_W void accumulateWeighted( InputArray src, InputOutputArray dst,
-                                      double alpha, InputArray mask = noArray() );
+CV_EXPORTS_W void accumulateWeighted(InputArray src, InputOutputArray dst, double alpha,
+                                     InputArray mask = noArray());
 
 /** @brief The function is used to detect translational shifts that occur between two images.
 
@@ -2822,8 +2810,8 @@ peak) and will be smaller when there are multiple peaks.
 
 @sa dft, getOptimalDFTSize, idft, mulSpectrums createHanningWindow
  */
-CV_EXPORTS_W Point2d phaseCorrelate(InputArray src1, InputArray src2,
-                                    InputArray window = noArray(), CV_OUT double* response = 0);
+CV_EXPORTS_W Point2d phaseCorrelate(InputArray src1, InputArray src2, InputArray window = noArray(),
+                                    CV_OUT double* response = 0);
 
 /** @brief This function computes a Hanning window coefficients in two dimensions.
 
@@ -2871,8 +2859,7 @@ types.
 
 @sa  adaptiveThreshold, findContours, compare, min, max
  */
-CV_EXPORTS_W double threshold( InputArray src, OutputArray dst,
-                               double thresh, double maxval, int type );
+CV_EXPORTS_W double threshold(InputArray src, OutputArray dst, double thresh, double maxval, int type);
 
 
 /** @brief Applies an adaptive threshold to an array.
@@ -2900,9 +2887,8 @@ is positive but may be zero or negative as well.
 
 @sa  threshold, blur, GaussianBlur
  */
-CV_EXPORTS_W void adaptiveThreshold( InputArray src, OutputArray dst,
-                                     double maxValue, int adaptiveMethod,
-                                     int thresholdType, int blockSize, double C );
+CV_EXPORTS_W void adaptiveThreshold(InputArray src, OutputArray dst, double maxValue, int adaptiveMethod,
+                                    int thresholdType, int blockSize, double C);
 
 //! @} imgproc_misc
 
@@ -2932,8 +2918,8 @@ Then, it downsamples the image by rejecting even rows and columns.
 @param dstsize size of the output image.
 @param borderType Pixel extrapolation method, see #BorderTypes (#BORDER_CONSTANT isn't supported)
  */
-CV_EXPORTS_W void pyrDown( InputArray src, OutputArray dst,
-                           const Size& dstsize = Size(), int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void pyrDown(InputArray src, OutputArray dst, const Size& dstsize = Size(),
+                          int borderType = BORDER_DEFAULT);
 
 /** @brief Upsamples an image and then blurs it.
 
@@ -2952,8 +2938,8 @@ pyrDown multiplied by 4.
 @param dstsize size of the output image.
 @param borderType Pixel extrapolation method, see #BorderTypes (only #BORDER_DEFAULT is supported)
  */
-CV_EXPORTS_W void pyrUp( InputArray src, OutputArray dst,
-                         const Size& dstsize = Size(), int borderType = BORDER_DEFAULT );
+CV_EXPORTS_W void pyrUp(InputArray src, OutputArray dst, const Size& dstsize = Size(),
+                        int borderType = BORDER_DEFAULT);
 
 /** @brief Constructs the Gaussian pyramid for an image.
 
@@ -2966,8 +2952,7 @@ same as src. dst[1] is the next pyramid layer, a smoothed and down-sized src, an
 @param maxlevel 0-based index of the last (the smallest) pyramid layer. It must be non-negative.
 @param borderType Pixel extrapolation method, see #BorderTypes (#BORDER_CONSTANT isn't supported)
  */
-CV_EXPORTS void buildPyramid( InputArray src, OutputArrayOfArrays dst,
-                              int maxlevel, int borderType = BORDER_DEFAULT );
+CV_EXPORTS void buildPyramid(InputArray src, OutputArrayOfArrays dst, int maxlevel, int borderType = BORDER_DEFAULT);
 
 //! @} imgproc_filter
 
@@ -3011,28 +2996,22 @@ counted in the histogram.
 when it is allocated. This feature enables you to compute a single histogram from several sets of
 arrays, or to update the histogram in time.
 */
-CV_EXPORTS void calcHist( const Mat* images, int nimages,
-                          const int* channels, InputArray mask,
-                          OutputArray hist, int dims, const int* histSize,
-                          const float** ranges, bool uniform = true, bool accumulate = false );
+CV_EXPORTS void calcHist(const Mat* images, int nimages, const int* channels, InputArray mask, OutputArray hist,
+                         int dims, const int* histSize, const float** ranges, bool uniform = true,
+                         bool accumulate = false);
 
 /** @overload
 
 this variant uses %SparseMat for output
 */
-CV_EXPORTS void calcHist( const Mat* images, int nimages,
-                          const int* channels, InputArray mask,
-                          SparseMat& hist, int dims,
-                          const int* histSize, const float** ranges,
-                          bool uniform = true, bool accumulate = false );
+CV_EXPORTS void calcHist(const Mat* images, int nimages, const int* channels, InputArray mask, SparseMat& hist,
+                         int dims, const int* histSize, const float** ranges, bool uniform = true,
+                         bool accumulate = false);
 
 /** @overload */
-CV_EXPORTS_W void calcHist( InputArrayOfArrays images,
-                            const std::vector<int>& channels,
-                            InputArray mask, OutputArray hist,
-                            const std::vector<int>& histSize,
-                            const std::vector<float>& ranges,
-                            bool accumulate = false );
+CV_EXPORTS_W void calcHist(InputArrayOfArrays images, const std::vector<int>& channels, InputArray mask,
+                           OutputArray hist, const std::vector<int>& histSize, const std::vector<float>& ranges,
+                           bool accumulate = false);
 
 /** @brief Calculates the back projection of a histogram.
 
@@ -3073,22 +3052,18 @@ size and depth as images[0] .
 
 @sa calcHist, compareHist
  */
-CV_EXPORTS void calcBackProject( const Mat* images, int nimages,
-                                 const int* channels, InputArray hist,
-                                 OutputArray backProject, const float** ranges,
-                                 double scale = 1, bool uniform = true );
+CV_EXPORTS void calcBackProject(const Mat* images, int nimages, const int* channels, InputArray hist,
+                                OutputArray backProject, const float** ranges, double scale = 1,
+                                bool uniform = true);
 
 /** @overload */
-CV_EXPORTS void calcBackProject( const Mat* images, int nimages,
-                                 const int* channels, const SparseMat& hist,
-                                 OutputArray backProject, const float** ranges,
-                                 double scale = 1, bool uniform = true );
+CV_EXPORTS void calcBackProject(const Mat* images, int nimages, const int* channels, const SparseMat& hist,
+                                OutputArray backProject, const float** ranges, double scale = 1,
+                                bool uniform = true);
 
 /** @overload */
-CV_EXPORTS_W void calcBackProject( InputArrayOfArrays images, const std::vector<int>& channels,
-                                   InputArray hist, OutputArray dst,
-                                   const std::vector<float>& ranges,
-                                   double scale );
+CV_EXPORTS_W void calcBackProject(InputArrayOfArrays images, const std::vector<int>& channels, InputArray hist,
+                                  OutputArray dst, const std::vector<float>& ranges, double scale);
 
 /** @brief Compares two histograms.
 
@@ -3105,10 +3080,10 @@ or more general sparse configurations of weighted points, consider using the #EM
 @param H2 Second compared histogram of the same size as H1 .
 @param method Comparison method, see #HistCompMethods
  */
-CV_EXPORTS_W double compareHist( InputArray H1, InputArray H2, int method );
+CV_EXPORTS_W double compareHist(InputArray H1, InputArray H2, int method);
 
 /** @overload */
-CV_EXPORTS double compareHist( const SparseMat& H1, const SparseMat& H2, int method );
+CV_EXPORTS double compareHist(const SparseMat& H1, const SparseMat& H2, int method);
 
 /** @brief Equalizes the histogram of a grayscale image.
 
@@ -3125,7 +3100,7 @@ The algorithm normalizes the brightness and increases the contrast of the image.
 @param src Source 8-bit single channel image.
 @param dst Destination image of the same size and type as src .
  */
-CV_EXPORTS_W void equalizeHist( InputArray src, OutputArray dst );
+CV_EXPORTS_W void equalizeHist(InputArray src, OutputArray dst);
 
 /** @brief Computes the "minimal work" distance between two weighted point configurations.
 
@@ -3161,13 +3136,12 @@ should be set to 0.
 @param flow Resultant \f$\texttt{size1} \times \texttt{size2}\f$ flow matrix: \f$\texttt{flow}_{i,j}\f$ is
 a flow from \f$i\f$ -th point of signature1 to \f$j\f$ -th point of signature2 .
  */
-CV_EXPORTS float EMD( InputArray signature1, InputArray signature2,
-                      int distType, InputArray cost=noArray(),
-                      float* lowerBound = 0, OutputArray flow = noArray() );
+CV_EXPORTS float EMD(InputArray signature1, InputArray signature2, int distType, InputArray cost = noArray(),
+                     float* lowerBound = 0, OutputArray flow = noArray());
 
-CV_EXPORTS_AS(EMD) float wrapperEMD( InputArray signature1, InputArray signature2,
-                      int distType, InputArray cost=noArray(),
-                      CV_IN_OUT Ptr<float> lowerBound = Ptr<float>(), OutputArray flow = noArray() );
+CV_EXPORTS_AS(EMD)
+float wrapperEMD(InputArray signature1, InputArray signature2, int distType, InputArray cost = noArray(),
+                 CV_IN_OUT Ptr<float> lowerBound = Ptr<float>(), OutputArray flow = noArray());
 
 //! @} imgproc_hist
 
@@ -3201,7 +3175,7 @@ size as image .
 
 @ingroup imgproc_misc
  */
-CV_EXPORTS_W void watershed( InputArray image, InputOutputArray markers );
+CV_EXPORTS_W void watershed(InputArray image, InputOutputArray markers);
 
 //! @addtogroup imgproc_filter
 //! @{
@@ -3242,9 +3216,9 @@ whole original image (i.e. when maxLevel==0).
 @param maxLevel Maximum level of the pyramid for the segmentation.
 @param termcrit Termination criteria: when to stop meanshift iterations.
  */
-CV_EXPORTS_W void pyrMeanShiftFiltering( InputArray src, OutputArray dst,
-                                         double sp, double sr, int maxLevel = 1,
-                                         TermCriteria termcrit=TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,5,1) );
+CV_EXPORTS_W void
+pyrMeanShiftFiltering(InputArray src, OutputArray dst, double sp, double sr, int maxLevel = 1,
+                      TermCriteria termcrit = TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 5, 1));
 
 //! @}
 
@@ -3274,9 +3248,8 @@ that the result can be refined with further calls with mode==#GC_INIT_WITH_MASK 
 mode==GC_EVAL .
 @param mode Operation mode that could be one of the #GrabCutModes
  */
-CV_EXPORTS_W void grabCut( InputArray img, InputOutputArray mask, Rect rect,
-                           InputOutputArray bgdModel, InputOutputArray fgdModel,
-                           int iterCount, int mode = GC_EVAL );
+CV_EXPORTS_W void grabCut(InputArray img, InputOutputArray mask, Rect rect, InputOutputArray bgdModel,
+                          InputOutputArray fgdModel, int iterCount, int mode = GC_EVAL);
 
 /** @example samples/cpp/distrans.cpp
 An example on using the distance transform
@@ -3335,9 +3308,9 @@ the parameter is forced to 3 because a \f$3\times 3\f$ mask gives the same resul
 5\f$ or any larger aperture.
 @param labelType Type of the label array to build, see #DistanceTransformLabelTypes.
  */
-CV_EXPORTS_AS(distanceTransformWithLabels) void distanceTransform( InputArray src, OutputArray dst,
-                                     OutputArray labels, int distanceType, int maskSize,
-                                     int labelType = DIST_LABEL_CCOMP );
+CV_EXPORTS_AS(distanceTransformWithLabels)
+void distanceTransform(InputArray src, OutputArray dst, OutputArray labels, int distanceType, int maskSize,
+                       int labelType = DIST_LABEL_CCOMP);
 
 /** @overload
 @param src 8-bit, single-channel (binary) source image.
@@ -3350,8 +3323,8 @@ the same result as \f$5\times 5\f$ or any larger aperture.
 @param dstType Type of output image. It can be CV_8U or CV_32F. Type CV_8U can be used only for
 the first variant of the function and distanceType == #DIST_L1.
 */
-CV_EXPORTS_W void distanceTransform( InputArray src, OutputArray dst,
-                                     int distanceType, int maskSize, int dstType=CV_32F);
+CV_EXPORTS_W void distanceTransform(InputArray src, OutputArray dst, int distanceType, int maskSize,
+                                    int dstType = CV_32F);
 
 /** @example samples/cpp/ffilldemo.cpp
 An example using the FloodFill technique
@@ -3361,10 +3334,8 @@ An example using the FloodFill technique
 
 variant without `mask` parameter
 */
-CV_EXPORTS int floodFill( InputOutputArray image,
-                          Point seedPoint, Scalar newVal, CV_OUT Rect* rect = 0,
-                          Scalar loDiff = Scalar(), Scalar upDiff = Scalar(),
-                          int flags = 4 );
+CV_EXPORTS int floodFill(InputOutputArray image, Point seedPoint, Scalar newVal, CV_OUT Rect* rect = 0,
+                         Scalar loDiff = Scalar(), Scalar upDiff = Scalar(), int flags = 4);
 
 /** @brief Fills a connected component with the given color.
 
@@ -3437,10 +3408,8 @@ pixel \f$(x+1, y+1)\f$ in the mask .
 
 @sa findContours
  */
-CV_EXPORTS_W int floodFill( InputOutputArray image, InputOutputArray mask,
-                            Point seedPoint, Scalar newVal, CV_OUT Rect* rect=0,
-                            Scalar loDiff = Scalar(), Scalar upDiff = Scalar(),
-                            int flags = 4 );
+CV_EXPORTS_W int floodFill(InputOutputArray image, InputOutputArray mask, Point seedPoint, Scalar newVal,
+                           CV_OUT Rect* rect = 0, Scalar loDiff = Scalar(), Scalar upDiff = Scalar(), int flags = 4);
 
 /** @brief Converts an image from one color space to another.
 
@@ -3483,7 +3452,7 @@ channels is derived automatically from src and code.
 
 @see @ref imgproc_color_conversions
  */
-CV_EXPORTS_W void cvtColor( InputArray src, OutputArray dst, int code, int dstCn = 0 );
+CV_EXPORTS_W void cvtColor(InputArray src, OutputArray dst, int code, int dstCn = 0);
 
 /** @brief Converts an image from one color space to another where the source image is
 stored in two planes.
@@ -3503,7 +3472,7 @@ This function only supports YUV420 to RGB conversion as of now.
 - #COLOR_YUV2BGRA_NV21
 - #COLOR_YUV2RGBA_NV21
 */
-CV_EXPORTS_W void cvtColorTwoPlane( InputArray src1, InputArray src2, OutputArray dst, int code );
+CV_EXPORTS_W void cvtColorTwoPlane(InputArray src1, InputArray src2, OutputArray dst, int code);
 
 //! @} imgproc_misc
 
@@ -3529,7 +3498,7 @@ type for the input array should be either np.int32 or np.float32.
 
 @sa  contourArea, arcLength
  */
-CV_EXPORTS_W Moments moments( InputArray array, bool binaryImage = false );
+CV_EXPORTS_W Moments moments(InputArray array, bool binaryImage = false);
 
 /** @brief Calculates seven Hu invariants.
 
@@ -3550,10 +3519,10 @@ transformed images are a bit different.
 
 @sa matchShapes
  */
-CV_EXPORTS void HuMoments( const Moments& moments, double hu[7] );
+CV_EXPORTS void HuMoments(const Moments& moments, double hu[7]);
 
 /** @overload */
-CV_EXPORTS_W void HuMoments( const Moments& m, OutputArray hu );
+CV_EXPORTS_W void HuMoments(const Moments& m, OutputArray hu);
 
 //! @} imgproc_shape
 
@@ -3561,15 +3530,19 @@ CV_EXPORTS_W void HuMoments( const Moments& m, OutputArray hu );
 //! @{
 
 //! type of the template matching operation
-enum TemplateMatchModes {
-    TM_SQDIFF        = 0, //!< \f[R(x,y)= \sum _{x',y'} (T(x',y')-I(x+x',y+y'))^2\f]
-    TM_SQDIFF_NORMED = 1, //!< \f[R(x,y)= \frac{\sum_{x',y'} (T(x',y')-I(x+x',y+y'))^2}{\sqrt{\sum_{x',y'}T(x',y')^2 \cdot \sum_{x',y'} I(x+x',y+y')^2}}\f]
-    TM_CCORR         = 2, //!< \f[R(x,y)= \sum _{x',y'} (T(x',y')  \cdot I(x+x',y+y'))\f]
-    TM_CCORR_NORMED  = 3, //!< \f[R(x,y)= \frac{\sum_{x',y'} (T(x',y') \cdot I(x+x',y+y'))}{\sqrt{\sum_{x',y'}T(x',y')^2 \cdot \sum_{x',y'} I(x+x',y+y')^2}}\f]
-    TM_CCOEFF        = 4, //!< \f[R(x,y)= \sum _{x',y'} (T'(x',y')  \cdot I'(x+x',y+y'))\f]
-                          //!< where
-                          //!< \f[\begin{array}{l} T'(x',y')=T(x',y') - 1/(w  \cdot h)  \cdot \sum _{x'',y''} T(x'',y'') \\ I'(x+x',y+y')=I(x+x',y+y') - 1/(w  \cdot h)  \cdot \sum _{x'',y''} I(x+x'',y+y'') \end{array}\f]
-    TM_CCOEFF_NORMED = 5  //!< \f[R(x,y)= \frac{ \sum_{x',y'} (T'(x',y') \cdot I'(x+x',y+y')) }{ \sqrt{\sum_{x',y'}T'(x',y')^2 \cdot \sum_{x',y'} I'(x+x',y+y')^2} }\f]
+enum TemplateMatchModes
+{
+    TM_SQDIFF = 0, //!< \f[R(x,y)= \sum _{x',y'} (T(x',y')-I(x+x',y+y'))^2\f]
+    TM_SQDIFF_NORMED =
+        1, //!< \f[R(x,y)= \frac{\sum_{x',y'} (T(x',y')-I(x+x',y+y'))^2}{\sqrt{\sum_{x',y'}T(x',y')^2 \cdot \sum_{x',y'} I(x+x',y+y')^2}}\f]
+    TM_CCORR = 2, //!< \f[R(x,y)= \sum _{x',y'} (T(x',y')  \cdot I(x+x',y+y'))\f]
+    TM_CCORR_NORMED =
+        3, //!< \f[R(x,y)= \frac{\sum_{x',y'} (T(x',y') \cdot I(x+x',y+y'))}{\sqrt{\sum_{x',y'}T(x',y')^2 \cdot \sum_{x',y'} I(x+x',y+y')^2}}\f]
+    TM_CCOEFF = 4, //!< \f[R(x,y)= \sum _{x',y'} (T'(x',y')  \cdot I'(x+x',y+y'))\f]
+    //!< where
+    //!< \f[\begin{array}{l} T'(x',y')=T(x',y') - 1/(w  \cdot h)  \cdot \sum _{x'',y''} T(x'',y'') \\ I'(x+x',y+y')=I(x+x',y+y') - 1/(w  \cdot h)  \cdot \sum _{x'',y''} I(x+x'',y+y'') \end{array}\f]
+    TM_CCOEFF_NORMED =
+        5 //!< \f[R(x,y)= \frac{ \sum_{x',y'} (T'(x',y') \cdot I'(x+x',y+y')) }{ \sqrt{\sum_{x',y'}T'(x',y')^2 \cdot \sum_{x',y'} I'(x+x',y+y')^2} }\f]
 };
 
 /** @example samples/cpp/tutorial_code/Histograms_Matching/MatchTemplate_Demo.cpp
@@ -3599,8 +3572,8 @@ is \f$W \times H\f$ and templ is \f$w \times h\f$ , then result is \f$(W-w+1) \t
 @param mask Mask of searched template. It must have the same datatype and size with templ. It is
 not set by default. Currently, only the #TM_SQDIFF and #TM_CCORR_NORMED methods are supported.
  */
-CV_EXPORTS_W void matchTemplate( InputArray image, InputArray templ,
-                                 OutputArray result, int method, InputArray mask = noArray() );
+CV_EXPORTS_W void matchTemplate(InputArray image, InputArray templ, OutputArray result, int method,
+                                InputArray mask = noArray());
 
 //! @}
 
@@ -3628,8 +3601,8 @@ parallel framework is enabled and if the rows of the image are at least twice th
 @param ltype output image label type. Currently CV_32S and CV_16U are supported.
 @param ccltype connected components algorithm type (see the #ConnectedComponentsAlgorithmsTypes).
 */
-CV_EXPORTS_AS(connectedComponentsWithAlgorithm) int connectedComponents(InputArray image, OutputArray labels,
-                                                                        int connectivity, int ltype, int ccltype);
+CV_EXPORTS_AS(connectedComponentsWithAlgorithm)
+int connectedComponents(InputArray image, OutputArray labels, int connectivity, int ltype, int ccltype);
 
 
 /** @overload
@@ -3639,8 +3612,7 @@ CV_EXPORTS_AS(connectedComponentsWithAlgorithm) int connectedComponents(InputArr
 @param connectivity 8 or 4 for 8-way or 4-way connectivity respectively
 @param ltype output image label type. Currently CV_32S and CV_16U are supported.
 */
-CV_EXPORTS_W int connectedComponents(InputArray image, OutputArray labels,
-                                     int connectivity = 8, int ltype = CV_32S);
+CV_EXPORTS_W int connectedComponents(InputArray image, OutputArray labels, int connectivity = 8, int ltype = CV_32S);
 
 
 /** @brief computes the connected components labeled image of boolean image and also produces a statistics output for each label
@@ -3665,9 +3637,9 @@ accessed via centroids(label, 0) for x and centroids(label, 1) for y. The data t
 @param ltype output image label type. Currently CV_32S and CV_16U are supported.
 @param ccltype connected components algorithm type (see #ConnectedComponentsAlgorithmsTypes).
 */
-CV_EXPORTS_AS(connectedComponentsWithStatsWithAlgorithm) int connectedComponentsWithStats(InputArray image, OutputArray labels,
-                                                                                          OutputArray stats, OutputArray centroids,
-                                                                                          int connectivity, int ltype, int ccltype);
+CV_EXPORTS_AS(connectedComponentsWithStatsWithAlgorithm)
+int connectedComponentsWithStats(InputArray image, OutputArray labels, OutputArray stats, OutputArray centroids,
+                                 int connectivity, int ltype, int ccltype);
 
 /** @overload
 @param image the 8-bit single-channel image to be labeled
@@ -3680,9 +3652,8 @@ accessed via centroids(label, 0) for x and centroids(label, 1) for y. The data t
 @param connectivity 8 or 4 for 8-way or 4-way connectivity respectively
 @param ltype output image label type. Currently CV_32S and CV_16U are supported.
 */
-CV_EXPORTS_W int connectedComponentsWithStats(InputArray image, OutputArray labels,
-                                              OutputArray stats, OutputArray centroids,
-                                              int connectivity = 8, int ltype = CV_32S);
+CV_EXPORTS_W int connectedComponentsWithStats(InputArray image, OutputArray labels, OutputArray stats,
+                                              OutputArray centroids, int connectivity = 8, int ltype = CV_32S);
 
 
 /** @brief Finds contours in a binary image.
@@ -3710,13 +3681,12 @@ parent, or nested contours, the corresponding elements of hierarchy[i] will be n
 contours are extracted from the image ROI and then they should be analyzed in the whole image
 context.
  */
-CV_EXPORTS_W void findContours( InputArray image, OutputArrayOfArrays contours,
-                              OutputArray hierarchy, int mode,
-                              int method, Point offset = Point());
+CV_EXPORTS_W void findContours(InputArray image, OutputArrayOfArrays contours, OutputArray hierarchy, int mode,
+                               int method, Point offset = Point());
 
 /** @overload */
-CV_EXPORTS void findContours( InputArray image, OutputArrayOfArrays contours,
-                              int mode, int method, Point offset = Point());
+CV_EXPORTS void findContours(InputArray image, OutputArrayOfArrays contours, int mode, int method,
+                             Point offset = Point());
 
 /** @example samples/cpp/squares.cpp
 A program using pyramid scaling, Canny, contours and contour simplification to find
@@ -3741,9 +3711,7 @@ between the original curve and its approximation.
 @param closed If true, the approximated curve is closed (its first and last vertices are
 connected). Otherwise, it is not closed.
  */
-CV_EXPORTS_W void approxPolyDP( InputArray curve,
-                                OutputArray approxCurve,
-                                double epsilon, bool closed );
+CV_EXPORTS_W void approxPolyDP(InputArray curve, OutputArray approxCurve, double epsilon, bool closed);
 
 /** @brief Calculates a contour perimeter or a curve length.
 
@@ -3752,7 +3720,7 @@ The function computes a curve length or a closed contour perimeter.
 @param curve Input vector of 2D points, stored in std::vector or Mat.
 @param closed Flag indicating whether the curve is closed or not.
  */
-CV_EXPORTS_W double arcLength( InputArray curve, bool closed );
+CV_EXPORTS_W double arcLength(InputArray curve, bool closed);
 
 /** @brief Calculates the up-right bounding rectangle of a point set.
 
@@ -3760,7 +3728,7 @@ The function calculates and returns the minimal up-right bounding rectangle for 
 
 @param points Input 2D point set, stored in std::vector or Mat.
  */
-CV_EXPORTS_W Rect boundingRect( InputArray points );
+CV_EXPORTS_W Rect boundingRect(InputArray points);
 
 /** @brief Calculates a contour area.
 
@@ -3792,7 +3760,7 @@ depending on the contour orientation (clockwise or counter-clockwise). Using thi
 determine orientation of a contour by taking the sign of an area. By default, the parameter is
 false, which means that the absolute value is returned.
  */
-CV_EXPORTS_W double contourArea( InputArray contour, bool oriented = false );
+CV_EXPORTS_W double contourArea(InputArray contour, bool oriented = false);
 
 /** @brief Finds a rotated rectangle of the minimum area enclosing the input 2D point set.
 
@@ -3802,7 +3770,7 @@ indices when data is close to the containing Mat element boundary.
 
 @param points Input vector of 2D points, stored in std::vector\<\> or Mat
  */
-CV_EXPORTS_W RotatedRect minAreaRect( InputArray points );
+CV_EXPORTS_W RotatedRect minAreaRect(InputArray points);
 
 /** @brief Finds the four vertices of a rotated rect. Useful to draw the rotated rectangle.
 
@@ -3823,8 +3791,7 @@ The function finds the minimal enclosing circle of a 2D point set using an itera
 @param center Output center of the circle.
 @param radius Output radius of the circle.
  */
-CV_EXPORTS_W void minEnclosingCircle( InputArray points,
-                                      CV_OUT Point2f& center, CV_OUT float& radius );
+CV_EXPORTS_W void minEnclosingCircle(InputArray points, CV_OUT Point2f& center, CV_OUT float& radius);
 
 /** @example samples/cpp/minarea.cpp
 */
@@ -3848,7 +3815,7 @@ than \f$\theta(n)\f$. Thus the overall complexity of the function is \f$O(n log(
 @param triangle Output vector of three 2D points defining the vertices of the triangle. The depth
 of the OutputArray must be CV_32F.
  */
-CV_EXPORTS_W double minEnclosingTriangle( InputArray points, CV_OUT OutputArray triangle );
+CV_EXPORTS_W double minEnclosingTriangle(InputArray points, CV_OUT OutputArray triangle);
 
 /** @brief Compares two shapes.
 
@@ -3859,8 +3826,7 @@ The function compares two shapes. All three implemented methods use the Hu invar
 @param method Comparison method, see #ShapeMatchModes
 @param parameter Method-specific parameter (not supported now).
  */
-CV_EXPORTS_W double matchShapes( InputArray contour1, InputArray contour2,
-                                 int method, double parameter );
+CV_EXPORTS_W double matchShapes(InputArray contour1, InputArray contour2, int method, double parameter);
 
 /** @example samples/cpp/convexhull.cpp
 An example using the convexHull functionality
@@ -3887,8 +3853,7 @@ returnPoints=true.
 
 @note `points` and `hull` should be different arrays, inplace processing isn't supported.
  */
-CV_EXPORTS_W void convexHull( InputArray points, OutputArray hull,
-                              bool clockwise = false, bool returnPoints = true );
+CV_EXPORTS_W void convexHull(InputArray points, OutputArray hull, bool clockwise = false, bool returnPoints = true);
 
 /** @brief Finds the convexity defects of a contour.
 
@@ -3907,7 +3872,7 @@ fixpt_depth is fixed-point approximation (with 8 fractional bits) of the distanc
 farthest contour point and the hull. That is, to get the floating-point value of the depth will be
 fixpt_depth/256.0.
  */
-CV_EXPORTS_W void convexityDefects( InputArray contour, InputArray convexhull, OutputArray convexityDefects );
+CV_EXPORTS_W void convexityDefects(InputArray contour, InputArray convexhull, OutputArray convexityDefects);
 
 /** @brief Tests a contour convexity.
 
@@ -3916,11 +3881,10 @@ without self-intersections. Otherwise, the function output is undefined.
 
 @param contour Input vector of 2D points, stored in std::vector\<\> or Mat
  */
-CV_EXPORTS_W bool isContourConvex( InputArray contour );
+CV_EXPORTS_W bool isContourConvex(InputArray contour);
 
 //! finds intersection of two convex polygons
-CV_EXPORTS_W float intersectConvexConvex( InputArray _p1, InputArray _p2,
-                                          OutputArray _p12, bool handleNested = true );
+CV_EXPORTS_W float intersectConvexConvex(InputArray _p1, InputArray _p2, OutputArray _p12, bool handleNested = true);
 
 /** @example samples/cpp/fitellipse.cpp
 An example using the fitEllipse technique
@@ -3936,7 +3900,7 @@ border of the containing Mat element.
 
 @param points Input 2D point set, stored in std::vector\<\> or Mat
  */
-CV_EXPORTS_W RotatedRect fitEllipse( InputArray points );
+CV_EXPORTS_W RotatedRect fitEllipse(InputArray points);
 
 /** @brief Fits an ellipse around a set of 2D points.
 
@@ -3973,7 +3937,7 @@ CV_EXPORTS_W RotatedRect fitEllipse( InputArray points );
 
  @param points Input 2D point set, stored in std::vector\<\> or Mat
  */
-CV_EXPORTS_W RotatedRect fitEllipseAMS( InputArray points );
+CV_EXPORTS_W RotatedRect fitEllipseAMS(InputArray points);
 
 
 /** @brief Fits an ellipse around a set of 2D points.
@@ -4018,7 +3982,7 @@ CV_EXPORTS_W RotatedRect fitEllipseAMS( InputArray points );
 
  @param points Input 2D point set, stored in std::vector\<\> or Mat
  */
-CV_EXPORTS_W RotatedRect fitEllipseDirect( InputArray points );
+CV_EXPORTS_W RotatedRect fitEllipseDirect(InputArray points);
 
 /** @brief Fits a line to a 2D or 3D point set.
 
@@ -4054,8 +4018,7 @@ is chosen.
 @param reps Sufficient accuracy for the radius (distance between the coordinate origin and the line).
 @param aeps Sufficient accuracy for the angle. 0.01 would be a good default value for reps and aeps.
  */
-CV_EXPORTS_W void fitLine( InputArray points, OutputArray line, int distType,
-                           double param, double reps, double aeps );
+CV_EXPORTS_W void fitLine(InputArray points, OutputArray line, int distType, double param, double reps, double aeps);
 
 /** @brief Performs a point-in-contour test.
 
@@ -4073,7 +4036,7 @@ See below a sample output of the function where each image pixel is tested again
 @param measureDist If true, the function estimates the signed distance from the point to the
 nearest contour edge. Otherwise, the function only checks if the point is inside a contour or not.
  */
-CV_EXPORTS_W double pointPolygonTest( InputArray contour, Point2f pt, bool measureDist );
+CV_EXPORTS_W double pointPolygonTest(InputArray contour, Point2f pt, bool measureDist);
 
 /** @brief Finds out if there is any intersection between two rotated rectangles.
 
@@ -4090,7 +4053,8 @@ intersecting region and the red vertices are returned by the function.
 at most 8 vertices. Stored as std::vector\<cv::Point2f\> or cv::Mat as Mx1 of type CV_32FC2.
 @returns One of #RectanglesIntersectTypes
  */
-CV_EXPORTS_W int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, OutputArray intersectingRegion  );
+CV_EXPORTS_W int rotatedRectangleIntersection(const RotatedRect& rect1, const RotatedRect& rect2,
+                                              OutputArray intersectingRegion);
 
 //! @} imgproc_shape
 /** @brief Creates implementation for cv::CLAHE .
@@ -4116,7 +4080,8 @@ CV_EXPORTS Ptr<GeneralizedHoughGuil> createGeneralizedHoughGuil();
 //! @param weights1 It has a type of CV_32FC1 and the same size with src1.
 //! @param weights2 It has a type of CV_32FC1 and the same size with src1.
 //! @param dst It is created if it does not have the same size and type with src1.
-CV_EXPORTS void blendLinear(InputArray src1, InputArray src2, InputArray weights1, InputArray weights2, OutputArray dst);
+CV_EXPORTS void blendLinear(InputArray src1, InputArray src2, InputArray weights1, InputArray weights2,
+                            OutputArray dst);
 
 //! @addtogroup imgproc_colormap
 //! @{
@@ -4166,7 +4131,7 @@ CV_EXPORTS_W void applyColorMap(InputArray src, OutputArray dst, InputArray user
 
 
 /** OpenCV color channel order is BGR[A] */
-#define CV_RGB(r, g, b)  cv::Scalar((b), (g), (r), 0)
+#define CV_RGB(r, g, b) cv::Scalar((b), (g), (r), 0)
 
 /** @brief Draws a line segment connecting two points.
 
@@ -4183,8 +4148,8 @@ lines are drawn using Gaussian filtering.
 @param lineType Type of the line. See #LineTypes.
 @param shift Number of fractional bits in the point coordinates.
  */
-CV_EXPORTS_W void line(InputOutputArray img, Point pt1, Point pt2, const Scalar& color,
-                     int thickness = 1, int lineType = LINE_8, int shift = 0);
+CV_EXPORTS_W void line(InputOutputArray img, Point pt1, Point pt2, const Scalar& color, int thickness = 1,
+                       int lineType = LINE_8, int shift = 0);
 
 /** @brief Draws a arrow segment pointing from the first point to the second one.
 
@@ -4199,8 +4164,8 @@ The function cv::arrowedLine draws an arrow between pt1 and pt2 points in the im
 @param shift Number of fractional bits in the point coordinates.
 @param tipLength The length of the arrow tip in relation to the arrow length
  */
-CV_EXPORTS_W void arrowedLine(InputOutputArray img, Point pt1, Point pt2, const Scalar& color,
-                     int thickness=1, int line_type=8, int shift=0, double tipLength=0.1);
+CV_EXPORTS_W void arrowedLine(InputOutputArray img, Point pt1, Point pt2, const Scalar& color, int thickness = 1,
+                              int line_type = 8, int shift = 0, double tipLength = 0.1);
 
 /** @brief Draws a simple, thick, or filled up-right rectangle.
 
@@ -4216,18 +4181,16 @@ mean that the function has to draw a filled rectangle.
 @param lineType Type of the line. See #LineTypes
 @param shift Number of fractional bits in the point coordinates.
  */
-CV_EXPORTS_W void rectangle(InputOutputArray img, Point pt1, Point pt2,
-                          const Scalar& color, int thickness = 1,
-                          int lineType = LINE_8, int shift = 0);
+CV_EXPORTS_W void rectangle(InputOutputArray img, Point pt1, Point pt2, const Scalar& color, int thickness = 1,
+                            int lineType = LINE_8, int shift = 0);
 
 /** @overload
 
 use `rec` parameter as alternative specification of the drawn rectangle: `r.tl() and
 r.br()-Point(1,1)` are opposite corners
 */
-CV_EXPORTS_W void rectangle(InputOutputArray img, Rect rec,
-                          const Scalar& color, int thickness = 1,
-                          int lineType = LINE_8, int shift = 0);
+CV_EXPORTS_W void rectangle(InputOutputArray img, Rect rec, const Scalar& color, int thickness = 1,
+                            int lineType = LINE_8, int shift = 0);
 
 /** @example samples/cpp/tutorial_code/ImgProc/basic_drawing/Drawing_2.cpp
 An example using drawing functions
@@ -4245,9 +4208,8 @@ mean that a filled circle is to be drawn.
 @param lineType Type of the circle boundary. See #LineTypes
 @param shift Number of fractional bits in the coordinates of the center and in the radius value.
  */
-CV_EXPORTS_W void circle(InputOutputArray img, Point center, int radius,
-                       const Scalar& color, int thickness = 1,
-                       int lineType = LINE_8, int shift = 0);
+CV_EXPORTS_W void circle(InputOutputArray img, Point center, int radius, const Scalar& color, int thickness = 1,
+                         int lineType = LINE_8, int shift = 0);
 
 /** @brief Draws a simple or thick elliptic arc or fills an ellipse sector.
 
@@ -4274,10 +4236,9 @@ a filled ellipse sector is to be drawn.
 @param lineType Type of the ellipse boundary. See #LineTypes
 @param shift Number of fractional bits in the coordinates of the center and values of axes.
  */
-CV_EXPORTS_W void ellipse(InputOutputArray img, Point center, Size axes,
-                        double angle, double startAngle, double endAngle,
-                        const Scalar& color, int thickness = 1,
-                        int lineType = LINE_8, int shift = 0);
+CV_EXPORTS_W void ellipse(InputOutputArray img, Point center, Size axes, double angle, double startAngle,
+                          double endAngle, const Scalar& color, int thickness = 1, int lineType = LINE_8,
+                          int shift = 0);
 
 /** @overload
 @param img Image.
@@ -4288,8 +4249,8 @@ an ellipse inscribed in the rotated rectangle.
 a filled ellipse sector is to be drawn.
 @param lineType Type of the ellipse boundary. See #LineTypes
 */
-CV_EXPORTS_W void ellipse(InputOutputArray img, const RotatedRect& box, const Scalar& color,
-                        int thickness = 1, int lineType = LINE_8);
+CV_EXPORTS_W void ellipse(InputOutputArray img, const RotatedRect& box, const Scalar& color, int thickness = 1,
+                          int lineType = LINE_8);
 
 /* ----------------------------------------------------------------------------------------- */
 /* ADDING A SET OF PREDEFINED MARKERS WHICH COULD BE USED TO HIGHLIGHT POSITIONS IN AN IMAGE */
@@ -4309,16 +4270,15 @@ marker types are supported, see #MarkerTypes for more information.
 @param markerSize The length of the marker axis [default = 20 pixels]
  */
 CV_EXPORTS_W void drawMarker(InputOutputArray img, Point position, const Scalar& color,
-                             int markerType = MARKER_CROSS, int markerSize=20, int thickness=1,
-                             int line_type=8);
+                             int markerType = MARKER_CROSS, int markerSize = 20, int thickness = 1,
+                             int line_type = 8);
 
 /* ----------------------------------------------------------------------------------------- */
 /* END OF MARKER SECTION */
 /* ----------------------------------------------------------------------------------------- */
 
 /** @overload */
-CV_EXPORTS void fillConvexPoly(Mat& img, const Point* pts, int npts,
-                               const Scalar& color, int lineType = LINE_8,
+CV_EXPORTS void fillConvexPoly(Mat& img, const Point* pts, int npts, const Scalar& color, int lineType = LINE_8,
                                int shift = 0);
 
 /** @brief Fills a convex polygon.
@@ -4334,15 +4294,12 @@ twice at the most (though, its top-most and/or the bottom edge could be horizont
 @param lineType Type of the polygon boundaries. See #LineTypes
 @param shift Number of fractional bits in the vertex coordinates.
  */
-CV_EXPORTS_W void fillConvexPoly(InputOutputArray img, InputArray points,
-                                 const Scalar& color, int lineType = LINE_8,
-                                 int shift = 0);
+CV_EXPORTS_W void fillConvexPoly(InputOutputArray img, InputArray points, const Scalar& color,
+                                 int lineType = LINE_8, int shift = 0);
 
 /** @overload */
-CV_EXPORTS void fillPoly(Mat& img, const Point** pts,
-                         const int* npts, int ncontours,
-                         const Scalar& color, int lineType = LINE_8, int shift = 0,
-                         Point offset = Point() );
+CV_EXPORTS void fillPoly(Mat& img, const Point** pts, const int* npts, int ncontours, const Scalar& color,
+                         int lineType = LINE_8, int shift = 0, Point offset = Point());
 
 /** @example samples/cpp/tutorial_code/ImgProc/basic_drawing/Drawing_1.cpp
 An example using drawing functions
@@ -4362,14 +4319,12 @@ parts), and so forth.
 @param shift Number of fractional bits in the vertex coordinates.
 @param offset Optional offset of all points of the contours.
  */
-CV_EXPORTS_W void fillPoly(InputOutputArray img, InputArrayOfArrays pts,
-                           const Scalar& color, int lineType = LINE_8, int shift = 0,
-                           Point offset = Point() );
+CV_EXPORTS_W void fillPoly(InputOutputArray img, InputArrayOfArrays pts, const Scalar& color,
+                           int lineType = LINE_8, int shift = 0, Point offset = Point());
 
 /** @overload */
-CV_EXPORTS void polylines(Mat& img, const Point* const* pts, const int* npts,
-                          int ncontours, bool isClosed, const Scalar& color,
-                          int thickness = 1, int lineType = LINE_8, int shift = 0 );
+CV_EXPORTS void polylines(Mat& img, const Point* const* pts, const int* npts, int ncontours, bool isClosed,
+                          const Scalar& color, int thickness = 1, int lineType = LINE_8, int shift = 0);
 
 /** @brief Draws several polygonal curves.
 
@@ -4384,9 +4339,8 @@ the function draws a line from the last vertex of each curve to its first vertex
 
 The function cv::polylines draws one or more polygonal curves.
  */
-CV_EXPORTS_W void polylines(InputOutputArray img, InputArrayOfArrays pts,
-                            bool isClosed, const Scalar& color,
-                            int thickness = 1, int lineType = LINE_8, int shift = 0 );
+CV_EXPORTS_W void polylines(InputOutputArray img, InputArrayOfArrays pts, bool isClosed, const Scalar& color,
+                            int thickness = 1, int lineType = LINE_8, int shift = 0);
 
 /** @example samples/cpp/contours2.cpp
 An example program illustrates the use of cv::findContours and cv::drawContours
@@ -4425,11 +4379,9 @@ using even-odd rule. This may give incorrect results if you have a joint collect
 contours. In order to solve this problem, you need to call #drawContours separately for each sub-group
 of contours, or iterate over the collection using contourIdx parameter.
  */
-CV_EXPORTS_W void drawContours( InputOutputArray image, InputArrayOfArrays contours,
-                              int contourIdx, const Scalar& color,
-                              int thickness = 1, int lineType = LINE_8,
-                              InputArray hierarchy = noArray(),
-                              int maxLevel = INT_MAX, Point offset = Point() );
+CV_EXPORTS_W void drawContours(InputOutputArray image, InputArrayOfArrays contours, int contourIdx,
+                               const Scalar& color, int thickness = 1, int lineType = LINE_8,
+                               InputArray hierarchy = noArray(), int maxLevel = INT_MAX, Point offset = Point());
 
 /** @brief Clips the line against the image rectangle.
 
@@ -4470,9 +4422,8 @@ elliptic arc. It is used by #ellipse. If `arcStart` is greater than `arcEnd`, th
 accuracy.
 @param pts Output vector of polyline vertices.
  */
-CV_EXPORTS_W void ellipse2Poly( Point center, Size axes, int angle,
-                                int arcStart, int arcEnd, int delta,
-                                CV_OUT std::vector<Point>& pts );
+CV_EXPORTS_W void ellipse2Poly(Point center, Size axes, int angle, int arcStart, int arcEnd, int delta,
+                               CV_OUT std::vector<Point>& pts);
 
 /** @overload
 @param center Center of the arc.
@@ -4483,8 +4434,7 @@ CV_EXPORTS_W void ellipse2Poly( Point center, Size axes, int angle,
 @param delta Angle between the subsequent polyline vertices. It defines the approximation accuracy.
 @param pts Output vector of polyline vertices.
 */
-CV_EXPORTS void ellipse2Poly(Point2d center, Size2d axes, int angle,
-                             int arcStart, int arcEnd, int delta,
+CV_EXPORTS void ellipse2Poly(Point2d center, Size2d axes, int angle, int arcStart, int arcEnd, int delta,
                              CV_OUT std::vector<Point2d>& pts);
 
 /** @brief Draws a text string.
@@ -4504,10 +4454,8 @@ example.
 @param bottomLeftOrigin When true, the image data origin is at the bottom-left corner. Otherwise,
 it is at the top-left corner.
  */
-CV_EXPORTS_W void putText( InputOutputArray img, const String& text, Point org,
-                         int fontFace, double fontScale, Scalar color,
-                         int thickness = 1, int lineType = LINE_8,
-                         bool bottomLeftOrigin = false );
+CV_EXPORTS_W void putText(InputOutputArray img, const String& text, Point org, int fontFace, double fontScale,
+                          Scalar color, int thickness = 1, int lineType = LINE_8, bool bottomLeftOrigin = false);
 
 /** @brief Calculates the width and height of a text string.
 
@@ -4554,9 +4502,8 @@ point.
 
 @see putText
  */
-CV_EXPORTS_W Size getTextSize(const String& text, int fontFace,
-                            double fontScale, int thickness,
-                            CV_OUT int* baseLine);
+CV_EXPORTS_W Size getTextSize(const String& text, int fontFace, double fontScale, int thickness,
+                              CV_OUT int* baseLine);
 
 
 /** @brief Calculates the font-specific size to use to achieve a given height in pixels.
@@ -4568,9 +4515,7 @@ CV_EXPORTS_W Size getTextSize(const String& text, int fontFace,
 
 @see cv::putText
 */
-CV_EXPORTS_W double getFontScaleFromHeight(const int fontFace,
-                                           const int pixelHeight,
-                                           const int thickness = 1);
+CV_EXPORTS_W double getFontScaleFromHeight(const int fontFace, const int pixelHeight, const int thickness = 1);
 
 /** @brief Line iterator
 
@@ -4616,17 +4561,16 @@ public:
     from the left-most point to the right most,
     not to depend on the ordering of pt1 and pt2 parameters
     */
-    LineIterator( const Mat& img, Point pt1, Point pt2,
-                  int connectivity = 8, bool leftToRight = false );
+    LineIterator(const Mat& img, Point pt1, Point pt2, int connectivity = 8, bool leftToRight = false);
     /** @brief returns pointer to the current pixel
     */
-    uchar* operator *();
+    uchar* operator*();
     /** @brief prefix increment operator (++it). shifts iterator to the next pixel
     */
-    LineIterator& operator ++();
+    LineIterator& operator++();
     /** @brief postfix increment operator (it++). shifts iterator to the next pixel
     */
-    LineIterator operator ++(int);
+    LineIterator operator++(int);
     /** @brief returns coordinates of the current pixel
     */
     Point pos() const;
@@ -4643,14 +4587,9 @@ public:
 
 // === LineIterator implementation ===
 
-inline
-uchar* LineIterator::operator *()
-{
-    return ptr;
-}
+inline uchar* LineIterator::operator*() { return ptr; }
 
-inline
-LineIterator& LineIterator::operator ++()
+inline LineIterator& LineIterator::operator++()
 {
     int mask = err < 0 ? -1 : 0;
     err += minusDelta + (plusDelta & mask);
@@ -4658,20 +4597,18 @@ LineIterator& LineIterator::operator ++()
     return *this;
 }
 
-inline
-LineIterator LineIterator::operator ++(int)
+inline LineIterator LineIterator::operator++(int)
 {
     LineIterator it = *this;
     ++(*this);
     return it;
 }
 
-inline
-Point LineIterator::pos() const
+inline Point LineIterator::pos() const
 {
     Point p;
-    p.y = (int)((ptr - ptr0)/step);
-    p.x = (int)(((ptr - ptr0) - p.y*step)/elemSize);
+    p.y = (int)((ptr - ptr0) / step);
+    p.x = (int)(((ptr - ptr0) - p.y * step) / elemSize);
     return p;
 }
 
@@ -4681,6 +4618,6 @@ Point LineIterator::pos() const
 
 //! @} imgproc
 
-} // cv
+} // namespace cv
 
 #endif

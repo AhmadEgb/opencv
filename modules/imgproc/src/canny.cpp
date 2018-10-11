@@ -48,38 +48,38 @@
 #include "opencv2/core/openvx/ovx_defs.hpp"
 
 #if CV_SIMD128
-#define CV_MALLOC_SIMD128 16
+#    define CV_MALLOC_SIMD128 16
 #endif
 
-namespace cv
-{
+namespace cv {
 
 #ifdef HAVE_IPP
-static bool ipp_Canny(const Mat& src , const Mat& dx_, const Mat& dy_, Mat& dst, float low,  float high, bool L2gradient, int aperture_size)
+static bool ipp_Canny(const Mat& src, const Mat& dx_, const Mat& dy_, Mat& dst, float low, float high,
+                      bool L2gradient, int aperture_size)
 {
-#ifdef HAVE_IPP_IW
+#    ifdef HAVE_IPP_IW
     CV_INSTRUMENT_REGION_IPP();
 
-#if IPP_DISABLE_PERF_CANNY_MT
-    if(cv::getNumThreads()>1)
+#        if IPP_DISABLE_PERF_CANNY_MT
+    if (cv::getNumThreads() > 1)
         return false;
-#endif
+#        endif
 
     ::ipp::IwiSize size(dst.cols, dst.rows);
-    IppDataType    type     = ippiGetDataType(dst.depth());
-    int            channels = dst.channels();
-    IppNormType    norm     = (L2gradient)?ippNormL2:ippNormL1;
+    IppDataType type = ippiGetDataType(dst.depth());
+    int channels = dst.channels();
+    IppNormType norm = (L2gradient) ? ippNormL2 : ippNormL1;
 
-    if(size.width <= 3 || size.height <= 3)
+    if (size.width <= 3 || size.height <= 3)
         return false;
 
-    if(channels != 1)
+    if (channels != 1)
         return false;
 
-    if(type != ipp8u)
+    if (type != ipp8u)
         return false;
 
-    if(src.empty())
+    if (src.empty())
     {
         try
         {
@@ -91,7 +91,8 @@ static bool ipp_Canny(const Mat& src , const Mat& dx_, const Mat& dy_, Mat& dst,
             ippiGetImage(dy_, iwSrcDy);
             ippiGetImage(dst, iwDst);
 
-            CV_INSTRUMENT_FUN_IPP(::ipp::iwiFilterCannyDeriv, iwSrcDx, iwSrcDy, iwDst, low, high, ::ipp::IwiFilterCannyDerivParams(norm));
+            CV_INSTRUMENT_FUN_IPP(::ipp::iwiFilterCannyDeriv, iwSrcDx, iwSrcDy, iwDst, low, high,
+                                  ::ipp::IwiFilterCannyDerivParams(norm));
         }
         catch (::ipp::IwException ex)
         {
@@ -102,9 +103,9 @@ static bool ipp_Canny(const Mat& src , const Mat& dx_, const Mat& dy_, Mat& dst,
     {
         IppiMaskSize kernel;
 
-        if(aperture_size == 3)
+        if (aperture_size == 3)
             kernel = ippMskSize3x3;
-        else if(aperture_size == 5)
+        else if (aperture_size == 5)
             kernel = ippMskSize5x5;
         else
             return false;
@@ -117,7 +118,8 @@ static bool ipp_Canny(const Mat& src , const Mat& dx_, const Mat& dy_, Mat& dst,
             ippiGetImage(src, iwSrc);
             ippiGetImage(dst, iwDst);
 
-            CV_INSTRUMENT_FUN_IPP(::ipp::iwiFilterCanny, iwSrc, iwDst, low, high, ::ipp::IwiFilterCannyParams(ippFilterSobel, kernel, norm), ippBorderRepl);
+            CV_INSTRUMENT_FUN_IPP(::ipp::iwiFilterCanny, iwSrc, iwDst, low, high,
+                                  ::ipp::IwiFilterCannyParams(ippFilterSobel, kernel, norm), ippBorderRepl);
         }
         catch (::ipp::IwException)
         {
@@ -126,24 +128,31 @@ static bool ipp_Canny(const Mat& src , const Mat& dx_, const Mat& dy_, Mat& dst,
     }
 
     return true;
-#else
-    CV_UNUSED(src); CV_UNUSED(dx_); CV_UNUSED(dy_); CV_UNUSED(dst); CV_UNUSED(low); CV_UNUSED(high); CV_UNUSED(L2gradient); CV_UNUSED(aperture_size);
+#    else
+    CV_UNUSED(src);
+    CV_UNUSED(dx_);
+    CV_UNUSED(dy_);
+    CV_UNUSED(dst);
+    CV_UNUSED(low);
+    CV_UNUSED(high);
+    CV_UNUSED(L2gradient);
+    CV_UNUSED(aperture_size);
     return false;
-#endif
+#    endif
 }
 #endif
 
 #ifdef HAVE_OPENCL
 
-template <bool useCustomDeriv>
-static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputArray _dst, float low_thresh, float high_thresh,
-                      int aperture_size, bool L2gradient, int cn, const Size & size)
+template<bool useCustomDeriv>
+static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputArray _dst, float low_thresh,
+                      float high_thresh, int aperture_size, bool L2gradient, int cn, const Size& size)
 {
     CV_INSTRUMENT_REGION_OPENCL();
 
     UMat map;
 
-    const ocl::Device &dev = ocl::Device::getDefault();
+    const ocl::Device& dev = ocl::Device::getDefault();
     int max_wg_size = (int)dev.maxWorkGroupSize();
 
     int lSizeX = 32;
@@ -177,8 +186,7 @@ static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputA
     }
     int low = cvFloor(low_thresh), high = cvFloor(high_thresh);
 
-    if (!useCustomDeriv &&
-        aperture_size == 3 && !_src.isSubmatrix())
+    if (!useCustomDeriv && aperture_size == 3 && !_src.isSubmatrix())
     {
         /*
             stage1_with_sobel:
@@ -188,24 +196,22 @@ static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputA
                 Double thresholding
         */
         char cvt[40];
-        ocl::Kernel with_sobel("stage1_with_sobel", ocl::imgproc::canny_oclsrc,
-                               format("-D WITH_SOBEL -D cn=%d -D TYPE=%s -D convert_floatN=%s -D floatN=%s -D GRP_SIZEX=%d -D GRP_SIZEY=%d%s",
-                                      cn, ocl::memopTypeToStr(_src.depth()),
-                                      ocl::convertTypeStr(_src.depth(), CV_32F, cn, cvt),
-                                      ocl::typeToStr(CV_MAKE_TYPE(CV_32F, cn)),
-                                      lSizeX, lSizeY,
-                                      L2gradient ? " -D L2GRAD" : ""));
+        ocl::Kernel with_sobel(
+            "stage1_with_sobel", ocl::imgproc::canny_oclsrc,
+            format("-D WITH_SOBEL -D cn=%d -D TYPE=%s -D convert_floatN=%s -D floatN=%s -D GRP_SIZEX=%d -D "
+                   "GRP_SIZEY=%d%s",
+                   cn, ocl::memopTypeToStr(_src.depth()), ocl::convertTypeStr(_src.depth(), CV_32F, cn, cvt),
+                   ocl::typeToStr(CV_MAKE_TYPE(CV_32F, cn)), lSizeX, lSizeY, L2gradient ? " -D L2GRAD" : ""));
         if (with_sobel.empty())
             return false;
 
         UMat src = _src.getUMat();
         map.create(size, CV_32S);
-        with_sobel.args(ocl::KernelArg::ReadOnly(src),
-                        ocl::KernelArg::WriteOnlyNoSize(map),
-                        (float) low, (float) high);
+        with_sobel.args(ocl::KernelArg::ReadOnly(src), ocl::KernelArg::WriteOnlyNoSize(map), (float)low,
+                        (float)high);
 
-        size_t globalsize[2] = { (size_t)size.width, (size_t)size.height },
-                localsize[2] = { (size_t)lSizeX, (size_t)lSizeY };
+        size_t globalsize[2] = {(size_t)size.width, (size_t)size.height},
+               localsize[2] = {(size_t)lSizeX, (size_t)lSizeY};
 
         if (!with_sobel.run(2, globalsize, localsize, false))
             return false;
@@ -237,18 +243,17 @@ static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputA
         }
 
         ocl::Kernel without_sobel("stage1_without_sobel", ocl::imgproc::canny_oclsrc,
-                                    format("-D WITHOUT_SOBEL -D cn=%d -D GRP_SIZEX=%d -D GRP_SIZEY=%d%s",
-                                           cn, lSizeX, lSizeY, L2gradient ? " -D L2GRAD" : ""));
+                                  format("-D WITHOUT_SOBEL -D cn=%d -D GRP_SIZEX=%d -D GRP_SIZEY=%d%s", cn, lSizeX,
+                                         lSizeY, L2gradient ? " -D L2GRAD" : ""));
         if (without_sobel.empty())
             return false;
 
         map.create(size, CV_32S);
         without_sobel.args(ocl::KernelArg::ReadOnlyNoSize(dx), ocl::KernelArg::ReadOnlyNoSize(dy),
-                           ocl::KernelArg::WriteOnly(map),
-                           low, high);
+                           ocl::KernelArg::WriteOnly(map), low, high);
 
-        size_t globalsize[2] = { (size_t)size.width, (size_t)size.height },
-                localsize[2] = { (size_t)lSizeX, (size_t)lSizeY };
+        size_t globalsize[2] = {(size_t)size.width, (size_t)size.height},
+               localsize[2] = {(size_t)lSizeX, (size_t)lSizeY};
 
         if (!without_sobel.run(2, globalsize, localsize, false))
             return false;
@@ -264,11 +269,12 @@ static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputA
     if (sizey == 0)
         sizey = 1;
 
-    size_t globalsize[2] = { (size_t)size.width, ((size_t)size.height + PIX_PER_WI - 1) / PIX_PER_WI }, localsize[2] = { (size_t)lSizeX, (size_t)sizey };
+    size_t globalsize[2] = {(size_t)size.width, ((size_t)size.height + PIX_PER_WI - 1) / PIX_PER_WI},
+           localsize[2] = {(size_t)lSizeX, (size_t)sizey};
 
     ocl::Kernel edgesHysteresis("stage2_hysteresis", ocl::imgproc::canny_oclsrc,
-                                format("-D STAGE2 -D PIX_PER_WI=%d -D LOCAL_X=%d -D LOCAL_Y=%d",
-                                PIX_PER_WI, lSizeX, sizey));
+                                format("-D STAGE2 -D PIX_PER_WI=%d -D LOCAL_X=%d -D LOCAL_Y=%d", PIX_PER_WI,
+                                       lSizeX, sizey));
 
     if (edgesHysteresis.empty())
         return false;
@@ -280,7 +286,7 @@ static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputA
     // get edges
 
     ocl::Kernel getEdgesKernel("getEdges", ocl::imgproc::canny_oclsrc,
-                                format("-D GET_EDGES -D PIX_PER_WI=%d", PIX_PER_WI));
+                               format("-D GET_EDGES -D PIX_PER_WI=%d", PIX_PER_WI));
     if (getEdgesKernel.empty())
         return false;
 
@@ -312,18 +318,19 @@ static bool ocl_Canny(InputArray _src, const UMat& dx_, const UMat& dy_, OutputA
 class parallelCanny : public ParallelLoopBody
 {
 public:
-    parallelCanny(const Mat &_src, Mat &_map, std::deque<uchar*> &borderPeaksParallel,
-                  int _low, int _high, int _aperture_size, bool _L2gradient) :
-        src(_src), src2(_src), map(_map), _borderPeaksParallel(borderPeaksParallel),
-        low(_low), high(_high), aperture_size(_aperture_size), L2gradient(_L2gradient)
+    parallelCanny(const Mat& _src, Mat& _map, std::deque<uchar*>& borderPeaksParallel, int _low, int _high,
+                  int _aperture_size, bool _L2gradient)
+        : src(_src), src2(_src), map(_map), _borderPeaksParallel(borderPeaksParallel), low(_low), high(_high),
+          aperture_size(_aperture_size), L2gradient(_L2gradient)
     {
 #if CV_SIMD128
         haveSIMD = hasSIMD128();
-        if(haveSIMD)
-            _map.create(src.rows + 2, (int)alignSize((size_t)(src.cols + CV_MALLOC_SIMD128 + 1), CV_MALLOC_SIMD128), CV_8UC1);
+        if (haveSIMD)
+            _map.create(src.rows + 2,
+                        (int)alignSize((size_t)(src.cols + CV_MALLOC_SIMD128 + 1), CV_MALLOC_SIMD128), CV_8UC1);
         else
 #endif
-            _map.create(src.rows + 2, src.cols + 2,  CV_8UC1);
+            _map.create(src.rows + 2, src.cols + 2, CV_8UC1);
         map = _map;
         map.row(0).setTo(1);
         map.row(src.rows + 1).setTo(1);
@@ -332,18 +339,19 @@ public:
         cn = src.channels();
     }
 
-    parallelCanny(const Mat &_dx, const Mat &_dy, Mat &_map, std::deque<uchar*> &borderPeaksParallel,
-                  int _low, int _high, bool _L2gradient) :
-        src(_dx), src2(_dy), map(_map), _borderPeaksParallel(borderPeaksParallel),
-        low(_low), high(_high), aperture_size(0), L2gradient(_L2gradient)
+    parallelCanny(const Mat& _dx, const Mat& _dy, Mat& _map, std::deque<uchar*>& borderPeaksParallel, int _low,
+                  int _high, bool _L2gradient)
+        : src(_dx), src2(_dy), map(_map), _borderPeaksParallel(borderPeaksParallel), low(_low), high(_high),
+          aperture_size(0), L2gradient(_L2gradient)
     {
 #if CV_SIMD128
         haveSIMD = hasSIMD128();
-        if(haveSIMD)
-            _map.create(src.rows + 2, (int)alignSize((size_t)(src.cols + CV_MALLOC_SIMD128 + 1), CV_MALLOC_SIMD128), CV_8UC1);
+        if (haveSIMD)
+            _map.create(src.rows + 2,
+                        (int)alignSize((size_t)(src.cols + CV_MALLOC_SIMD128 + 1), CV_MALLOC_SIMD128), CV_8UC1);
         else
 #endif
-            _map.create(src.rows + 2, src.cols + 2,  CV_8UC1);
+            _map.create(src.rows + 2, src.cols + 2, CV_8UC1);
         map = _map;
         map.row(0).setTo(1);
         map.row(src.rows + 1).setTo(1);
@@ -356,7 +364,7 @@ public:
 
     parallelCanny& operator=(const parallelCanny&) { return *this; }
 
-    void operator()(const Range &boundaries) const CV_OVERRIDE
+    void operator()(const Range& boundaries) const CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
 
@@ -366,11 +374,11 @@ public:
         const int rowStart = max(0, boundaries.start - 1), rowEnd = min(src.rows, boundaries.end + 1);
         int *_mag_p, *_mag_a, *_mag_n;
         short *_dx, *_dy, *_dx_a = NULL, *_dy_a = NULL, *_dx_n = NULL, *_dy_n = NULL;
-        uchar *_pmap;
+        uchar* _pmap;
         double scale = 1.0;
 
         CV_TRACE_REGION("gradient")
-        if(needGradient)
+        if (needGradient)
         {
             if (aperture_size == 7)
             {
@@ -386,7 +394,7 @@ public:
         }
 
         CV_TRACE_REGION_NEXT("magnitude");
-        if(cn > 1)
+        if (cn > 1)
         {
             dxMax.allocate(2 * dx.cols);
             dyMax.allocate(2 * dy.cols);
@@ -410,7 +418,7 @@ public:
 #endif
 
         // For the first time when just 2 rows are filled and for left and right borders
-        if(rowStart == boundaries.start)
+        if (rowStart == boundaries.start)
             memset(_mag_n - 1, 0, mapstep * sizeof(int));
         else
             _mag_n[src.cols] = _mag_n[-1] = 0;
@@ -428,7 +436,7 @@ public:
             std::swap(_mag_n, _mag_a);
             std::swap(_mag_n, _mag_p);
 
-            if(i < rowEnd)
+            if (i < rowEnd)
             {
                 // Next row calculation
                 _dx = dx.ptr<short>(i - rowStart);
@@ -440,7 +448,7 @@ public:
 #if CV_SIMD128
                     if (haveSIMD)
                     {
-                       for ( ; j <= width - 8; j += 8)
+                        for (; j <= width - 8; j += 8)
                         {
                             v_int16x8 v_dx = v_load((const short*)(_dx + j));
                             v_int16x8 v_dy = v_load((const short*)(_dy + j));
@@ -450,13 +458,14 @@ public:
                             v_expand(v_dx, v_dxp_low, v_dxp_high);
                             v_expand(v_dy, v_dyp_low, v_dyp_high);
 
-                            v_store_aligned((int *)(_mag_n + j), v_dxp_low*v_dxp_low+v_dyp_low*v_dyp_low);
-                            v_store_aligned((int *)(_mag_n + j + 4), v_dxp_high*v_dxp_high+v_dyp_high*v_dyp_high);
+                            v_store_aligned((int*)(_mag_n + j), v_dxp_low * v_dxp_low + v_dyp_low * v_dyp_low);
+                            v_store_aligned((int*)(_mag_n + j + 4),
+                                            v_dxp_high * v_dxp_high + v_dyp_high * v_dyp_high);
                         }
                     }
 #endif
-                    for ( ; j < width; ++j)
-                        _mag_n[j] = int(_dx[j])*_dx[j] + int(_dy[j])*_dy[j];
+                    for (; j < width; ++j)
+                        _mag_n[j] = int(_dx[j]) * _dx[j] + int(_dy[j]) * _dy[j];
                 }
                 else
                 {
@@ -464,10 +473,10 @@ public:
 #if CV_SIMD128
                     if (haveSIMD)
                     {
-                        for(; j <= width - 8; j += 8)
+                        for (; j <= width - 8; j += 8)
                         {
-                            v_int16x8 v_dx = v_load((const short *)(_dx + j));
-                            v_int16x8 v_dy = v_load((const short *)(_dy + j));
+                            v_int16x8 v_dx = v_load((const short*)(_dx + j));
+                            v_int16x8 v_dy = v_load((const short*)(_dy + j));
 
                             v_dx = v_reinterpret_as_s16(v_abs(v_dx));
                             v_dy = v_reinterpret_as_s16(v_abs(v_dy));
@@ -476,25 +485,26 @@ public:
                             v_expand(v_dx, v_dx_ml, v_dx_mh);
                             v_expand(v_dy, v_dy_ml, v_dy_mh);
 
-                            v_store_aligned((int *)(_mag_n + j), v_dx_ml + v_dy_ml);
-                            v_store_aligned((int *)(_mag_n + j + 4), v_dx_mh + v_dy_mh);
+                            v_store_aligned((int*)(_mag_n + j), v_dx_ml + v_dy_ml);
+                            v_store_aligned((int*)(_mag_n + j + 4), v_dx_mh + v_dy_mh);
                         }
                     }
 #endif
-                    for ( ; j < width; ++j)
+                    for (; j < width; ++j)
                         _mag_n[j] = std::abs(int(_dx[j])) + std::abs(int(_dy[j]));
                 }
 
-                if(cn > 1)
+                if (cn > 1)
                 {
                     std::swap(_dx_n, _dx_a);
                     std::swap(_dy_n, _dy_a);
 
-                    for(int j = 0, jn = 0; j < src.cols; ++j, jn += cn)
+                    for (int j = 0, jn = 0; j < src.cols; ++j, jn += cn)
                     {
                         int maxIdx = jn;
-                        for(int k = 1; k < cn; ++k)
-                            if(_mag_n[jn + k] > _mag_n[maxIdx]) maxIdx = jn + k;
+                        for (int k = 1; k < cn; ++k)
+                            if (_mag_n[jn + k] > _mag_n[maxIdx])
+                                maxIdx = jn + k;
 
                         _mag_n[j] = _mag_n[maxIdx];
                         _dx_n[j] = _dx[maxIdx];
@@ -513,7 +523,7 @@ public:
             {
                 memset(_mag_n - 1, 0, mapstep * sizeof(int));
 
-                if(cn > 1)
+                if (cn > 1)
                 {
                     std::swap(_dx_n, _dx_a);
                     std::swap(_dy_n, _dy_a);
@@ -523,15 +533,15 @@ public:
             // From here actual src row is (i - 1)
             // Set left and right border to 1
 #if CV_SIMD128
-            if(haveSIMD)
+            if (haveSIMD)
                 _pmap = map.ptr<uchar>(i) + CV_MALLOC_SIMD128;
             else
 #endif
                 _pmap = map.ptr<uchar>(i) + 1;
 
-            _pmap[src.cols] =_pmap[-1] = 1;
+            _pmap[src.cols] = _pmap[-1] = 1;
 
-            if(cn == 1)
+            if (cn == 1)
             {
                 _dx = dx.ptr<short>(i - rowStart - 1);
                 _dy = dy.ptr<short>(i - rowStart - 1);
@@ -610,7 +620,7 @@ public:
                             {
                                 if (m > _mag_a[k - 1] && m >= _mag_a[k + 1])
                                 {
-                                    CANNY_CHECK_SIMD(m, high, (_pmap+k), stack);
+                                    CANNY_CHECK_SIMD(m, high, (_pmap + k), stack);
                                 }
                             }
                             else
@@ -620,20 +630,20 @@ public:
                                 {
                                     if (m > _mag_p[k] && m >= _mag_n[k])
                                     {
-                                        CANNY_CHECK_SIMD(m, high, (_pmap+k), stack);
+                                        CANNY_CHECK_SIMD(m, high, (_pmap + k), stack);
                                     }
                                 }
                                 else
                                 {
                                     int s = (xs ^ ys) < 0 ? -1 : 1;
-                                    if(m > _mag_p[k - s] && m > _mag_n[k + s])
+                                    if (m > _mag_p[k - s] && m > _mag_n[k + s])
                                     {
-                                        CANNY_CHECK_SIMD(m, high, (_pmap+k), stack);
+                                        CANNY_CHECK_SIMD(m, high, (_pmap + k), stack);
                                     }
                                 }
                             }
                             ++k;
-                        } while((mask >>= 1));
+                        } while ((mask >>= 1));
                     }
                 }
 
@@ -679,7 +689,7 @@ public:
                             {
                                 if (m > _mag_a[k - 1] && m >= _mag_a[k + 1])
                                 {
-                                    CANNY_CHECK_SIMD(m, high, (_pmap+k), stack);
+                                    CANNY_CHECK_SIMD(m, high, (_pmap + k), stack);
                                 }
                             }
                             else
@@ -689,20 +699,20 @@ public:
                                 {
                                     if (m > _mag_p[k] && m >= _mag_n[k])
                                     {
-                                        CANNY_CHECK_SIMD(m, high, (_pmap+k), stack);
+                                        CANNY_CHECK_SIMD(m, high, (_pmap + k), stack);
                                     }
                                 }
                                 else
                                 {
                                     int s = (xs ^ ys) < 0 ? -1 : 1;
-                                    if(m > _mag_p[k - s] && m > _mag_n[k + s])
+                                    if (m > _mag_p[k - s] && m > _mag_n[k + s])
                                     {
-                                        CANNY_CHECK_SIMD(m, high, (_pmap+k), stack);
+                                        CANNY_CHECK_SIMD(m, high, (_pmap + k), stack);
                                     }
                                 }
                             }
                             ++k;
-                        } while((mask >>= 1));
+                        } while ((mask >>= 1));
                     }
                     j += 16;
                 }
@@ -725,7 +735,7 @@ public:
                     {
                         if (m > _mag_a[j - 1] && m >= _mag_a[j + 1])
                         {
-                            CANNY_CHECK(m, high, (_pmap+j), stack);
+                            CANNY_CHECK(m, high, (_pmap + j), stack);
                         }
                     }
                     else
@@ -735,15 +745,15 @@ public:
                         {
                             if (m > _mag_p[j] && m >= _mag_n[j])
                             {
-                                CANNY_CHECK(m, high, (_pmap+j), stack);
+                                CANNY_CHECK(m, high, (_pmap + j), stack);
                             }
                         }
                         else
                         {
                             int s = (xs ^ ys) < 0 ? -1 : 1;
-                            if(m > _mag_p[j - s] && m > _mag_n[j + s])
+                            if (m > _mag_p[j - s] && m > _mag_n[j + s])
                             {
-                                CANNY_CHECK(m, high, (_pmap+j), stack);
+                                CANNY_CHECK(m, high, (_pmap + j), stack);
                             }
                         }
                     }
@@ -753,53 +763,68 @@ public:
         }
 
         // Not for first row of first slice or last row of last slice
-        uchar *pmapLower = (rowStart == 0) ? map.data : (map.data + (boundaries.start + 2) * mapstep);
-        uint pmapDiff = (uint)(((rowEnd == src.rows) ? map.datalimit : (map.data + boundaries.end * mapstep)) - pmapLower);
+        uchar* pmapLower = (rowStart == 0) ? map.data : (map.data + (boundaries.start + 2) * mapstep);
+        uint pmapDiff = (uint)(((rowEnd == src.rows) ? map.datalimit : (map.data + boundaries.end * mapstep))
+                               - pmapLower);
 
         // now track the edges (hysteresis thresholding)
         CV_TRACE_REGION_NEXT("hysteresis");
         while (!stack.empty())
         {
-            uchar *m = stack.back();
+            uchar* m = stack.back();
             stack.pop_back();
 
             // Stops thresholding from expanding to other slices by sending pixels in the borders of each
             // slice in a queue to be serially processed later.
-            if((unsigned)(m - pmapLower) < pmapDiff)
+            if ((unsigned)(m - pmapLower) < pmapDiff)
             {
-                if (!m[-mapstep-1]) CANNY_PUSH((m-mapstep-1), stack);
-                if (!m[-mapstep])   CANNY_PUSH((m-mapstep), stack);
-                if (!m[-mapstep+1]) CANNY_PUSH((m-mapstep+1), stack);
-                if (!m[-1])         CANNY_PUSH((m-1), stack);
-                if (!m[1])          CANNY_PUSH((m+1), stack);
-                if (!m[mapstep-1])  CANNY_PUSH((m+mapstep-1), stack);
-                if (!m[mapstep])    CANNY_PUSH((m+mapstep), stack);
-                if (!m[mapstep+1])  CANNY_PUSH((m+mapstep+1), stack);
+                if (!m[-mapstep - 1])
+                    CANNY_PUSH((m - mapstep - 1), stack);
+                if (!m[-mapstep])
+                    CANNY_PUSH((m - mapstep), stack);
+                if (!m[-mapstep + 1])
+                    CANNY_PUSH((m - mapstep + 1), stack);
+                if (!m[-1])
+                    CANNY_PUSH((m - 1), stack);
+                if (!m[1])
+                    CANNY_PUSH((m + 1), stack);
+                if (!m[mapstep - 1])
+                    CANNY_PUSH((m + mapstep - 1), stack);
+                if (!m[mapstep])
+                    CANNY_PUSH((m + mapstep), stack);
+                if (!m[mapstep + 1])
+                    CANNY_PUSH((m + mapstep + 1), stack);
             }
             else
             {
                 borderPeaksLocal.push_back(m);
                 ptrdiff_t mapstep2 = m < pmapLower ? mapstep : -mapstep;
 
-                if (!m[-1])         CANNY_PUSH((m-1), stack);
-                if (!m[1])          CANNY_PUSH((m+1), stack);
-                if (!m[mapstep2-1]) CANNY_PUSH((m+mapstep2-1), stack);
-                if (!m[mapstep2])   CANNY_PUSH((m+mapstep2), stack);
-                if (!m[mapstep2+1]) CANNY_PUSH((m+mapstep2+1), stack);
+                if (!m[-1])
+                    CANNY_PUSH((m - 1), stack);
+                if (!m[1])
+                    CANNY_PUSH((m + 1), stack);
+                if (!m[mapstep2 - 1])
+                    CANNY_PUSH((m + mapstep2 - 1), stack);
+                if (!m[mapstep2])
+                    CANNY_PUSH((m + mapstep2), stack);
+                if (!m[mapstep2 + 1])
+                    CANNY_PUSH((m + mapstep2 + 1), stack);
             }
         }
 
-        if(!borderPeaksLocal.empty())
+        if (!borderPeaksLocal.empty())
         {
             AutoLock lock(mutex);
-            _borderPeaksParallel.insert(_borderPeaksParallel.end(), borderPeaksLocal.begin(), borderPeaksLocal.end());
+            _borderPeaksParallel.insert(_borderPeaksParallel.end(), borderPeaksLocal.begin(),
+                                        borderPeaksLocal.end());
         }
     }
 
 private:
     const Mat &src, &src2;
-    Mat &map;
-    std::deque<uchar*> &_borderPeaksParallel;
+    Mat& map;
+    std::deque<uchar*>& _borderPeaksParallel;
     int low, high, aperture_size;
     bool L2gradient, needGradient;
     ptrdiff_t mapstep;
@@ -814,8 +839,7 @@ class finalPass : public ParallelLoopBody
 {
 
 public:
-    finalPass(const Mat &_map, Mat &_dst) :
-        map(_map), dst(_dst)
+    finalPass(const Mat& _map, Mat& _dst) : map(_map), dst(_dst)
     {
         dst = _dst;
 #if CV_SIMD128
@@ -825,22 +849,23 @@ public:
 
     ~finalPass() {}
 
-    void operator()(const Range &boundaries) const CV_OVERRIDE
+    void operator()(const Range& boundaries) const CV_OVERRIDE
     {
         // the final pass, form the final image
         for (int i = boundaries.start; i < boundaries.end; i++)
         {
             int j = 0;
-            uchar *pdst = dst.ptr<uchar>(i);
-            const uchar *pmap = map.ptr<uchar>(i + 1);
+            uchar* pdst = dst.ptr<uchar>(i);
+            const uchar* pmap = map.ptr<uchar>(i + 1);
 #if CV_SIMD128
-            if(haveSIMD)
+            if (haveSIMD)
                 pmap += CV_MALLOC_SIMD128;
             else
 #endif
                 pmap += 1;
 #if CV_SIMD128
-            if(haveSIMD) {
+            if (haveSIMD)
+            {
                 const v_uint8x16 v_zero = v_setzero_u8();
                 const v_uint8x16 v_ff = ~v_zero;
                 const v_uint8x16 v_two(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2);
@@ -863,14 +888,14 @@ public:
 #endif
             for (; j < dst.cols; j++)
             {
-                pdst[j] = (uchar)-(pmap[j] >> 1);
+                pdst[j] = (uchar) - (pmap[j] >> 1);
             }
         }
     }
 
 private:
-    const Mat &map;
-    Mat &dst;
+    const Mat& map;
+    Mat& dst;
 #if CV_SIMD128
     bool haveSIMD;
 #endif
@@ -881,8 +906,12 @@ private:
 
 #ifdef HAVE_OPENVX
 namespace ovx {
-    template <> inline bool skipSmallImages<VX_KERNEL_CANNY_EDGE_DETECTOR>(int w, int h) { return w*h < 640 * 480; }
+template<>
+inline bool skipSmallImages<VX_KERNEL_CANNY_EDGE_DETECTOR>(int w, int h)
+{
+    return w * h < 640 * 480;
 }
+} // namespace ovx
 static bool openvx_canny(const Mat& src, Mat& dst, int loVal, int hiVal, int kSize, bool useL2)
 {
     using namespace ivx;
@@ -890,19 +919,14 @@ static bool openvx_canny(const Mat& src, Mat& dst, int loVal, int hiVal, int kSi
     Context context = ovx::getOpenVXContext();
     try
     {
-    Image _src = Image::createFromHandle(
-                context,
-                Image::matTypeToFormat(src.type()),
-                Image::createAddressing(src),
-                src.data );
-    Image _dst = Image::createFromHandle(
-                context,
-                Image::matTypeToFormat(dst.type()),
-                Image::createAddressing(dst),
-                dst.data );
-    Threshold threshold = Threshold::createRange(context, VX_TYPE_UINT8, saturate_cast<uchar>(loVal), saturate_cast<uchar>(hiVal));
+        Image _src = Image::createFromHandle(context, Image::matTypeToFormat(src.type()),
+                                             Image::createAddressing(src), src.data);
+        Image _dst = Image::createFromHandle(context, Image::matTypeToFormat(dst.type()),
+                                             Image::createAddressing(dst), dst.data);
+        Threshold threshold = Threshold::createRange(context, VX_TYPE_UINT8, saturate_cast<uchar>(loVal),
+                                                     saturate_cast<uchar>(hiVal));
 
-#if 0
+#    if 0
     // the code below is disabled because vxuCannyEdgeDetector()
     // ignores context attribute VX_CONTEXT_IMMEDIATE_BORDER
 
@@ -911,25 +935,26 @@ static bool openvx_canny(const Mat& src, Mat& dst, int loVal, int hiVal, int kSi
     context.setImmediateBorder(VX_BORDER_REPLICATE);
     IVX_CHECK_STATUS( vxuCannyEdgeDetector(context, _src, threshold, kSize, (useL2 ? VX_NORM_L2 : VX_NORM_L1), _dst) );
     context.setImmediateBorder(prevBorder);
-#else
-    // alternative code without vxuCannyEdgeDetector()
-    Graph graph = Graph::create(context);
-    ivx::Node node = ivx::Node(vxCannyEdgeDetectorNode(graph, _src, threshold, kSize, (useL2 ? VX_NORM_L2 : VX_NORM_L1), _dst) );
-    node.setBorder(VX_BORDER_REPLICATE);
-    graph.verify();
-    graph.process();
-#endif
+#    else
+        // alternative code without vxuCannyEdgeDetector()
+        Graph graph = Graph::create(context);
+        ivx::Node node = ivx::Node(
+            vxCannyEdgeDetectorNode(graph, _src, threshold, kSize, (useL2 ? VX_NORM_L2 : VX_NORM_L1), _dst));
+        node.setBorder(VX_BORDER_REPLICATE);
+        graph.verify();
+        graph.process();
+#    endif
 
-#ifdef VX_VERSION_1_1
-    _src.swapHandle();
-    _dst.swapHandle();
-#endif
+#    ifdef VX_VERSION_1_1
+        _src.swapHandle();
+        _dst.swapHandle();
+#    endif
     }
-    catch(const WrapperError& e)
+    catch (const WrapperError& e)
     {
         VX_DbgThrow(e.what());
     }
-    catch(const RuntimeError& e)
+    catch (const RuntimeError& e)
     {
         VX_DbgThrow(e.what());
     }
@@ -938,13 +963,12 @@ static bool openvx_canny(const Mat& src, Mat& dst, int loVal, int hiVal, int kSi
 }
 #endif // HAVE_OPENVX
 
-void Canny( InputArray _src, OutputArray _dst,
-                double low_thresh, double high_thresh,
-                int aperture_size, bool L2gradient )
+void Canny(InputArray _src, OutputArray _dst, double low_thresh, double high_thresh, int aperture_size,
+           bool L2gradient)
 {
     CV_INSTRUMENT_REGION();
 
-    CV_Assert( _src.depth() == CV_8U );
+    CV_Assert(_src.depth() == CV_8U);
 
     const Size size = _src.size();
 
@@ -973,7 +997,8 @@ void Canny( InputArray _src, OutputArray _dst,
         std::swap(low_thresh, high_thresh);
 
     CV_OCL_RUN(_dst.isUMat() && (_src.channels() == 1 || _src.channels() == 3),
-               ocl_Canny<false>(_src, UMat(), UMat(), _dst, (float)low_thresh, (float)high_thresh, aperture_size, L2gradient, _src.channels(), size))
+               ocl_Canny<false>(_src, UMat(), UMat(), _dst, (float)low_thresh, (float)high_thresh, aperture_size,
+                                L2gradient, _src.channels(), size))
 
     Mat src0 = _src.getMat(), dst = _dst.getMat();
     Mat src(src0.size(), src0.type(), src0.data, src0.step);
@@ -981,30 +1006,24 @@ void Canny( InputArray _src, OutputArray _dst,
     CALL_HAL(canny, cv_hal_canny, src.data, src.step, dst.data, dst.step, src.cols, src.rows, src.channels(),
              low_thresh, high_thresh, aperture_size, L2gradient);
 
-    CV_OVX_RUN(
-        false && /* disabling due to accuracy issues */
-            src.type() == CV_8UC1 &&
-            !src.isSubmatrix() &&
-            src.cols >= aperture_size &&
-            src.rows >= aperture_size &&
-            !ovx::skipSmallImages<VX_KERNEL_CANNY_EDGE_DETECTOR>(src.cols, src.rows),
-        openvx_canny(
-            src,
-            dst,
-            cvFloor(low_thresh),
-            cvFloor(high_thresh),
-            aperture_size,
-            L2gradient ) )
+    CV_OVX_RUN(false && /* disabling due to accuracy issues */
+                   src.type() == CV_8UC1 && !src.isSubmatrix() && src.cols >= aperture_size
+                   && src.rows >= aperture_size
+                   && !ovx::skipSmallImages<VX_KERNEL_CANNY_EDGE_DETECTOR>(src.cols, src.rows),
+               openvx_canny(src, dst, cvFloor(low_thresh), cvFloor(high_thresh), aperture_size, L2gradient))
 
-    CV_IPP_RUN_FAST(ipp_Canny(src, Mat(), Mat(), dst, (float)low_thresh, (float)high_thresh, L2gradient, aperture_size))
+    CV_IPP_RUN_FAST(
+        ipp_Canny(src, Mat(), Mat(), dst, (float)low_thresh, (float)high_thresh, L2gradient, aperture_size))
 
     if (L2gradient)
     {
         low_thresh = std::min(32767.0, low_thresh);
         high_thresh = std::min(32767.0, high_thresh);
 
-        if (low_thresh > 0) low_thresh *= low_thresh;
-        if (high_thresh > 0) high_thresh *= high_thresh;
+        if (low_thresh > 0)
+            low_thresh *= low_thresh;
+        if (high_thresh > 0)
+            high_thresh *= high_thresh;
     }
     int low = cvFloor(low_thresh);
     int high = cvFloor(high_thresh);
@@ -1022,7 +1041,8 @@ void Canny( InputArray _src, OutputArray _dst,
     Mat map;
     std::deque<uchar*> stack;
 
-    parallel_for_(Range(0, src.rows), parallelCanny(src, map, stack, low, high, aperture_size, L2gradient), numOfThreads);
+    parallel_for_(Range(0, src.rows), parallelCanny(src, map, stack, low, high, aperture_size, L2gradient),
+                  numOfThreads);
 
     CV_TRACE_REGION("global_hysteresis");
     // now track the edges (hysteresis thresholding)
@@ -1033,23 +1053,29 @@ void Canny( InputArray _src, OutputArray _dst,
         uchar* m = stack.back();
         stack.pop_back();
 
-        if (!m[-mapstep-1]) CANNY_PUSH((m-mapstep-1), stack);
-        if (!m[-mapstep])   CANNY_PUSH((m-mapstep), stack);
-        if (!m[-mapstep+1]) CANNY_PUSH((m-mapstep+1), stack);
-        if (!m[-1])         CANNY_PUSH((m-1), stack);
-        if (!m[1])          CANNY_PUSH((m+1), stack);
-        if (!m[mapstep-1])  CANNY_PUSH((m+mapstep-1), stack);
-        if (!m[mapstep])    CANNY_PUSH((m+mapstep), stack);
-        if (!m[mapstep+1])  CANNY_PUSH((m+mapstep+1), stack);
+        if (!m[-mapstep - 1])
+            CANNY_PUSH((m - mapstep - 1), stack);
+        if (!m[-mapstep])
+            CANNY_PUSH((m - mapstep), stack);
+        if (!m[-mapstep + 1])
+            CANNY_PUSH((m - mapstep + 1), stack);
+        if (!m[-1])
+            CANNY_PUSH((m - 1), stack);
+        if (!m[1])
+            CANNY_PUSH((m + 1), stack);
+        if (!m[mapstep - 1])
+            CANNY_PUSH((m + mapstep - 1), stack);
+        if (!m[mapstep])
+            CANNY_PUSH((m + mapstep), stack);
+        if (!m[mapstep + 1])
+            CANNY_PUSH((m + mapstep + 1), stack);
     }
 
     CV_TRACE_REGION_NEXT("finalPass");
-    parallel_for_(Range(0, src.rows), finalPass(map, dst), src.total()/(double)(1<<16));
+    parallel_for_(Range(0, src.rows), finalPass(map, dst), src.total() / (double)(1 << 16));
 }
 
-void Canny( InputArray _dx, InputArray _dy, OutputArray _dst,
-                double low_thresh, double high_thresh,
-                bool L2gradient )
+void Canny(InputArray _dx, InputArray _dy, OutputArray _dst, double low_thresh, double high_thresh, bool L2gradient)
 {
     CV_INSTRUMENT_REGION();
 
@@ -1063,8 +1089,8 @@ void Canny( InputArray _dx, InputArray _dy, OutputArray _dst,
 
     const Size size = _dx.size();
 
-    CV_OCL_RUN(_dst.isUMat(),
-               ocl_Canny<true>(UMat(), _dx.getUMat(), _dy.getUMat(), _dst, (float)low_thresh, (float)high_thresh, 0, L2gradient, _dx.channels(), size))
+    CV_OCL_RUN(_dst.isUMat(), ocl_Canny<true>(UMat(), _dx.getUMat(), _dy.getUMat(), _dst, (float)low_thresh,
+                                              (float)high_thresh, 0, L2gradient, _dx.channels(), size))
 
     _dst.create(size, CV_8U);
     Mat dst = _dst.getMat();
@@ -1079,8 +1105,10 @@ void Canny( InputArray _dx, InputArray _dy, OutputArray _dst,
         low_thresh = std::min(32767.0, low_thresh);
         high_thresh = std::min(32767.0, high_thresh);
 
-        if (low_thresh > 0) low_thresh *= low_thresh;
-        if (high_thresh > 0) high_thresh *= high_thresh;
+        if (low_thresh > 0)
+            low_thresh *= low_thresh;
+        if (high_thresh > 0)
+            high_thresh *= high_thresh;
     }
 
     int low = cvFloor(low_thresh);
@@ -1105,30 +1133,36 @@ void Canny( InputArray _dx, InputArray _dy, OutputArray _dst,
         uchar* m = stack.back();
         stack.pop_back();
 
-        if (!m[-mapstep-1]) CANNY_PUSH((m-mapstep-1), stack);
-        if (!m[-mapstep])   CANNY_PUSH((m-mapstep), stack);
-        if (!m[-mapstep+1]) CANNY_PUSH((m-mapstep+1), stack);
-        if (!m[-1])         CANNY_PUSH((m-1), stack);
-        if (!m[1])          CANNY_PUSH((m+1), stack);
-        if (!m[mapstep-1])  CANNY_PUSH((m+mapstep-1), stack);
-        if (!m[mapstep])    CANNY_PUSH((m+mapstep), stack);
-        if (!m[mapstep+1])  CANNY_PUSH((m+mapstep+1), stack);
+        if (!m[-mapstep - 1])
+            CANNY_PUSH((m - mapstep - 1), stack);
+        if (!m[-mapstep])
+            CANNY_PUSH((m - mapstep), stack);
+        if (!m[-mapstep + 1])
+            CANNY_PUSH((m - mapstep + 1), stack);
+        if (!m[-1])
+            CANNY_PUSH((m - 1), stack);
+        if (!m[1])
+            CANNY_PUSH((m + 1), stack);
+        if (!m[mapstep - 1])
+            CANNY_PUSH((m + mapstep - 1), stack);
+        if (!m[mapstep])
+            CANNY_PUSH((m + mapstep), stack);
+        if (!m[mapstep + 1])
+            CANNY_PUSH((m + mapstep + 1), stack);
     }
 
     CV_TRACE_REGION_NEXT("finalPass");
-    parallel_for_(Range(0, dx.rows), finalPass(map, dst), dx.total()/(double)(1<<16));
+    parallel_for_(Range(0, dx.rows), finalPass(map, dst), dx.total() / (double)(1 << 16));
 }
 
 } // namespace cv
 
-void cvCanny( const CvArr* image, CvArr* edges, double threshold1,
-              double threshold2, int aperture_size )
+void cvCanny(const CvArr* image, CvArr* edges, double threshold1, double threshold2, int aperture_size)
 {
     cv::Mat src = cv::cvarrToMat(image), dst = cv::cvarrToMat(edges);
-    CV_Assert( src.size == dst.size && src.depth() == CV_8U && dst.type() == CV_8U );
+    CV_Assert(src.size == dst.size && src.depth() == CV_8U && dst.type() == CV_8U);
 
-    cv::Canny(src, dst, threshold1, threshold2, aperture_size & 255,
-              (aperture_size & CV_CANNY_L2_GRADIENT) != 0);
+    cv::Canny(src, dst, threshold1, threshold2, aperture_size & 255, (aperture_size & CV_CANNY_L2_GRADIENT) != 0);
 }
 
 /* End of file. */

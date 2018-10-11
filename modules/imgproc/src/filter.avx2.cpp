@@ -43,8 +43,7 @@
 #include "precomp.hpp"
 #include "filter.hpp"
 
-namespace cv
-{
+namespace cv {
 
 int RowVec_32f_AVX(const float* src0, const float* _kx, float* dst, int width, int cn, int _ksize)
 {
@@ -77,7 +76,7 @@ int SymmColumnVec_32f_Symm_AVX(const float** src, const float* ky, float* dst, f
     const __m128 d4 = _mm_set1_ps(delta);
     const __m256 d8 = _mm256_set1_ps(delta);
 
-    for( ; i <= width - 16; i += 16 )
+    for (; i <= width - 16; i += 16)
     {
         __m256 f = _mm256_set1_ps(ky[0]);
         __m256 s0, s1;
@@ -89,14 +88,14 @@ int SymmColumnVec_32f_Symm_AVX(const float** src, const float* ky, float* dst, f
 #else
         s0 = _mm256_add_ps(_mm256_mul_ps(s0, f), d8);
 #endif
-        s1 = _mm256_loadu_ps(S+8);
+        s1 = _mm256_loadu_ps(S + 8);
 #if CV_FMA3
         s1 = _mm256_fmadd_ps(s1, f, d8);
 #else
         s1 = _mm256_add_ps(_mm256_mul_ps(s1, f), d8);
 #endif
 
-        for( k = 1; k <= ksize2; k++ )
+        for (k = 1; k <= ksize2; k++)
         {
             S = src[k] + i;
             S2 = src[-k] + i;
@@ -107,7 +106,7 @@ int SymmColumnVec_32f_Symm_AVX(const float** src, const float* ky, float* dst, f
 #else
             s0 = _mm256_add_ps(s0, _mm256_mul_ps(x0, f));
 #endif
-            x0 = _mm256_add_ps(_mm256_loadu_ps(S+8), _mm256_loadu_ps(S2+8));
+            x0 = _mm256_add_ps(_mm256_loadu_ps(S + 8), _mm256_loadu_ps(S2 + 8));
 #if CV_FMA3
             s1 = _mm256_fmadd_ps(x0, f, s1);
 #else
@@ -119,16 +118,16 @@ int SymmColumnVec_32f_Symm_AVX(const float** src, const float* ky, float* dst, f
         _mm256_storeu_ps(dst + i + 8, s1);
     }
 
-    for( ; i <= width - 4; i += 4 )
+    for (; i <= width - 4; i += 4)
     {
         __m128 f = _mm_set1_ps(ky[0]);
         __m128 x0, s0 = _mm_load_ps(src[0] + i);
         s0 = _mm_add_ps(_mm_mul_ps(s0, f), d4);
 
-        for( k = 1; k <= ksize2; k++ )
+        for (k = 1; k <= ksize2; k++)
         {
             f = _mm_set1_ps(ky[k]);
-            x0 = _mm_add_ps(_mm_load_ps(src[k]+i), _mm_load_ps(src[-k] + i));
+            x0 = _mm_add_ps(_mm_load_ps(src[k] + i), _mm_load_ps(src[-k] + i));
             s0 = _mm_add_ps(s0, _mm_mul_ps(x0, f));
         }
 
@@ -142,7 +141,7 @@ int SymmColumnVec_32f_Symm_AVX(const float** src, const float* ky, float* dst, f
 int SymmColumnVec_32f_Unsymm_AVX(const float** src, const float* ky, float* dst, float delta, int width, int ksize2)
 {
     int i = 0, k;
-    const float *S2;
+    const float* S2;
     const __m128 d4 = _mm_set1_ps(delta);
     const __m256 d8 = _mm256_set1_ps(delta);
 
@@ -153,7 +152,7 @@ int SymmColumnVec_32f_Unsymm_AVX(const float** src, const float* ky, float* dst,
 
         for (k = 1; k <= ksize2; k++)
         {
-            const float *S = src[k] + i;
+            const float* S = src[k] + i;
             S2 = src[-k] + i;
             f = _mm256_set1_ps(ky[k]);
             x0 = _mm256_sub_ps(_mm256_loadu_ps(S), _mm256_loadu_ps(S2));
@@ -192,6 +191,6 @@ int SymmColumnVec_32f_Unsymm_AVX(const float** src, const float* ky, float* dst,
     return i;
 }
 
-}
+} // namespace cv
 
 /* End of file. */

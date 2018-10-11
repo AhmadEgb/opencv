@@ -50,12 +50,9 @@
 #include "precomp.hpp"
 #include "imgwarp.hpp"
 
-namespace cv
-{
-namespace opt_AVX2
-{
+namespace cv { namespace opt_AVX2 {
 
-int warpAffineBlockline(int *adelta, int *bdelta, short* xy, short* alpha, int X0, int Y0, int bw)
+int warpAffineBlockline(int* adelta, int* bdelta, short* xy, short* alpha, int X0, int Y0, int bw)
 {
     const int AB_BITS = MAX(10, (int)INTER_BITS);
     int x1 = 0;
@@ -74,14 +71,10 @@ int warpAffineBlockline(int *adelta, int *bdelta, short* xy, short* alpha, int X
         tx1 = _mm256_srai_epi32(tx1, AB_BITS - INTER_BITS);
         ty1 = _mm256_srai_epi32(ty1, AB_BITS - INTER_BITS);
 
-        __m256i fx_ = _mm256_packs_epi32(_mm256_and_si256(tx0, fxy_mask),
-            _mm256_and_si256(tx1, fxy_mask));
-        __m256i fy_ = _mm256_packs_epi32(_mm256_and_si256(ty0, fxy_mask),
-            _mm256_and_si256(ty1, fxy_mask));
-        tx0 = _mm256_packs_epi32(_mm256_srai_epi32(tx0, INTER_BITS),
-            _mm256_srai_epi32(tx1, INTER_BITS));
-        ty0 = _mm256_packs_epi32(_mm256_srai_epi32(ty0, INTER_BITS),
-            _mm256_srai_epi32(ty1, INTER_BITS));
+        __m256i fx_ = _mm256_packs_epi32(_mm256_and_si256(tx0, fxy_mask), _mm256_and_si256(tx1, fxy_mask));
+        __m256i fy_ = _mm256_packs_epi32(_mm256_and_si256(ty0, fxy_mask), _mm256_and_si256(ty1, fxy_mask));
+        tx0 = _mm256_packs_epi32(_mm256_srai_epi32(tx0, INTER_BITS), _mm256_srai_epi32(tx1, INTER_BITS));
+        ty0 = _mm256_packs_epi32(_mm256_srai_epi32(ty0, INTER_BITS), _mm256_srai_epi32(ty1, INTER_BITS));
         fx_ = _mm256_adds_epi16(fx_, _mm256_slli_epi16(fy_, INTER_BITS));
         fx_ = _mm256_permute4x64_epi64(fx_, (3 << 6) + (1 << 4) + (2 << 2) + 0);
 
@@ -93,6 +86,5 @@ int warpAffineBlockline(int *adelta, int *bdelta, short* xy, short* alpha, int X
     return x1;
 }
 
-}
-}
+}} // namespace cv::opt_AVX2
 /* End of file. */

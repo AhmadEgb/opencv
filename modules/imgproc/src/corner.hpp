@@ -42,18 +42,17 @@
 //M*/
 
 #ifndef OPENCV_IMGPROC_CORNER_HPP
-#define OPENCV_IMGPROC_CORNER_HPP
+#    define OPENCV_IMGPROC_CORNER_HPP
 
-namespace cv
-{
+namespace cv {
 
-#if CV_TRY_AVX
-    int calcMinEigenValLine_AVX(const float* cov, float* dst, int width);
-    int calcHarrisLine_AVX(const float* cov, float* dst, double k, int width);
-    int cornerEigenValsVecsLine_AVX(const float* dxdata, const float* dydata, float* cov_data, int width);
-#endif // CV_TRY_AVX
+#    if CV_TRY_AVX
+int calcMinEigenValLine_AVX(const float* cov, float* dst, int width);
+int calcHarrisLine_AVX(const float* cov, float* dst, double k, int width);
+int cornerEigenValsVecsLine_AVX(const float* dxdata, const float* dydata, float* cov_data, int width);
+#    endif // CV_TRY_AVX
 
-}
+} // namespace cv
 
 #endif
 

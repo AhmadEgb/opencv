@@ -40,8 +40,7 @@
 //M*/
 #include "precomp.hpp"
 
-namespace cv
-{
+namespace cv {
 
 struct MinAreaState
 {
@@ -53,7 +52,12 @@ struct MinAreaState
     float base_b;
 };
 
-enum { CALIPERS_MAXHEIGHT=0, CALIPERS_MINAREARECT=1, CALIPERS_MAXDIST=2 };
+enum
+{
+    CALIPERS_MAXHEIGHT = 0,
+    CALIPERS_MINAREARECT = 1,
+    CALIPERS_MAXDIST = 2
+};
 
 /*F///////////////////////////////////////////////////////////////////////////////////////
  //    Name:    rotatingCalipers
@@ -89,17 +93,17 @@ enum { CALIPERS_MAXHEIGHT=0, CALIPERS_MINAREARECT=1, CALIPERS_MAXDIST=2 };
  //F*/
 
 /* we will use usual cartesian coordinates */
-static void rotatingCalipers( const Point2f* points, int n, int mode, float* out )
+static void rotatingCalipers(const Point2f* points, int n, int mode, float* out)
 {
     float minarea = FLT_MAX;
     float max_dist = 0;
     char buffer[32] = {};
     int i, k;
-    AutoBuffer<float> abuf(n*3);
+    AutoBuffer<float> abuf(n * 3);
     float* inv_vect_length = abuf.data();
     Point2f* vect = (Point2f*)(inv_vect_length + n);
     int left = 0, bottom = 0, right = 0, top = 0;
-    int seq[4] = { -1, -1, -1, -1 };
+    int seq[4] = {-1, -1, -1, -1};
 
     /* rotating calipers sides will always have coordinates
      (a,b) (-b,a) (-a,-b) (b, -a)
@@ -115,47 +119,47 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
     left_x = right_x = pt0.x;
     top_y = bottom_y = pt0.y;
 
-    for( i = 0; i < n; i++ )
+    for (i = 0; i < n; i++)
     {
         double dx, dy;
 
-        if( pt0.x < left_x )
+        if (pt0.x < left_x)
             left_x = pt0.x, left = i;
 
-        if( pt0.x > right_x )
+        if (pt0.x > right_x)
             right_x = pt0.x, right = i;
 
-        if( pt0.y > top_y )
+        if (pt0.y > top_y)
             top_y = pt0.y, top = i;
 
-        if( pt0.y < bottom_y )
+        if (pt0.y < bottom_y)
             bottom_y = pt0.y, bottom = i;
 
-        Point2f pt = points[(i+1) & (i+1 < n ? -1 : 0)];
+        Point2f pt = points[(i + 1) & (i + 1 < n ? -1 : 0)];
 
         dx = pt.x - pt0.x;
         dy = pt.y - pt0.y;
 
         vect[i].x = (float)dx;
         vect[i].y = (float)dy;
-        inv_vect_length[i] = (float)(1./std::sqrt(dx*dx + dy*dy));
+        inv_vect_length[i] = (float)(1. / std::sqrt(dx * dx + dy * dy));
 
         pt0 = pt;
     }
 
     // find convex hull orientation
     {
-        double ax = vect[n-1].x;
-        double ay = vect[n-1].y;
+        double ax = vect[n - 1].x;
+        double ay = vect[n - 1].y;
 
-        for( i = 0; i < n; i++ )
+        for (i = 0; i < n; i++)
         {
             double bx = vect[i].x;
             double by = vect[i].y;
 
             double convexity = ax * by - ay * bx;
 
-            if( convexity != 0 )
+            if (convexity != 0)
             {
                 orientation = (convexity > 0) ? 1.f : (-1.f);
                 break;
@@ -163,7 +167,7 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
             ax = bx;
             ay = by;
         }
-        CV_Assert( orientation != 0 );
+        CV_Assert(orientation != 0);
     }
     base_a = orientation;
 
@@ -177,7 +181,7 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
     /*                         Main loop - evaluate angles and rotate calipers               */
 
     /* all of edges will be checked while rotating calipers by 90 degrees */
-    for( k = 0; k < n; k++ )
+    for (k = 0; k < n; k++)
     {
         /* sinus of minimal angle */
         /*float sinus;*/
@@ -197,7 +201,7 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
         int main_element = 0;
 
         /* choose minimal angle */
-        for ( i = 1; i < 4; ++i )
+        for (i = 1; i < 4; ++i)
         {
             float cosalpha = dp[i] * inv_vect_length[seq[i]];
             if (cosalpha > maxcos)
@@ -211,9 +215,9 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
         {
             //get next base
             int pindex = seq[main_element];
-            float lead_x = vect[pindex].x*inv_vect_length[pindex];
-            float lead_y = vect[pindex].y*inv_vect_length[pindex];
-            switch( main_element )
+            float lead_x = vect[pindex].x * inv_vect_length[pindex];
+            float lead_y = vect[pindex].y * inv_vect_length[pindex];
+            switch (main_element)
             {
             case 0:
                 base_a = lead_x;
@@ -242,7 +246,7 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
         switch (mode)
         {
         case CALIPERS_MAXHEIGHT:
-            {
+        {
             /* now main element lies on edge aligned to calipers side */
 
             /* find opposite element i.e. transform  */
@@ -253,61 +257,61 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
             float dy = points[seq[opposite_el]].y - points[seq[main_element]].y;
             float dist;
 
-            if( main_element & 1 )
+            if (main_element & 1)
                 dist = (float)fabs(dx * base_a + dy * base_b);
             else
                 dist = (float)fabs(dx * (-base_b) + dy * base_a);
 
-            if( dist > max_dist )
+            if (dist > max_dist)
                 max_dist = dist;
-            }
-            break;
+        }
+        break;
         case CALIPERS_MINAREARECT:
             /* find area of rectangle */
             {
-            float height;
-            float area;
+                float height;
+                float area;
 
-            /* find vector left-right */
-            float dx = points[seq[1]].x - points[seq[3]].x;
-            float dy = points[seq[1]].y - points[seq[3]].y;
+                /* find vector left-right */
+                float dx = points[seq[1]].x - points[seq[3]].x;
+                float dy = points[seq[1]].y - points[seq[3]].y;
 
-            /* dotproduct */
-            float width = dx * base_a + dy * base_b;
+                /* dotproduct */
+                float width = dx * base_a + dy * base_b;
 
-            /* find vector left-right */
-            dx = points[seq[2]].x - points[seq[0]].x;
-            dy = points[seq[2]].y - points[seq[0]].y;
+                /* find vector left-right */
+                dx = points[seq[2]].x - points[seq[0]].x;
+                dy = points[seq[2]].y - points[seq[0]].y;
 
-            /* dotproduct */
-            height = -dx * base_b + dy * base_a;
+                /* dotproduct */
+                height = -dx * base_b + dy * base_a;
 
-            area = width * height;
-            if( area <= minarea )
-            {
-                float *buf = (float *) buffer;
+                area = width * height;
+                if (area <= minarea)
+                {
+                    float* buf = (float*)buffer;
 
-                minarea = area;
-                /* leftist point */
-                ((int *) buf)[0] = seq[3];
-                buf[1] = base_a;
-                buf[2] = width;
-                buf[3] = base_b;
-                buf[4] = height;
-                /* bottom point */
-                ((int *) buf)[5] = seq[0];
-                buf[6] = area;
-            }
+                    minarea = area;
+                    /* leftist point */
+                    ((int*)buf)[0] = seq[3];
+                    buf[1] = base_a;
+                    buf[2] = width;
+                    buf[3] = base_b;
+                    buf[4] = height;
+                    /* bottom point */
+                    ((int*)buf)[5] = seq[0];
+                    buf[6] = area;
+                }
             }
             break;
-        }                       /*switch */
-    }                           /* for */
+        } /*switch */
+    } /* for */
 
     switch (mode)
     {
     case CALIPERS_MINAREARECT:
-        {
-        float *buf = (float *) buffer;
+    {
+        float* buf = (float*)buffer;
 
         float A1 = buf[1];
         float B1 = buf[3];
@@ -315,8 +319,8 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
         float A2 = -buf[3];
         float B2 = buf[1];
 
-        float C1 = A1 * points[((int *) buf)[0]].x + points[((int *) buf)[0]].y * B1;
-        float C2 = A2 * points[((int *) buf)[5]].x + points[((int *) buf)[5]].y * B2;
+        float C1 = A1 * points[((int*)buf)[0]].x + points[((int*)buf)[0]].y * B1;
+        float C2 = A2 * points[((int*)buf)[5]].x + points[((int*)buf)[5]].y * B2;
 
         float idet = 1.f / (A1 * B2 - A2 * B1);
 
@@ -331,20 +335,20 @@ static void rotatingCalipers( const Point2f* points, int n, int mode, float* out
 
         out[4] = A2 * buf[4];
         out[5] = B2 * buf[4];
-        }
-        break;
+    }
+    break;
     case CALIPERS_MAXHEIGHT:
-        {
+    {
         out[0] = max_dist;
-        }
-        break;
+    }
+    break;
     }
 }
 
-}
+} // namespace cv
 
 
-cv::RotatedRect cv::minAreaRect( InputArray _points )
+cv::RotatedRect cv::minAreaRect(InputArray _points)
 {
     CV_INSTRUMENT_REGION();
 
@@ -354,7 +358,7 @@ cv::RotatedRect cv::minAreaRect( InputArray _points )
 
     convexHull(_points, hull, true, true);
 
-    if( hull.depth() != CV_32F )
+    if (hull.depth() != CV_32F)
     {
         Mat temp;
         hull.convertTo(temp, CV_32F);
@@ -364,38 +368,37 @@ cv::RotatedRect cv::minAreaRect( InputArray _points )
     int n = hull.checkVector(2);
     const Point2f* hpoints = hull.ptr<Point2f>();
 
-    if( n > 2 )
+    if (n > 2)
     {
-        rotatingCalipers( hpoints, n, CALIPERS_MINAREARECT, (float*)out );
-        box.center.x = out[0].x + (out[1].x + out[2].x)*0.5f;
-        box.center.y = out[0].y + (out[1].y + out[2].y)*0.5f;
-        box.size.width = (float)std::sqrt((double)out[1].x*out[1].x + (double)out[1].y*out[1].y);
-        box.size.height = (float)std::sqrt((double)out[2].x*out[2].x + (double)out[2].y*out[2].y);
-        box.angle = (float)atan2( (double)out[1].y, (double)out[1].x );
+        rotatingCalipers(hpoints, n, CALIPERS_MINAREARECT, (float*)out);
+        box.center.x = out[0].x + (out[1].x + out[2].x) * 0.5f;
+        box.center.y = out[0].y + (out[1].y + out[2].y) * 0.5f;
+        box.size.width = (float)std::sqrt((double)out[1].x * out[1].x + (double)out[1].y * out[1].y);
+        box.size.height = (float)std::sqrt((double)out[2].x * out[2].x + (double)out[2].y * out[2].y);
+        box.angle = (float)atan2((double)out[1].y, (double)out[1].x);
     }
-    else if( n == 2 )
+    else if (n == 2)
     {
-        box.center.x = (hpoints[0].x + hpoints[1].x)*0.5f;
-        box.center.y = (hpoints[0].y + hpoints[1].y)*0.5f;
+        box.center.x = (hpoints[0].x + hpoints[1].x) * 0.5f;
+        box.center.y = (hpoints[0].y + hpoints[1].y) * 0.5f;
         double dx = hpoints[1].x - hpoints[0].x;
         double dy = hpoints[1].y - hpoints[0].y;
-        box.size.width = (float)std::sqrt(dx*dx + dy*dy);
+        box.size.width = (float)std::sqrt(dx * dx + dy * dy);
         box.size.height = 0;
-        box.angle = (float)atan2( dy, dx );
+        box.angle = (float)atan2(dy, dx);
     }
     else
     {
-        if( n == 1 )
+        if (n == 1)
             box.center = hpoints[0];
     }
 
-    box.angle = (float)(box.angle*180/CV_PI);
+    box.angle = (float)(box.angle * 180 / CV_PI);
     return box;
 }
 
 
-CV_IMPL CvBox2D
-cvMinAreaRect2( const CvArr* array, CvMemStorage* /*storage*/ )
+CV_IMPL CvBox2D cvMinAreaRect2(const CvArr* array, CvMemStorage* /*storage*/)
 {
     cv::AutoBuffer<double> abuf;
     cv::Mat points = cv::cvarrToMat(array, false, false, 0, &abuf);

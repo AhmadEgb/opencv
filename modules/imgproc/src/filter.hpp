@@ -41,22 +41,20 @@
 //M*/
 
 #ifndef OPENCV_IMGPROC_FILTER_HPP
-#define OPENCV_IMGPROC_FILTER_HPP
+#    define OPENCV_IMGPROC_FILTER_HPP
 
-namespace cv
-{
-#if CV_TRY_AVX2
-    int RowVec_32f_AVX(const float* src0, const float* _kx, float* dst, int width, int cn, int _ksize);
-    int SymmColumnVec_32f_Symm_AVX(const float** src, const float* ky, float* dst, float delta, int width, int ksize2);
-    int SymmColumnVec_32f_Unsymm_AVX(const float** src, const float* ky, float* dst, float delta, int width, int ksize2);
-#endif
+namespace cv {
+#    if CV_TRY_AVX2
+int RowVec_32f_AVX(const float* src0, const float* _kx, float* dst, int width, int cn, int _ksize);
+int SymmColumnVec_32f_Symm_AVX(const float** src, const float* ky, float* dst, float delta, int width, int ksize2);
+int SymmColumnVec_32f_Unsymm_AVX(const float** src, const float* ky, float* dst, float delta, int width, int ksize2);
+#    endif
 
-#ifdef HAVE_OPENCL
-    bool ocl_sepFilter2D( InputArray _src, OutputArray _dst, int ddepth,
-                          InputArray _kernelX, InputArray _kernelY, Point anchor,
-                          double delta, int borderType );
-#endif
-}
+#    ifdef HAVE_OPENCL
+bool ocl_sepFilter2D(InputArray _src, OutputArray _dst, int ddepth, InputArray _kernelX, InputArray _kernelY,
+                     Point anchor, double delta, int borderType);
+#    endif
+} // namespace cv
 
 #endif
 

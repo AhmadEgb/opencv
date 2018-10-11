@@ -39,17 +39,16 @@ the use of this software, even if advised of the possibility of such damage.
 
 #include "opencv2/imgproc.hpp"
 
-namespace cv
-{
+namespace cv {
 
 //! type of the kernel
 enum
 {
-    KERNEL_GENERAL      = 0, // the kernel is generic. No any type of symmetry or other properties.
-    KERNEL_SYMMETRICAL  = 1, // kernel[i] == kernel[ksize-i-1] , and the anchor is at the center
+    KERNEL_GENERAL = 0, // the kernel is generic. No any type of symmetry or other properties.
+    KERNEL_SYMMETRICAL = 1, // kernel[i] == kernel[ksize-i-1] , and the anchor is at the center
     KERNEL_ASYMMETRICAL = 2, // kernel[i] == -kernel[ksize-i-1] , and the anchor is at the center
-    KERNEL_SMOOTH       = 4, // all the kernel elements are non-negative and summed to 1
-    KERNEL_INTEGER      = 8  // all the kernel coefficients are integer numbers
+    KERNEL_SMOOTH = 4, // all the kernel elements are non-negative and summed to 1
+    KERNEL_INTEGER = 8 // all the kernel coefficients are integer numbers
 };
 
 /*!
@@ -213,33 +212,26 @@ public:
     //! the default constructor
     FilterEngine();
     //! the full constructor. Either _filter2D or both _rowFilter and _columnFilter must be non-empty.
-    FilterEngine(const Ptr<BaseFilter>& _filter2D,
-                 const Ptr<BaseRowFilter>& _rowFilter,
-                 const Ptr<BaseColumnFilter>& _columnFilter,
-                 int srcType, int dstType, int bufType,
-                 int _rowBorderType = BORDER_REPLICATE,
-                 int _columnBorderType = -1,
+    FilterEngine(const Ptr<BaseFilter>& _filter2D, const Ptr<BaseRowFilter>& _rowFilter,
+                 const Ptr<BaseColumnFilter>& _columnFilter, int srcType, int dstType, int bufType,
+                 int _rowBorderType = BORDER_REPLICATE, int _columnBorderType = -1,
                  const Scalar& _borderValue = Scalar());
     //! the destructor
     virtual ~FilterEngine();
     //! reinitializes the engine. The previously assigned filters are released.
-    void init(const Ptr<BaseFilter>& _filter2D,
-              const Ptr<BaseRowFilter>& _rowFilter,
-              const Ptr<BaseColumnFilter>& _columnFilter,
-              int srcType, int dstType, int bufType,
-              int _rowBorderType = BORDER_REPLICATE,
-              int _columnBorderType = -1,
+    void init(const Ptr<BaseFilter>& _filter2D, const Ptr<BaseRowFilter>& _rowFilter,
+              const Ptr<BaseColumnFilter>& _columnFilter, int srcType, int dstType, int bufType,
+              int _rowBorderType = BORDER_REPLICATE, int _columnBorderType = -1,
               const Scalar& _borderValue = Scalar());
 
     //! starts filtering of the specified ROI of an image of size wholeSize.
-    virtual int start(const cv::Size &wholeSize, const cv::Size &sz, const cv::Point &ofs);
+    virtual int start(const cv::Size& wholeSize, const cv::Size& sz, const cv::Point& ofs);
     //! starts filtering of the specified ROI of the specified image.
-    virtual int start(const Mat& src, const cv::Size &wsz, const cv::Point &ofs);
+    virtual int start(const Mat& src, const cv::Size& wsz, const cv::Point& ofs);
     //! processes the next srcCount rows of the image.
-    virtual int proceed(const uchar* src, int srcStep, int srcCount,
-                        uchar* dst, int dstStep);
+    virtual int proceed(const uchar* src, int srcStep, int srcCount, uchar* dst, int dstStep);
     //! applies filter to the specified ROI of the image. if srcRoi=(0,0,-1,-1), the whole image is filtered.
-    virtual void apply(const Mat& src, Mat& dst, const cv::Size &wsz, const cv::Point &ofs);
+    virtual void apply(const Mat& src, Mat& dst, const cv::Size& wsz, const cv::Point& ofs);
 
     //! returns true if the filter is separable
     bool isSeparable() const { return !filter2D; }
@@ -283,59 +275,43 @@ public:
 int getKernelType(InputArray kernel, Point anchor);
 
 //! returns the primitive row filter with the specified kernel
-Ptr<BaseRowFilter> getLinearRowFilter(int srcType, int bufType,
-                                            InputArray kernel, int anchor,
-                                            int symmetryType);
+Ptr<BaseRowFilter> getLinearRowFilter(int srcType, int bufType, InputArray kernel, int anchor, int symmetryType);
 
 //! returns the primitive column filter with the specified kernel
-Ptr<BaseColumnFilter> getLinearColumnFilter(int bufType, int dstType,
-                                            InputArray kernel, int anchor,
-                                            int symmetryType, double delta = 0,
-                                            int bits = 0);
+Ptr<BaseColumnFilter> getLinearColumnFilter(int bufType, int dstType, InputArray kernel, int anchor,
+                                            int symmetryType, double delta = 0, int bits = 0);
 
 //! returns 2D filter with the specified kernel
-Ptr<BaseFilter> getLinearFilter(int srcType, int dstType,
-                                           InputArray kernel,
-                                           Point anchor = Point(-1,-1),
-                                           double delta = 0, int bits = 0);
+Ptr<BaseFilter> getLinearFilter(int srcType, int dstType, InputArray kernel, Point anchor = Point(-1, -1),
+                                double delta = 0, int bits = 0);
 
 //! returns the separable linear filter engine
-Ptr<FilterEngine> createSeparableLinearFilter(int srcType, int dstType,
-                          InputArray rowKernel, InputArray columnKernel,
-                          Point anchor = Point(-1,-1), double delta = 0,
-                          int rowBorderType = BORDER_DEFAULT,
-                          int columnBorderType = -1,
-                          const Scalar& borderValue = Scalar());
+Ptr<FilterEngine> createSeparableLinearFilter(int srcType, int dstType, InputArray rowKernel,
+                                              InputArray columnKernel, Point anchor = Point(-1, -1),
+                                              double delta = 0, int rowBorderType = BORDER_DEFAULT,
+                                              int columnBorderType = -1, const Scalar& borderValue = Scalar());
 
 //! returns the non-separable linear filter engine
-Ptr<FilterEngine> createLinearFilter(int srcType, int dstType,
-                 InputArray kernel, Point _anchor = Point(-1,-1),
-                 double delta = 0, int rowBorderType = BORDER_DEFAULT,
-                 int columnBorderType = -1, const Scalar& borderValue = Scalar());
+Ptr<FilterEngine> createLinearFilter(int srcType, int dstType, InputArray kernel, Point _anchor = Point(-1, -1),
+                                     double delta = 0, int rowBorderType = BORDER_DEFAULT,
+                                     int columnBorderType = -1, const Scalar& borderValue = Scalar());
 
 //! returns the Gaussian filter engine
-Ptr<FilterEngine> createGaussianFilter( int type, Size ksize,
-                                    double sigma1, double sigma2 = 0,
-                                    int borderType = BORDER_DEFAULT);
+Ptr<FilterEngine> createGaussianFilter(int type, Size ksize, double sigma1, double sigma2 = 0,
+                                       int borderType = BORDER_DEFAULT);
 
 //! returns filter engine for the generalized Sobel operator
-Ptr<FilterEngine> createDerivFilter( int srcType, int dstType,
-                                        int dx, int dy, int ksize,
-                                        int borderType = BORDER_DEFAULT );
+Ptr<FilterEngine> createDerivFilter(int srcType, int dstType, int dx, int dy, int ksize,
+                                    int borderType = BORDER_DEFAULT);
 
 //! returns horizontal 1D box filter
-Ptr<BaseRowFilter> getRowSumFilter(int srcType, int sumType,
-                                              int ksize, int anchor = -1);
+Ptr<BaseRowFilter> getRowSumFilter(int srcType, int sumType, int ksize, int anchor = -1);
 
 //! returns vertical 1D box filter
-Ptr<BaseColumnFilter> getColumnSumFilter( int sumType, int dstType,
-                                                     int ksize, int anchor = -1,
-                                                     double scale = 1);
+Ptr<BaseColumnFilter> getColumnSumFilter(int sumType, int dstType, int ksize, int anchor = -1, double scale = 1);
 //! returns box filter engine
-Ptr<FilterEngine> createBoxFilter( int srcType, int dstType, Size ksize,
-                                              Point anchor = Point(-1,-1),
-                                              bool normalize = true,
-                                              int borderType = BORDER_DEFAULT);
+Ptr<FilterEngine> createBoxFilter(int srcType, int dstType, Size ksize, Point anchor = Point(-1, -1),
+                                  bool normalize = true, int borderType = BORDER_DEFAULT);
 
 
 //! returns horizontal 1D morphological filter
@@ -345,39 +321,36 @@ Ptr<BaseRowFilter> getMorphologyRowFilter(int op, int type, int ksize, int ancho
 Ptr<BaseColumnFilter> getMorphologyColumnFilter(int op, int type, int ksize, int anchor = -1);
 
 //! returns 2D morphological filter
-Ptr<BaseFilter> getMorphologyFilter(int op, int type, InputArray kernel,
-                                               Point anchor = Point(-1,-1));
+Ptr<BaseFilter> getMorphologyFilter(int op, int type, InputArray kernel, Point anchor = Point(-1, -1));
 
 //! returns morphological filter engine. Only MORPH_ERODE and MORPH_DILATE are supported.
 CV_EXPORTS Ptr<FilterEngine> createMorphologyFilter(int op, int type, InputArray kernel,
-                                                    Point anchor = Point(-1,-1), int rowBorderType = BORDER_CONSTANT,
-                                                    int columnBorderType = -1,
+                                                    Point anchor = Point(-1, -1),
+                                                    int rowBorderType = BORDER_CONSTANT, int columnBorderType = -1,
                                                     const Scalar& borderValue = morphologyDefaultBorderValue());
 
-static inline Point normalizeAnchor( Point anchor, Size ksize )
+static inline Point normalizeAnchor(Point anchor, Size ksize)
 {
-   if( anchor.x == -1 )
-       anchor.x = ksize.width/2;
-   if( anchor.y == -1 )
-       anchor.y = ksize.height/2;
-   CV_Assert( anchor.inside(Rect(0, 0, ksize.width, ksize.height)) );
-   return anchor;
+    if (anchor.x == -1)
+        anchor.x = ksize.width / 2;
+    if (anchor.y == -1)
+        anchor.y = ksize.height / 2;
+    CV_Assert(anchor.inside(Rect(0, 0, ksize.width, ksize.height)));
+    return anchor;
 }
 
-void preprocess2DKernel( const Mat& kernel, std::vector<Point>& coords, std::vector<uchar>& coeffs );
-void crossCorr( const Mat& src, const Mat& templ, Mat& dst,
-               Size corrsize, int ctype,
-               Point anchor=Point(0,0), double delta=0,
-               int borderType=BORDER_REFLECT_101 );
+void preprocess2DKernel(const Mat& kernel, std::vector<Point>& coords, std::vector<uchar>& coeffs);
+void crossCorr(const Mat& src, const Mat& templ, Mat& dst, Size corrsize, int ctype, Point anchor = Point(0, 0),
+               double delta = 0, int borderType = BORDER_REFLECT_101);
 
 
-}
+} // namespace cv
 
 #ifdef HAVE_IPP_IW
 static inline bool ippiCheckAnchor(cv::Point anchor, cv::Size ksize)
 {
     anchor = cv::normalizeAnchor(anchor, ksize);
-    if(anchor.x != ((ksize.width-1)/2) || anchor.y != ((ksize.height-1)/2))
+    if (anchor.x != ((ksize.width - 1) / 2) || anchor.y != ((ksize.height - 1) / 2))
         return 0;
     else
         return 1;

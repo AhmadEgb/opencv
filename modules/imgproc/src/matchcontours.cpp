@@ -52,113 +52,113 @@ double cv::matchShapes(InputArray contour1, InputArray contour2, int method, dou
     double result = 0;
     bool anyA = false, anyB = false;
 
-    HuMoments( moments(contour1), ma );
-    HuMoments( moments(contour2), mb );
+    HuMoments(moments(contour1), ma);
+    HuMoments(moments(contour2), mb);
 
     switch (method)
     {
     case 1:
-        for( i = 0; i < 7; i++ )
+        for (i = 0; i < 7; i++)
         {
-            double ama = fabs( ma[i] );
-            double amb = fabs( mb[i] );
+            double ama = fabs(ma[i]);
+            double amb = fabs(mb[i]);
 
             if (ama > 0)
                 anyA = true;
             if (amb > 0)
                 anyB = true;
 
-            if( ma[i] > 0 )
+            if (ma[i] > 0)
                 sma = 1;
-            else if( ma[i] < 0 )
+            else if (ma[i] < 0)
                 sma = -1;
             else
                 sma = 0;
-            if( mb[i] > 0 )
+            if (mb[i] > 0)
                 smb = 1;
-            else if( mb[i] < 0 )
+            else if (mb[i] < 0)
                 smb = -1;
             else
                 smb = 0;
 
-            if( ama > eps && amb > eps )
+            if (ama > eps && amb > eps)
             {
-                ama = 1. / (sma * log10( ama ));
-                amb = 1. / (smb * log10( amb ));
-                result += fabs( -ama + amb );
+                ama = 1. / (sma * log10(ama));
+                amb = 1. / (smb * log10(amb));
+                result += fabs(-ama + amb);
             }
         }
         break;
 
     case 2:
-        for( i = 0; i < 7; i++ )
+        for (i = 0; i < 7; i++)
         {
-            double ama = fabs( ma[i] );
-            double amb = fabs( mb[i] );
+            double ama = fabs(ma[i]);
+            double amb = fabs(mb[i]);
 
             if (ama > 0)
                 anyA = true;
             if (amb > 0)
                 anyB = true;
 
-            if( ma[i] > 0 )
+            if (ma[i] > 0)
                 sma = 1;
-            else if( ma[i] < 0 )
+            else if (ma[i] < 0)
                 sma = -1;
             else
                 sma = 0;
-            if( mb[i] > 0 )
+            if (mb[i] > 0)
                 smb = 1;
-            else if( mb[i] < 0 )
+            else if (mb[i] < 0)
                 smb = -1;
             else
                 smb = 0;
 
-            if( ama > eps && amb > eps )
+            if (ama > eps && amb > eps)
             {
-                ama = sma * log10( ama );
-                amb = smb * log10( amb );
-                result += fabs( -ama + amb );
+                ama = sma * log10(ama);
+                amb = smb * log10(amb);
+                result += fabs(-ama + amb);
             }
         }
         break;
 
     case 3:
-        for( i = 0; i < 7; i++ )
+        for (i = 0; i < 7; i++)
         {
-            double ama = fabs( ma[i] );
-            double amb = fabs( mb[i] );
+            double ama = fabs(ma[i]);
+            double amb = fabs(mb[i]);
 
             if (ama > 0)
                 anyA = true;
             if (amb > 0)
                 anyB = true;
 
-            if( ma[i] > 0 )
+            if (ma[i] > 0)
                 sma = 1;
-            else if( ma[i] < 0 )
+            else if (ma[i] < 0)
                 sma = -1;
             else
                 sma = 0;
-            if( mb[i] > 0 )
+            if (mb[i] > 0)
                 smb = 1;
-            else if( mb[i] < 0 )
+            else if (mb[i] < 0)
                 smb = -1;
             else
                 smb = 0;
 
-            if( ama > eps && amb > eps )
+            if (ama > eps && amb > eps)
             {
-                ama = sma * log10( ama );
-                amb = smb * log10( amb );
-                mmm = fabs( (ama - amb) / ama );
-                if( result < mmm )
+                ama = sma * log10(ama);
+                amb = smb * log10(amb);
+                mmm = fabs((ama - amb) / ama);
+                if (result < mmm)
                     result = mmm;
             }
         }
         break;
     default:
-        CV_Error( CV_StsBadArg, "Unknown comparison method" );
+        CV_Error(CV_StsBadArg, "Unknown comparison method");
     }
 
     //If anyA and anyB are both true, the result is correct.
@@ -171,9 +171,7 @@ double cv::matchShapes(InputArray contour1, InputArray contour2, int method, dou
 }
 
 
-CV_IMPL  double
-cvMatchShapes( const void* _contour1, const void* _contour2,
-               int method, double parameter )
+CV_IMPL double cvMatchShapes(const void* _contour1, const void* _contour2, int method, double parameter)
 {
     cv::AutoBuffer<double> abuf1, abuf2;
     cv::Mat contour1 = cv::cvarrToMat(_contour1, false, false, 0, &abuf1);

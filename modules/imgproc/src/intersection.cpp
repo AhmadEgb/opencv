@@ -44,10 +44,9 @@
 //M*/
 #include "precomp.hpp"
 
-namespace cv
-{
+namespace cv {
 
-int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& rect2, OutputArray intersectingRegion )
+int rotatedRectangleIntersection(const RotatedRect& rect1, const RotatedRect& rect2, OutputArray intersectingRegion)
 {
     CV_INSTRUMENT_REGION();
 
@@ -57,7 +56,8 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
     Point2f vec1[4], vec2[4];
     Point2f pts1[4], pts2[4];
 
-    std::vector <Point2f> intersection; intersection.reserve(24);
+    std::vector<Point2f> intersection;
+    intersection.reserve(24);
 
     rect1.points(pts1);
     rect2.points(pts2);
@@ -68,20 +68,20 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
     {
         bool same = true;
 
-        for( int i = 0; i < 4; i++ )
+        for (int i = 0; i < 4; i++)
         {
-            if( fabs(pts1[i].x - pts2[i].x) > samePointEps || (fabs(pts1[i].y - pts2[i].y) > samePointEps) )
+            if (fabs(pts1[i].x - pts2[i].x) > samePointEps || (fabs(pts1[i].y - pts2[i].y) > samePointEps))
             {
                 same = false;
                 break;
             }
         }
 
-        if(same)
+        if (same)
         {
             intersection.resize(4);
 
-            for( int i = 0; i < 4; i++ )
+            for (int i = 0; i < 4; i++)
             {
                 intersection[i] = pts1[i];
             }
@@ -94,19 +94,19 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
 
     // Line vector
     // A line from p1 to p2 is: p1 + (p2-p1)*t, t=[0,1]
-    for( int i = 0; i < 4; i++ )
+    for (int i = 0; i < 4; i++)
     {
-        vec1[i].x = pts1[(i+1)%4].x - pts1[i].x;
-        vec1[i].y = pts1[(i+1)%4].y - pts1[i].y;
+        vec1[i].x = pts1[(i + 1) % 4].x - pts1[i].x;
+        vec1[i].y = pts1[(i + 1) % 4].y - pts1[i].y;
 
-        vec2[i].x = pts2[(i+1)%4].x - pts2[i].x;
-        vec2[i].y = pts2[(i+1)%4].y - pts2[i].y;
+        vec2[i].x = pts2[(i + 1) % 4].x - pts2[i].x;
+        vec2[i].y = pts2[(i + 1) % 4].y - pts2[i].y;
     }
 
     // Line test - test all line combos for intersection
-    for( int i = 0; i < 4; i++ )
+    for (int i = 0; i < 4; i++)
     {
-        for( int j = 0; j < 4; j++ )
+        for (int j = 0; j < 4; j++)
         {
             // Solve for 2x2 Ax=b
             float x21 = pts2[j].x - pts1[i].x;
@@ -118,34 +118,34 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
             float vx2 = vec2[j].x;
             float vy2 = vec2[j].y;
 
-            float det = vx2*vy1 - vx1*vy2;
+            float det = vx2 * vy1 - vx1 * vy2;
 
-            float t1 = (vx2*y21 - vy2*x21) / det;
-            float t2 = (vx1*y21 - vy1*x21) / det;
+            float t1 = (vx2 * y21 - vy2 * x21) / det;
+            float t2 = (vx1 * y21 - vy1 * x21) / det;
 
             // This takes care of parallel lines
-            if( cvIsInf(t1) || cvIsInf(t2) || cvIsNaN(t1) || cvIsNaN(t2) )
+            if (cvIsInf(t1) || cvIsInf(t2) || cvIsNaN(t1) || cvIsNaN(t2))
             {
                 continue;
             }
 
-            if( t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f )
+            if (t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f)
             {
-                float xi = pts1[i].x + vec1[i].x*t1;
-                float yi = pts1[i].y + vec1[i].y*t1;
+                float xi = pts1[i].x + vec1[i].x * t1;
+                float yi = pts1[i].y + vec1[i].y * t1;
 
-                intersection.push_back(Point2f(xi,yi));
+                intersection.push_back(Point2f(xi, yi));
             }
         }
     }
 
-    if( !intersection.empty() )
+    if (!intersection.empty())
     {
         ret = INTERSECT_PARTIAL;
     }
 
     // Check for vertices from rect1 inside recct2
-    for( int i = 0; i < 4; i++ )
+    for (int i = 0; i < 4; i++)
     {
         // We do a sign test to see which side the point lies.
         // If the point all lie on the same sign for all 4 sides of the rect,
@@ -156,17 +156,17 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
         float x = pts1[i].x;
         float y = pts1[i].y;
 
-        for( int j = 0; j < 4; j++ )
+        for (int j = 0; j < 4; j++)
         {
             // line equation: Ax + By + C = 0
             // see which side of the line this point is at
             float A = -vec2[j].y;
             float B = vec2[j].x;
-            float C = -(A*pts2[j].x + B*pts2[j].y);
+            float C = -(A * pts2[j].x + B * pts2[j].y);
 
-            float s = A*x+ B*y+ C;
+            float s = A * x + B * y + C;
 
-            if( s >= 0 )
+            if (s >= 0)
             {
                 posSign++;
             }
@@ -176,14 +176,14 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
             }
         }
 
-        if( posSign == 4 || negSign == 4 )
+        if (posSign == 4 || negSign == 4)
         {
             intersection.push_back(pts1[i]);
         }
     }
 
     // Reverse the check - check for vertices from rect2 inside recct1
-    for( int i = 0; i < 4; i++ )
+    for (int i = 0; i < 4; i++)
     {
         // We do a sign test to see which side the point lies.
         // If the point all lie on the same sign for all 4 sides of the rect,
@@ -194,17 +194,17 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
         float x = pts2[i].x;
         float y = pts2[i].y;
 
-        for( int j = 0; j < 4; j++ )
+        for (int j = 0; j < 4; j++)
         {
             // line equation: Ax + By + C = 0
             // see which side of the line this point is at
             float A = -vec1[j].y;
             float B = vec1[j].x;
-            float C = -(A*pts1[j].x + B*pts1[j].y);
+            float C = -(A * pts1[j].x + B * pts1[j].y);
 
-            float s = A*x + B*y + C;
+            float s = A * x + B * y + C;
 
-            if( s >= 0 )
+            if (s >= 0)
             {
                 posSign++;
             }
@@ -214,7 +214,7 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
             }
         }
 
-        if( posSign == 4 || negSign == 4 )
+        if (posSign == 4 || negSign == 4)
         {
             intersection.push_back(pts2[i]);
         }
@@ -234,18 +234,18 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
     {
         const Point2f pt0 = intersection[i];
         ptDistRemap[i] = i;
-        for (int j = i + 1; j < N; )
+        for (int j = i + 1; j < N;)
         {
             const Point2f pt1 = intersection[j];
             float d2 = normL2Sqr<float>(pt1 - pt0);
-            if(d2 <= samePointEps)
+            if (d2 <= samePointEps)
             {
                 if (j < N - 1)
-                    intersection[j] =  intersection[N - 1];
+                    intersection[j] = intersection[N - 1];
                 N--;
                 continue;
             }
-            distPt[i*Nstride + j] = d2;
+            distPt[i * Nstride + j] = d2;
             ++j;
         }
     }
@@ -268,11 +268,12 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
                 }
             }
         }
-        CV_Assert(fabs(normL2Sqr<float>(intersection[minI] - intersection[minJ]) - minD) < 1e-6);  // ptDistRemap is not corrupted
+        CV_Assert(fabs(normL2Sqr<float>(intersection[minI] - intersection[minJ]) - minD)
+                  < 1e-6); // ptDistRemap is not corrupted
         // drop minJ point
         if (minJ < N - 1)
         {
-            intersection[minJ] =  intersection[N - 1];
+            intersection[minJ] = intersection[N - 1];
             ptDistRemap[minJ] = ptDistRemap[N - 1];
         }
         N--;
@@ -299,4 +300,4 @@ int rotatedRectangleIntersection( const RotatedRect& rect1, const RotatedRect& r
     return ret;
 }
 
-} // end namespace
+} // namespace cv

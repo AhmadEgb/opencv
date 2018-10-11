@@ -49,13 +49,15 @@
 
 namespace cv {
 #if CV_SIMD128
-static inline v_float32x4 blend(const v_float32x4& v_src1, const v_float32x4& v_src2, const v_float32x4& v_w1, const v_float32x4& v_w2)
+static inline v_float32x4 blend(const v_float32x4& v_src1, const v_float32x4& v_src2, const v_float32x4& v_w1,
+                                const v_float32x4& v_w2)
 {
     const v_float32x4 v_eps = v_setall_f32(1e-5f);
     v_float32x4 v_denom = v_w1 + v_w2 + v_eps;
     return (v_src1 * v_w1 + v_src2 * v_w2) / v_denom;
 }
-static inline v_float32x4 blend(const v_float32x4& v_src1, const v_float32x4& v_src2, const float* w_ptr1, const float* w_ptr2, int offset)
+static inline v_float32x4 blend(const v_float32x4& v_src1, const v_float32x4& v_src2, const float* w_ptr1,
+                                const float* w_ptr2, int offset)
 {
     v_float32x4 v_w1 = v_load(w_ptr1 + offset);
     v_float32x4 v_w2 = v_load(w_ptr2 + offset);
@@ -77,15 +79,17 @@ static inline v_uint8x16 pack_f32tou8(v_float32x4& val0, v_float32x4& val1, v_fl
     v_uint16x8 f = v_pack(c, d);
     return v_pack(e, f);
 }
-static inline void store_pack_f32tou8(uchar* ptr, v_float32x4& val0, v_float32x4& val1, v_float32x4& val2, v_float32x4& val3)
+static inline void store_pack_f32tou8(uchar* ptr, v_float32x4& val0, v_float32x4& val1, v_float32x4& val2,
+                                      v_float32x4& val3)
 {
     v_store((ptr), pack_f32tou8(val0, val1, val2, val3));
 }
-static inline void expand_u8tof32(const v_uint8x16& src, v_float32x4& dst0, v_float32x4& dst1, v_float32x4& dst2, v_float32x4& dst3)
+static inline void expand_u8tof32(const v_uint8x16& src, v_float32x4& dst0, v_float32x4& dst1, v_float32x4& dst2,
+                                  v_float32x4& dst3)
 {
     v_uint16x8 a0, a1;
     v_expand(src, a0, a1);
-    v_uint32x4 b0, b1,b2,b3;
+    v_uint32x4 b0, b1, b2, b3;
     v_expand(a0, b0, b1);
     v_expand(a1, b2, b3);
     dst0 = v_cvt_f32(v_reinterpret_as_s32(b0));
@@ -93,21 +97,25 @@ static inline void expand_u8tof32(const v_uint8x16& src, v_float32x4& dst0, v_fl
     dst2 = v_cvt_f32(v_reinterpret_as_s32(b2));
     dst3 = v_cvt_f32(v_reinterpret_as_s32(b3));
 }
-static inline void load_expand_u8tof32(const uchar* ptr, v_float32x4& dst0, v_float32x4& dst1, v_float32x4& dst2, v_float32x4& dst3)
+static inline void load_expand_u8tof32(const uchar* ptr, v_float32x4& dst0, v_float32x4& dst1, v_float32x4& dst2,
+                                       v_float32x4& dst3)
 {
     v_uint8x16 a = v_load((ptr));
     expand_u8tof32(a, dst0, dst1, dst2, dst3);
 }
-int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weights1, const float* weights2, uchar* dst, int x, int width, int cn);
-int blendLinearSimd128(const float* src1, const float* src2, const float* weights1, const float* weights2, float* dst, int x, int width, int cn);
-int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weights1, const float* weights2, uchar* dst, int x, int width, int cn)
+int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weights1, const float* weights2,
+                       uchar* dst, int x, int width, int cn);
+int blendLinearSimd128(const float* src1, const float* src2, const float* weights1, const float* weights2,
+                       float* dst, int x, int width, int cn);
+int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weights1, const float* weights2,
+                       uchar* dst, int x, int width, int cn)
 {
     int step = v_uint8x16::nlanes * cn;
     int weight_step = v_uint8x16::nlanes;
-    switch(cn)
+    switch (cn)
     {
     case 1:
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += weight_step)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += weight_step)
         {
             v_float32x4 v_src10, v_src11, v_src12, v_src13;
             v_float32x4 v_src20, v_src21, v_src22, v_src23;
@@ -123,7 +131,7 @@ int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weight
         }
         break;
     case 2:
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += weight_step)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += weight_step)
         {
             v_uint8x16 v_src10, v_src11, v_src20, v_src21;
             v_load_deinterleave(src1 + x, v_src10, v_src11);
@@ -150,14 +158,16 @@ int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weight
         }
         break;
     case 3:
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += weight_step)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += weight_step)
         {
             v_uint8x16 v_src10, v_src11, v_src12, v_src20, v_src21, v_src22;
             v_load_deinterleave(src1 + x, v_src10, v_src11, v_src12);
             v_load_deinterleave(src2 + x, v_src20, v_src21, v_src22);
 
-            v_float32x4 v_src100, v_src101, v_src102, v_src103, v_src110, v_src111, v_src112, v_src113, v_src120, v_src121, v_src122, v_src123;
-            v_float32x4 v_src200, v_src201, v_src202, v_src203, v_src210, v_src211, v_src212, v_src213, v_src220, v_src221, v_src222, v_src223;
+            v_float32x4 v_src100, v_src101, v_src102, v_src103, v_src110, v_src111, v_src112, v_src113, v_src120,
+                v_src121, v_src122, v_src123;
+            v_float32x4 v_src200, v_src201, v_src202, v_src203, v_src210, v_src211, v_src212, v_src213, v_src220,
+                v_src221, v_src222, v_src223;
             expand_u8tof32(v_src10, v_src100, v_src101, v_src102, v_src103);
             expand_u8tof32(v_src11, v_src110, v_src111, v_src112, v_src113);
             expand_u8tof32(v_src12, v_src120, v_src121, v_src122, v_src123);
@@ -196,7 +206,7 @@ int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weight
     case 4:
         step = v_uint8x16::nlanes;
         weight_step = v_float32x4::nlanes;
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += weight_step)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += weight_step)
         {
             v_float32x4 v_src10, v_src11, v_src12, v_src13, v_src14, v_src15, v_src16, v_src17;
             v_float32x4 v_src20, v_src21, v_src22, v_src23, v_src24, v_src25, v_src26, v_src27;
@@ -224,13 +234,14 @@ int blendLinearSimd128(const uchar* src1, const uchar* src2, const float* weight
     return x;
 }
 
-int blendLinearSimd128(const float* src1, const float* src2, const float* weights1, const float* weights2, float* dst, int x, int width, int cn)
+int blendLinearSimd128(const float* src1, const float* src2, const float* weights1, const float* weights2,
+                       float* dst, int x, int width, int cn)
 {
-    int step = v_float32x4::nlanes*cn;
-    switch(cn)
+    int step = v_float32x4::nlanes * cn;
+    switch (cn)
     {
     case 1:
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
         {
             v_float32x4 v_src1 = v_load(src1 + x);
             v_float32x4 v_src2 = v_load(src2 + x);
@@ -243,7 +254,7 @@ int blendLinearSimd128(const float* src1, const float* src2, const float* weight
         }
         break;
     case 2:
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
         {
             v_float32x4 v_src10, v_src11, v_src20, v_src21;
             v_load_deinterleave(src1 + x, v_src10, v_src11);
@@ -258,7 +269,7 @@ int blendLinearSimd128(const float* src1, const float* src2, const float* weight
         }
         break;
     case 3:
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
         {
             v_float32x4 v_src10, v_src11, v_src12, v_src20, v_src21, v_src22;
             v_load_deinterleave(src1 + x, v_src10, v_src11, v_src12);
@@ -274,7 +285,7 @@ int blendLinearSimd128(const float* src1, const float* src2, const float* weight
         }
         break;
     case 4:
-        for(int weight_offset = 0 ; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
+        for (int weight_offset = 0; x <= width - step; x += step, weight_offset += v_float32x4::nlanes)
         {
             v_float32x4 v_src10, v_src11, v_src12, v_src13, v_src20, v_src21, v_src22, v_src23;
             v_load_deinterleave(src1 + x, v_src10, v_src11, v_src12, v_src13);
@@ -297,35 +308,33 @@ int blendLinearSimd128(const float* src1, const float* src2, const float* weight
 }
 #endif
 
-template <typename T>
-class BlendLinearInvoker :
-        public ParallelLoopBody
+template<typename T>
+class BlendLinearInvoker : public ParallelLoopBody
 {
 public:
-    BlendLinearInvoker(const Mat & _src1, const Mat & _src2, const Mat & _weights1,
-                       const Mat & _weights2, Mat & _dst) :
-        src1(&_src1), src2(&_src2), weights1(&_weights1), weights2(&_weights2), dst(&_dst)
+    BlendLinearInvoker(const Mat& _src1, const Mat& _src2, const Mat& _weights1, const Mat& _weights2, Mat& _dst)
+        : src1(&_src1), src2(&_src2), weights1(&_weights1), weights2(&_weights2), dst(&_dst)
     {
     }
 
-    virtual void operator() (const Range & range) const CV_OVERRIDE
+    virtual void operator()(const Range& range) const CV_OVERRIDE
     {
         int cn = src1->channels(), width = src1->cols * cn;
 
         for (int y = range.start; y < range.end; ++y)
         {
-            const float * const weights1_row = weights1->ptr<float>(y);
-            const float * const weights2_row = weights2->ptr<float>(y);
-            const T * const src1_row = src1->ptr<T>(y);
-            const T * const src2_row = src2->ptr<T>(y);
-            T * const dst_row = dst->ptr<T>(y);
+            const float* const weights1_row = weights1->ptr<float>(y);
+            const float* const weights2_row = weights2->ptr<float>(y);
+            const T* const src1_row = src1->ptr<T>(y);
+            const T* const src2_row = src2->ptr<T>(y);
+            T* const dst_row = dst->ptr<T>(y);
 
             int x = 0;
-            #if CV_SIMD128
+#if CV_SIMD128
             x = blendLinearSimd128(src1_row, src2_row, weights1_row, weights2_row, dst_row, x, width, cn);
-            #endif
+#endif
 
-            for ( ; x < width; ++x)
+            for (; x < width; ++x)
             {
                 int x1 = x / cn;
                 float w1 = weights1_row[x1], w2 = weights2_row[x1];
@@ -338,42 +347,43 @@ public:
     }
 
 private:
-    const BlendLinearInvoker & operator= (const BlendLinearInvoker &);
-    BlendLinearInvoker(const BlendLinearInvoker &);
+    const BlendLinearInvoker& operator=(const BlendLinearInvoker&);
+    BlendLinearInvoker(const BlendLinearInvoker&);
 
-    const Mat * src1, * src2, * weights1, * weights2;
-    Mat * dst;
+    const Mat *src1, *src2, *weights1, *weights2;
+    Mat* dst;
 };
 
 #ifdef HAVE_OPENCL
 
-static bool ocl_blendLinear( InputArray _src1, InputArray _src2, InputArray _weights1, InputArray _weights2, OutputArray _dst )
+static bool ocl_blendLinear(InputArray _src1, InputArray _src2, InputArray _weights1, InputArray _weights2,
+                            OutputArray _dst)
 {
     int type = _src1.type(), depth = CV_MAT_DEPTH(type), cn = CV_MAT_CN(type);
 
     char cvt[30];
     ocl::Kernel k("blendLinear", ocl::imgproc::blend_linear_oclsrc,
-                  format("-D T=%s -D cn=%d -D convertToT=%s", ocl::typeToStr(depth),
-                         cn, ocl::convertTypeStr(CV_32F, depth, 1, cvt)));
+                  format("-D T=%s -D cn=%d -D convertToT=%s", ocl::typeToStr(depth), cn,
+                         ocl::convertTypeStr(CV_32F, depth, 1, cvt)));
     if (k.empty())
         return false;
 
     UMat src1 = _src1.getUMat(), src2 = _src2.getUMat(), weights1 = _weights1.getUMat(),
-            weights2 = _weights2.getUMat(), dst = _dst.getUMat();
+         weights2 = _weights2.getUMat(), dst = _dst.getUMat();
 
     k.args(ocl::KernelArg::ReadOnlyNoSize(src1), ocl::KernelArg::ReadOnlyNoSize(src2),
            ocl::KernelArg::ReadOnlyNoSize(weights1), ocl::KernelArg::ReadOnlyNoSize(weights2),
            ocl::KernelArg::WriteOnly(dst));
 
-    size_t globalsize[2] = { (size_t)dst.cols, (size_t)dst.rows };
+    size_t globalsize[2] = {(size_t)dst.cols, (size_t)dst.rows};
     return k.run(2, globalsize, NULL, false);
 }
 
 #endif
 
-}
+} // namespace cv
 
-void cv::blendLinear( InputArray _src1, InputArray _src2, InputArray _weights1, InputArray _weights2, OutputArray _dst )
+void cv::blendLinear(InputArray _src1, InputArray _src2, InputArray _weights1, InputArray _weights2, OutputArray _dst)
 {
     CV_INSTRUMENT_REGION();
 
@@ -386,20 +396,19 @@ void cv::blendLinear( InputArray _src1, InputArray _src2, InputArray _weights1, 
 
     _dst.create(size, type);
 
-    CV_OCL_RUN(_dst.isUMat(),
-               ocl_blendLinear(_src1, _src2, _weights1, _weights2, _dst))
+    CV_OCL_RUN(_dst.isUMat(), ocl_blendLinear(_src1, _src2, _weights1, _weights2, _dst))
 
-    Mat src1 = _src1.getMat(), src2 = _src2.getMat(), weights1 = _weights1.getMat(),
-            weights2 = _weights2.getMat(), dst = _dst.getMat();
+    Mat src1 = _src1.getMat(), src2 = _src2.getMat(), weights1 = _weights1.getMat(), weights2 = _weights2.getMat(),
+        dst = _dst.getMat();
 
     if (depth == CV_8U)
     {
         BlendLinearInvoker<uchar> invoker(src1, src2, weights1, weights2, dst);
-        parallel_for_(Range(0, src1.rows), invoker, dst.total()/(double)(1<<16));
+        parallel_for_(Range(0, src1.rows), invoker, dst.total() / (double)(1 << 16));
     }
     else if (depth == CV_32F)
     {
         BlendLinearInvoker<float> invoker(src1, src2, weights1, weights2, dst);
-        parallel_for_(Range(0, src1.rows), invoker, dst.total()/(double)(1<<16));
+        parallel_for_(Range(0, src1.rows), invoker, dst.total() / (double)(1 << 16));
     }
 }

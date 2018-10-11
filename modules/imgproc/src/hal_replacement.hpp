@@ -49,11 +49,11 @@
 #include "opencv2/imgproc/hal/interface.h"
 
 #if defined __GNUC__
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wunused-parameter"
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wunused-parameter"
 #elif defined _MSC_VER
-#  pragma warning( push )
-#  pragma warning( disable: 4100 )
+#    pragma warning(push)
+#    pragma warning(disable : 4100)
 #endif
 
 //! @addtogroup imgproc_hal_interface
@@ -81,7 +81,9 @@ int my_hal_filterFree(cvhalFilter2D *context) {
 }
 @endcode
  */
-struct cvhalFilter2D {};
+struct cvhalFilter2D
+{
+};
 
 /**
    @brief hal_filterInit
@@ -103,7 +105,13 @@ struct cvhalFilter2D {};
    @param allowInplace indicates whether the inplace operation will be possible
    @sa cv::filter2D, cv::hal::Filter2D
  */
-inline int hal_ni_filterInit(cvhalFilter2D **context, uchar *kernel_data, size_t kernel_step, int kernel_type, int kernel_width, int kernel_height, int max_width, int max_height, int src_type, int dst_type, int borderType, double delta, int anchor_x, int anchor_y, bool allowSubmatrix, bool allowInplace) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_filterInit(cvhalFilter2D** context, uchar* kernel_data, size_t kernel_step, int kernel_type,
+                             int kernel_width, int kernel_height, int max_width, int max_height, int src_type,
+                             int dst_type, int borderType, double delta, int anchor_x, int anchor_y,
+                             bool allowSubmatrix, bool allowInplace)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_filter
    @param context pointer to user-defined context
@@ -119,13 +127,17 @@ inline int hal_ni_filterInit(cvhalFilter2D **context, uchar *kernel_data, size_t
    @param offset_y source image ROI offset Y
    @sa cv::filter2D, cv::hal::Filter2D
  */
-inline int hal_ni_filter(cvhalFilter2D *context, uchar *src_data, size_t src_step, uchar *dst_data, size_t dst_step, int width, int height, int full_width, int full_height, int offset_x, int offset_y) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_filter(cvhalFilter2D* context, uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                         int width, int height, int full_width, int full_height, int offset_x, int offset_y)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_filterFree
    @param context pointer to user-defined context
    @sa cv::filter2D, cv::hal::Filter2D
  */
-inline int hal_ni_filterFree(cvhalFilter2D *context) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_filterFree(cvhalFilter2D* context) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
 
 //! @cond IGNORED
 #define cv_hal_filterInit hal_ni_filterInit
@@ -149,7 +161,12 @@ inline int hal_ni_filterFree(cvhalFilter2D *context) { return CV_HAL_ERROR_NOT_I
    @param borderType border processing mode (CV_HAL_BORDER_REFLECT, ...)
    @sa cv::sepFilter2D, cv::hal::SepFilter2D
  */
-inline int hal_ni_sepFilterInit(cvhalFilter2D **context, int src_type, int dst_type, int kernel_type, uchar *kernelx_data, int kernelx_length, uchar *kernely_data, int kernely_length, int anchor_x, int anchor_y, double delta, int borderType) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_sepFilterInit(cvhalFilter2D** context, int src_type, int dst_type, int kernel_type,
+                                uchar* kernelx_data, int kernelx_length, uchar* kernely_data, int kernely_length,
+                                int anchor_x, int anchor_y, double delta, int borderType)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_sepFilter
    @param context pointer to user-defined context
@@ -165,13 +182,18 @@ inline int hal_ni_sepFilterInit(cvhalFilter2D **context, int src_type, int dst_t
    @param offset_y source image ROI offset Y
    @sa cv::sepFilter2D, cv::hal::SepFilter2D
  */
-inline int hal_ni_sepFilter(cvhalFilter2D *context, uchar *src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int full_width, int full_height, int offset_x, int offset_y) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_sepFilter(cvhalFilter2D* context, uchar* src_data, size_t src_step, uchar* dst_data,
+                            size_t dst_step, int width, int height, int full_width, int full_height, int offset_x,
+                            int offset_y)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_sepFilterFree
    @param context pointer to user-defined context
    @sa cv::sepFilter2D, cv::hal::SepFilter2D
  */
-inline int hal_ni_sepFilterFree(cvhalFilter2D *context) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_sepFilterFree(cvhalFilter2D* context) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
 
 //! @cond IGNORED
 #define cv_hal_sepFilterInit hal_ni_sepFilterInit
@@ -201,7 +223,13 @@ inline int hal_ni_sepFilterFree(cvhalFilter2D *context) { return CV_HAL_ERROR_NO
    @param allowInplace indicates whether the inplace operation will be possible
    @sa cv::erode, cv::dilate, cv::morphologyEx, cv::hal::Morph
  */
-inline int hal_ni_morphInit(cvhalFilter2D **context, int operation, int src_type, int dst_type, int max_width, int max_height, int kernel_type, uchar *kernel_data, size_t kernel_step, int kernel_width, int kernel_height, int anchor_x, int anchor_y, int borderType, const double borderValue[4], int iterations, bool allowSubmatrix, bool allowInplace) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_morphInit(cvhalFilter2D** context, int operation, int src_type, int dst_type, int max_width,
+                            int max_height, int kernel_type, uchar* kernel_data, size_t kernel_step,
+                            int kernel_width, int kernel_height, int anchor_x, int anchor_y, int borderType,
+                            const double borderValue[4], int iterations, bool allowSubmatrix, bool allowInplace)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_morph
    @param context pointer to user-defined context
@@ -221,13 +249,18 @@ inline int hal_ni_morphInit(cvhalFilter2D **context, int operation, int src_type
    @param dst_roi_y destination image ROI Y offset
    @sa cv::erode, cv::dilate, cv::morphologyEx, cv::hal::Morph
  */
-inline int hal_ni_morph(cvhalFilter2D *context, uchar *src_data, size_t src_step, uchar *dst_data, size_t dst_step, int width, int height, int src_full_width, int src_full_height, int src_roi_x, int src_roi_y, int dst_full_width, int dst_full_height, int dst_roi_x, int dst_roi_y) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_morph(cvhalFilter2D* context, uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                        int width, int height, int src_full_width, int src_full_height, int src_roi_x,
+                        int src_roi_y, int dst_full_width, int dst_full_height, int dst_roi_x, int dst_roi_y)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_morphFree
    @param context pointer to user-defined context
    @sa cv::erode, cv::dilate, cv::morphologyEx, cv::hal::Morph
  */
-inline int hal_ni_morphFree(cvhalFilter2D *context) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_morphFree(cvhalFilter2D* context) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
 
 //! @cond IGNORED
 #define cv_hal_morphInit hal_ni_morphInit
@@ -251,7 +284,12 @@ inline int hal_ni_morphFree(cvhalFilter2D *context) { return CV_HAL_ERROR_NOT_IM
    @param interpolation interpolation mode (CV_HAL_INTER_NEAREST, ...)
    @sa cv::resize, cv::hal::resize
  */
-inline int hal_ni_resize(int src_type, const uchar *src_data, size_t src_step, int src_width, int src_height, uchar *dst_data, size_t dst_step, int dst_width, int dst_height, double inv_scale_x, double inv_scale_y, int interpolation) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_resize(int src_type, const uchar* src_data, size_t src_step, int src_width, int src_height,
+                         uchar* dst_data, size_t dst_step, int dst_width, int dst_height, double inv_scale_x,
+                         double inv_scale_y, int interpolation)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_warpAffine
    @param src_type source and destination image type
@@ -269,7 +307,12 @@ inline int hal_ni_resize(int src_type, const uchar *src_data, size_t src_step, i
    @param borderValue values to use for CV_HAL_BORDER_CONSTANT mode
    @sa cv::warpAffine, cv::hal::warpAffine
  */
-inline int hal_ni_warpAffine(int src_type, const uchar *src_data, size_t src_step, int src_width, int src_height, uchar *dst_data, size_t dst_step, int dst_width, int dst_height, const double M[6], int interpolation, int borderType, const double borderValue[4]) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_warpAffine(int src_type, const uchar* src_data, size_t src_step, int src_width, int src_height,
+                             uchar* dst_data, size_t dst_step, int dst_width, int dst_height, const double M[6],
+                             int interpolation, int borderType, const double borderValue[4])
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 /**
    @brief hal_warpPerspective
    @param src_type source and destination image type
@@ -287,7 +330,12 @@ inline int hal_ni_warpAffine(int src_type, const uchar *src_data, size_t src_ste
    @param borderValue values to use for CV_HAL_BORDER_CONSTANT mode
    @sa cv::warpPerspective, cv::hal::warpPerspective
  */
-inline int hal_ni_warpPerspective(int src_type, const uchar *src_data, size_t src_step, int src_width, int src_height, uchar *dst_data, size_t dst_step, int dst_width, int dst_height, const double M[9], int interpolation, int borderType, const double borderValue[4]) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_warpPerspective(int src_type, const uchar* src_data, size_t src_step, int src_width,
+                                  int src_height, uchar* dst_data, size_t dst_step, int dst_width, int dst_height,
+                                  const double M[9], int interpolation, int borderType, const double borderValue[4])
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_resize hal_ni_resize
@@ -306,7 +354,11 @@ inline int hal_ni_warpPerspective(int src_type, const uchar *src_data, size_t sr
    @param swapBlue if set to true B and R channels will be swapped (BGR->RGB or RGB->BGR)
    Convert between BGR, BGRA, RGB and RGBA image formats.
  */
-inline int hal_ni_cvtBGRtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int scn, int dcn, bool swapBlue) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int scn, int dcn, bool swapBlue)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGRtoBGR5x5
@@ -319,7 +371,11 @@ inline int hal_ni_cvtBGRtoBGR(const uchar * src_data, size_t src_step, uchar * d
    Convert from BGR, BGRA, RGB and RGBA to packed BGR or RGB (16 bits per pixel, 555 or 565).
    Support only CV_8U images (input 3 or 4 channels, output 2 channels).
  */
-inline int hal_ni_cvtBGRtoBGR5x5(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int scn, bool swapBlue, int greenBits) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoBGR5x5(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                 int width, int height, int scn, bool swapBlue, int greenBits)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGR5x5toBGR
@@ -332,7 +388,11 @@ inline int hal_ni_cvtBGRtoBGR5x5(const uchar * src_data, size_t src_step, uchar 
    Convert from packed BGR or RGB (16 bits per pixel, 555 or 565) to BGR, BGRA, RGB and RGBA.
    Support only CV_8U images (input 2 channels, output 3 or 4 channels).
  */
-inline int hal_ni_cvtBGR5x5toBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int dcn, bool swapBlue, int greenBits) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGR5x5toBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                 int width, int height, int dcn, bool swapBlue, int greenBits)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGRtoGray
@@ -344,7 +404,11 @@ inline int hal_ni_cvtBGR5x5toBGR(const uchar * src_data, size_t src_step, uchar 
    @param swapBlue if set to true B and R source channels will be swapped (treat as RGB)
    Convert from BGR, BGRA, RGB or RGBA to 1-channel gray.
  */
-inline int hal_ni_cvtBGRtoGray(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int scn, bool swapBlue) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoGray(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                               int height, int depth, int scn, bool swapBlue)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtGraytoBGR
@@ -355,7 +419,11 @@ inline int hal_ni_cvtBGRtoGray(const uchar * src_data, size_t src_step, uchar * 
    @param dcn destination image channels (3 or 4)
    Convert from 1-channel gray to BGR, RGB, RGBA or BGRA.
  */
-inline int hal_ni_cvtGraytoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int dcn) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtGraytoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                               int height, int depth, int dcn)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGR5x5toGray
@@ -366,7 +434,11 @@ inline int hal_ni_cvtGraytoBGR(const uchar * src_data, size_t src_step, uchar * 
    Convert from packed BGR (16 bits per pixel, 555 or 565) to 1-channel gray.
    Support only CV_8U images.
  */
-inline int hal_ni_cvtBGR5x5toGray(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int greenBits) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGR5x5toGray(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                  int width, int height, int greenBits)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtGraytoBGR5x5
@@ -377,7 +449,11 @@ inline int hal_ni_cvtBGR5x5toGray(const uchar * src_data, size_t src_step, uchar
    Convert from 1-channel gray to packed BGR (16 bits per pixel, 555 or 565).
    Support only CV_8U images.
  */
-inline int hal_ni_cvtGraytoBGR5x5(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int greenBits) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtGraytoBGR5x5(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                  int width, int height, int greenBits)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGRtoYUV
@@ -390,7 +466,11 @@ inline int hal_ni_cvtGraytoBGR5x5(const uchar * src_data, size_t src_step, uchar
    @param isCbCr if set to true write output in YCbCr format
    Convert from BGR, RGB, BGRA or RGBA to YUV or YCbCr.
  */
-inline int hal_ni_cvtBGRtoYUV(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int scn, bool swapBlue, bool isCbCr) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoYUV(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int scn, bool swapBlue, bool isCbCr)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtYUVtoBGR
@@ -403,7 +483,11 @@ inline int hal_ni_cvtBGRtoYUV(const uchar * src_data, size_t src_step, uchar * d
    @param isCbCr if set to true treat source as YCbCr
    Convert from YUV or YCbCr to BGR, RGB, BGRA or RGBA.
  */
-inline int hal_ni_cvtYUVtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int dcn, bool swapBlue, bool isCbCr) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtYUVtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int dcn, bool swapBlue, bool isCbCr)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGRtoXYZ
@@ -415,7 +499,11 @@ inline int hal_ni_cvtYUVtoBGR(const uchar * src_data, size_t src_step, uchar * d
    @param swapBlue if set to true B and R source channels will be swapped (treat as RGB)
    Convert from BGR, RGB, BGRA or RGBA to XYZ.
  */
-inline int hal_ni_cvtBGRtoXYZ(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int scn, bool swapBlue) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoXYZ(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int scn, bool swapBlue)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtXYZtoBGR
@@ -427,7 +515,11 @@ inline int hal_ni_cvtBGRtoXYZ(const uchar * src_data, size_t src_step, uchar * d
    @param swapBlue if set to true B and R destination channels will be swapped (write RGB)
    Convert from XYZ to BGR, RGB, BGRA or RGBA.
  */
-inline int hal_ni_cvtXYZtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int dcn, bool swapBlue) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtXYZtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int dcn, bool swapBlue)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGRtoHSV
@@ -441,7 +533,11 @@ inline int hal_ni_cvtXYZtoBGR(const uchar * src_data, size_t src_step, uchar * d
    @param isHSV if set to true write HSV otherwise HSL
    Convert from BGR, RGB, BGRA or RGBA to HSV or HSL.
  */
-inline int hal_ni_cvtBGRtoHSV(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int scn, bool swapBlue, bool isFullRange, bool isHSV) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoHSV(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int scn, bool swapBlue, bool isFullRange, bool isHSV)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtHSVtoBGR
@@ -455,7 +551,11 @@ inline int hal_ni_cvtBGRtoHSV(const uchar * src_data, size_t src_step, uchar * d
    @param isHSV if set to true treat source as HSV otherwise HSL
    Convert from HSV or HSL to BGR, RGB, BGRA or RGBA.
  */
-inline int hal_ni_cvtHSVtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int dcn, bool swapBlue, bool isFullRange, bool isHSV) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtHSVtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int dcn, bool swapBlue, bool isFullRange, bool isHSV)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGRtoLab
@@ -469,7 +569,11 @@ inline int hal_ni_cvtHSVtoBGR(const uchar * src_data, size_t src_step, uchar * d
    @param srgb if set to true use sRGB gamma correction
    Convert from BGR, RGB, BGRA or RGBA to Lab or Luv.
  */
-inline int hal_ni_cvtBGRtoLab(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int scn, bool swapBlue, bool isLab, bool srgb) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoLab(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int scn, bool swapBlue, bool isLab, bool srgb)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtLabtoBGR
@@ -483,7 +587,11 @@ inline int hal_ni_cvtBGRtoLab(const uchar * src_data, size_t src_step, uchar * d
    @param srgb if set to true use sRGB gamma correction
    Convert from Lab or Luv to BGR, RGB, BGRA or RGBA.
  */
-inline int hal_ni_cvtLabtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int depth, int dcn, bool swapBlue, bool isLab, bool srgb) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtLabtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                              int height, int depth, int dcn, bool swapBlue, bool isLab, bool srgb)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtTwoPlaneYUVtoBGR
@@ -496,7 +604,11 @@ inline int hal_ni_cvtLabtoBGR(const uchar * src_data, size_t src_step, uchar * d
    Convert from YUV (YUV420sp (or NV12/NV21) - Y plane followed by interleaved U/V plane) to BGR, RGB, BGRA or RGBA.
    Only for CV_8U.
  */
-inline int hal_ni_cvtTwoPlaneYUVtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int dst_width, int dst_height, int dcn, bool swapBlue, int uIdx) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtTwoPlaneYUVtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                      int dst_width, int dst_height, int dcn, bool swapBlue, int uIdx)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtThreePlaneYUVtoBGR
@@ -509,7 +621,11 @@ inline int hal_ni_cvtTwoPlaneYUVtoBGR(const uchar * src_data, size_t src_step, u
    Convert from YUV (YUV420p (or YV12/YV21) - Y plane followed by U and V planes) to BGR, RGB, BGRA or RGBA.
    Only for CV_8U.
  */
-inline int hal_ni_cvtThreePlaneYUVtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int dst_width, int dst_height, int dcn, bool swapBlue, int uIdx) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtThreePlaneYUVtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                        int dst_width, int dst_height, int dcn, bool swapBlue, int uIdx)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtBGRtoThreePlaneYUV
@@ -522,7 +638,11 @@ inline int hal_ni_cvtThreePlaneYUVtoBGR(const uchar * src_data, size_t src_step,
    Convert from BGR, RGB, BGRA or RGBA to YUV (YUV420p (or YV12/YV21) - Y plane followed by U and V planes).
    Only for CV_8U.
  */
-inline int hal_ni_cvtBGRtoThreePlaneYUV(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int scn, bool swapBlue, int uIdx) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtBGRtoThreePlaneYUV(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                        int width, int height, int scn, bool swapBlue, int uIdx)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtOnePlaneYUVtoBGR
@@ -536,7 +656,11 @@ inline int hal_ni_cvtBGRtoThreePlaneYUV(const uchar * src_data, size_t src_step,
    Convert from UYVY, YUY2 or YVYU to BGR, RGB, BGRA or RGBA.
    Only for CV_8U.
  */
-inline int hal_ni_cvtOnePlaneYUVtoBGR(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height, int dcn, bool swapBlue, int uIdx, int ycn) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtOnePlaneYUVtoBGR(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                      int width, int height, int dcn, bool swapBlue, int uIdx, int ycn)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 
 /**
@@ -547,7 +671,11 @@ inline int hal_ni_cvtOnePlaneYUVtoBGR(const uchar * src_data, size_t src_step, u
    Convert from BGRA or RGBA to format with multiplied alpha channel.
    Only for CV_8U.
  */
-inline int hal_ni_cvtRGBAtoMultipliedRGBA(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtRGBAtoMultipliedRGBA(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                          int width, int height)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 /**
    @brief hal_cvtMultipliedRGBAtoRGBA
@@ -557,7 +685,11 @@ inline int hal_ni_cvtRGBAtoMultipliedRGBA(const uchar * src_data, size_t src_ste
    Convert from format with multiplied alpha channel to BGRA or RGBA.
    Only for CV_8U.
  */
-inline int hal_ni_cvtMultipliedRGBAtoRGBA(const uchar * src_data, size_t src_step, uchar * dst_data, size_t dst_step, int width, int height) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_cvtMultipliedRGBAtoRGBA(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                          int width, int height)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_cvtBGRtoBGR hal_ni_cvtBGRtoBGR
@@ -609,7 +741,12 @@ inline int hal_ni_cvtMultipliedRGBAtoRGBA(const uchar * src_data, size_t src_ste
    CV_64F | CV_64F | CV_64F
    @sa cv::integral
 */
-inline int hal_ni_integral(int depth, int sdepth, int sqdepth, const uchar * src_data, size_t src_step, uchar * sum_data, size_t sum_step, uchar * sqsum_data, size_t sqsum_step, uchar * tilted_data, size_t tilted_step, int width, int height, int cn) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_integral(int depth, int sdepth, int sqdepth, const uchar* src_data, size_t src_step,
+                           uchar* sum_data, size_t sum_step, uchar* sqsum_data, size_t sqsum_step,
+                           uchar* tilted_data, size_t tilted_step, int width, int height, int cn)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_integral hal_ni_integral
@@ -624,7 +761,11 @@ inline int hal_ni_integral(int depth, int sdepth, int sqdepth, const uchar * src
    @param cn Number of channels
    @param ksize Size of kernel
 */
-inline int hal_ni_medianBlur(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int depth, int cn, int ksize) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_medianBlur(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                             int height, int depth, int cn, int ksize)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_medianBlur hal_ni_medianBlur
@@ -641,10 +782,15 @@ inline int hal_ni_medianBlur(const uchar* src_data, size_t src_step, uchar* dst_
    @param blockSize Size of a pixel neighborhood that is used to calculate a threshold value
    @param C Constant subtracted from the mean or weighted mean
 */
-inline int hal_ni_adaptiveThreshold(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, double maxValue, int adaptiveMethod, int thresholdType, int blockSize, double C) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_adaptiveThreshold(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step,
+                                    int width, int height, double maxValue, int adaptiveMethod, int thresholdType,
+                                    int blockSize, double C)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
-#define cv_hal_adaptiveThreshold  hal_ni_adaptiveThreshold
+#define cv_hal_adaptiveThreshold hal_ni_adaptiveThreshold
 //! @endcond
 
 /**
@@ -658,7 +804,11 @@ inline int hal_ni_adaptiveThreshold(const uchar* src_data, size_t src_step, ucha
    @param maxValue Value assigned to the pixels for which the condition is satisfied
    @param thresholdType Thresholding type
 */
-inline int hal_ni_threshold(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int depth, int cn, double thresh, double maxValue, int thresholdType) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_threshold(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                            int height, int depth, int cn, double thresh, double maxValue, int thresholdType)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_threshold hal_ni_threshold
@@ -677,7 +827,13 @@ inline int hal_ni_threshold(const uchar* src_data, size_t src_step, uchar* dst_d
    @param normalize If true then result is normalized
    @param border_type Border type
 */
-inline int hal_ni_boxFilter(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int src_depth, int dst_depth, int cn, int margin_left, int margin_top, int margin_right, int margin_bottom, size_t ksize_width, size_t ksize_height, int anchor_x, int anchor_y, bool normalize, int border_type) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_boxFilter(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                            int height, int src_depth, int dst_depth, int cn, int margin_left, int margin_top,
+                            int margin_right, int margin_bottom, size_t ksize_width, size_t ksize_height,
+                            int anchor_x, int anchor_y, bool normalize, int border_type)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_boxFilter hal_ni_boxFilter
@@ -695,7 +851,13 @@ inline int hal_ni_boxFilter(const uchar* src_data, size_t src_step, uchar* dst_d
    @param sigmaX,sigmaY Gaussian kernel standard deviation.
    @param border_type Border type
 */
-inline int hal_ni_gaussianBlur(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int depth, int cn, size_t margin_left, size_t margin_top, size_t margin_right, size_t margin_bottom, size_t ksize_width, size_t ksize_height, double sigmaX, double sigmaY, int border_type) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_gaussianBlur(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                               int height, int depth, int cn, size_t margin_left, size_t margin_top,
+                               size_t margin_right, size_t margin_bottom, size_t ksize_width, size_t ksize_height,
+                               double sigmaX, double sigmaY, int border_type)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_gaussianBlur hal_ni_gaussianBlur
@@ -715,7 +877,13 @@ inline int hal_ni_gaussianBlur(const uchar* src_data, size_t src_step, uchar* ds
    @param delta Delta value that is added to the results prior to storing them in dst
    @param border_type Border type
 */
-inline int hal_ni_sobel(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int src_depth, int dst_depth, int cn, int margin_left, int margin_top, int margin_right, int margin_bottom, int dx, int dy, int ksize, double scale, double delta, int border_type) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_sobel(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                        int height, int src_depth, int dst_depth, int cn, int margin_left, int margin_top,
+                        int margin_right, int margin_bottom, int dx, int dy, int ksize, double scale, double delta,
+                        int border_type)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_sobel hal_ni_sobel
@@ -734,7 +902,13 @@ inline int hal_ni_sobel(const uchar* src_data, size_t src_step, uchar* dst_data,
    @param delta Delta value that is added to the results prior to storing them in dst
    @param border_type Border type
 */
-inline int hal_ni_scharr(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int src_depth, int dst_depth, int cn, int margin_left, int margin_top, int margin_right, int margin_bottom, int dx, int dy, double scale, double delta, int border_type)  { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_scharr(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                         int height, int src_depth, int dst_depth, int cn, int margin_left, int margin_top,
+                         int margin_right, int margin_bottom, int dx, int dy, double scale, double delta,
+                         int border_type)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_scharr hal_ni_scharr
@@ -750,7 +924,11 @@ inline int hal_ni_scharr(const uchar* src_data, size_t src_step, uchar* dst_data
    @param cn Number of channels
    @param border_type Border type
 */
-inline int hal_ni_pyrdown(const uchar* src_data, size_t src_step, int src_width, int src_height, uchar* dst_data, size_t dst_step, int dst_width, int dst_height, int depth, int cn, int border_type) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_pyrdown(const uchar* src_data, size_t src_step, int src_width, int src_height, uchar* dst_data,
+                          size_t dst_step, int dst_width, int dst_height, int depth, int cn, int border_type)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_pyrdown hal_ni_pyrdown
@@ -766,7 +944,11 @@ inline int hal_ni_pyrdown(const uchar* src_data, size_t src_step, int src_width,
    @param ksize Kernel size for Sobel operator.
    @param L2gradient Flag, indicating use L2 or L1 norma.
 */
-inline int hal_ni_canny(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width, int height, int cn, double lowThreshold, double highThreshold, int ksize, bool L2gradient) { return CV_HAL_ERROR_NOT_IMPLEMENTED; }
+inline int hal_ni_canny(const uchar* src_data, size_t src_step, uchar* dst_data, size_t dst_step, int width,
+                        int height, int cn, double lowThreshold, double highThreshold, int ksize, bool L2gradient)
+{
+    return CV_HAL_ERROR_NOT_IMPLEMENTED;
+}
 
 //! @cond IGNORED
 #define cv_hal_canny hal_ni_canny
@@ -775,9 +957,9 @@ inline int hal_ni_canny(const uchar* src_data, size_t src_step, uchar* dst_data,
 //! @}
 
 #if defined __GNUC__
-#  pragma GCC diagnostic pop
+#    pragma GCC diagnostic pop
 #elif defined _MSC_VER
-#  pragma warning( pop )
+#    pragma warning(pop)
 #endif
 
 #include "custom_hal.hpp"
@@ -789,7 +971,7 @@ inline int hal_ni_canny(const uchar* src_data, size_t src_step, uchar* dst_data,
         return retval; \
     else if (res != CV_HAL_ERROR_NOT_IMPLEMENTED) \
         CV_Error_(cv::Error::StsInternal, \
-            ("HAL implementation " CVAUX_STR(name) " ==> " CVAUX_STR(fun) " returned %d (0x%08x)", res, res));
+                  ("HAL implementation " CVAUX_STR(name) " ==> " CVAUX_STR(fun) " returned %d (0x%08x)", res, res));
 
 
 #define CALL_HAL(name, fun, ...) \
@@ -798,7 +980,7 @@ inline int hal_ni_canny(const uchar* src_data, size_t src_step, uchar* dst_data,
         return; \
     else if (res != CV_HAL_ERROR_NOT_IMPLEMENTED) \
         CV_Error_(cv::Error::StsInternal, \
-            ("HAL implementation " CVAUX_STR(name) " ==> " CVAUX_STR(fun) " returned %d (0x%08x)", res, res));
+                  ("HAL implementation " CVAUX_STR(name) " ==> " CVAUX_STR(fun) " returned %d (0x%08x)", res, res));
 //! @endcond
 
 #endif
