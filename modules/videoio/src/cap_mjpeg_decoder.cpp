@@ -42,10 +42,9 @@
 #include "precomp.hpp"
 #include "opencv2/videoio/container_avi.private.hpp"
 
-namespace cv
-{
+namespace cv {
 
-class MotionJpegCapture: public IVideoCapture
+class MotionJpegCapture : public IVideoCapture
 {
 public:
     virtual ~MotionJpegCapture() CV_OVERRIDE;
@@ -59,31 +58,31 @@ public:
 
     bool open(const String&);
     void close();
-protected:
 
+protected:
     inline uint64_t getFramePos() const;
 
     Ptr<AVIReadContainer> m_avi_container;
-    bool             m_is_first_frame;
-    frame_list       m_mjpeg_frames;
+    bool m_is_first_frame;
+    frame_list m_mjpeg_frames;
 
-    frame_iterator   m_frame_iterator;
-    Mat              m_current_frame;
+    frame_iterator m_frame_iterator;
+    Mat m_current_frame;
 
     //frame width/height and fps could be different for
     //each frame/stream. At the moment we suppose that they
     //stays the same within single avi file.
-    uint32_t         m_frame_width;
-    uint32_t         m_frame_height;
-    double           m_fps;
+    uint32_t m_frame_width;
+    uint32_t m_frame_height;
+    double m_fps;
 };
 
 uint64_t MotionJpegCapture::getFramePos() const
 {
-    if(m_is_first_frame)
+    if (m_is_first_frame)
         return 0;
 
-    if(m_frame_iterator == m_mjpeg_frames.end())
+    if (m_frame_iterator == m_mjpeg_frames.end())
         return m_mjpeg_frames.size();
 
     return m_frame_iterator - m_mjpeg_frames.begin() + 1;
@@ -91,15 +90,15 @@ uint64_t MotionJpegCapture::getFramePos() const
 
 bool MotionJpegCapture::setProperty(int property, double value)
 {
-    if(property == CAP_PROP_POS_FRAMES)
+    if (property == CAP_PROP_POS_FRAMES)
     {
-        if(int(value) == 0)
+        if (int(value) == 0)
         {
             m_is_first_frame = true;
             m_frame_iterator = m_mjpeg_frames.end();
             return true;
         }
-        else if(m_mjpeg_frames.size() > value)
+        else if (m_mjpeg_frames.size() > value)
         {
             m_frame_iterator = m_mjpeg_frames.begin() + int(value - 1);
             m_is_first_frame = false;
@@ -112,34 +111,34 @@ bool MotionJpegCapture::setProperty(int property, double value)
 
 double MotionJpegCapture::getProperty(int property) const
 {
-    switch(property)
+    switch (property)
     {
-        case CAP_PROP_POS_FRAMES:
-            return (double)getFramePos();
-        case CAP_PROP_POS_AVI_RATIO:
-            return double(getFramePos())/m_mjpeg_frames.size();
-        case CAP_PROP_FRAME_WIDTH:
-            return (double)m_frame_width;
-        case CAP_PROP_FRAME_HEIGHT:
-            return (double)m_frame_height;
-        case CAP_PROP_FPS:
-            return m_fps;
-        case CAP_PROP_FOURCC:
-            return (double)CV_FOURCC('M','J','P','G');
-        case CAP_PROP_FRAME_COUNT:
-            return (double)m_mjpeg_frames.size();
-        case CAP_PROP_FORMAT:
-            return 0;
-        default:
-            return 0;
+    case CAP_PROP_POS_FRAMES:
+        return (double)getFramePos();
+    case CAP_PROP_POS_AVI_RATIO:
+        return double(getFramePos()) / m_mjpeg_frames.size();
+    case CAP_PROP_FRAME_WIDTH:
+        return (double)m_frame_width;
+    case CAP_PROP_FRAME_HEIGHT:
+        return (double)m_frame_height;
+    case CAP_PROP_FPS:
+        return m_fps;
+    case CAP_PROP_FOURCC:
+        return (double)CV_FOURCC('M', 'J', 'P', 'G');
+    case CAP_PROP_FRAME_COUNT:
+        return (double)m_mjpeg_frames.size();
+    case CAP_PROP_FORMAT:
+        return 0;
+    default:
+        return 0;
     }
 }
 
 bool MotionJpegCapture::grabFrame()
 {
-    if(isOpened())
+    if (isOpened())
     {
-        if(m_is_first_frame)
+        if (m_is_first_frame)
         {
             m_is_first_frame = false;
             m_frame_iterator = m_mjpeg_frames.begin();
@@ -158,13 +157,14 @@ bool MotionJpegCapture::grabFrame()
 
 bool MotionJpegCapture::retrieveFrame(int, OutputArray output_frame)
 {
-    if(m_frame_iterator != m_mjpeg_frames.end())
+    if (m_frame_iterator != m_mjpeg_frames.end())
     {
         std::vector<char> data = m_avi_container->readFrame(m_frame_iterator);
 
-        if(data.size())
+        if (data.size())
         {
-            m_current_frame = imdecode(data, CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_COLOR | IMREAD_IGNORE_ORIENTATION);
+            m_current_frame = imdecode(data,
+                                       CV_LOAD_IMAGE_ANYDEPTH | CV_LOAD_IMAGE_COLOR | IMREAD_IGNORE_ORIENTATION);
         }
 
         m_current_frame.copyTo(output_frame);
@@ -175,10 +175,7 @@ bool MotionJpegCapture::retrieveFrame(int, OutputArray output_frame)
     return false;
 }
 
-MotionJpegCapture::~MotionJpegCapture()
-{
-    close();
-}
+MotionJpegCapture::~MotionJpegCapture() { close(); }
 
 MotionJpegCapture::MotionJpegCapture(const String& filename)
 {
@@ -187,10 +184,7 @@ MotionJpegCapture::MotionJpegCapture(const String& filename)
     open(filename);
 }
 
-bool MotionJpegCapture::isOpened() const
-{
-    return m_mjpeg_frames.size() > 0;
-}
+bool MotionJpegCapture::isOpened() const { return m_mjpeg_frames.size() > 0; }
 
 void MotionJpegCapture::close()
 {
@@ -208,10 +202,11 @@ bool MotionJpegCapture::open(const String& filename)
     m_frame_iterator = m_mjpeg_frames.end();
     m_is_first_frame = true;
 
-    if(!m_avi_container->parseRiff(m_mjpeg_frames))
+    if (!m_avi_container->parseRiff(m_mjpeg_frames))
     {
         close();
-    } else
+    }
+    else
     {
         m_frame_width = m_avi_container->getWidth();
         m_frame_height = m_avi_container->getHeight();
@@ -224,9 +219,9 @@ bool MotionJpegCapture::open(const String& filename)
 Ptr<IVideoCapture> createMotionJpegCapture(const String& filename)
 {
     Ptr<MotionJpegCapture> mjdecoder(new MotionJpegCapture(filename));
-    if( mjdecoder->isOpened() )
+    if (mjdecoder->isOpened())
         return mjdecoder;
     return Ptr<MotionJpegCapture>();
 }
 
-}
+} // namespace cv

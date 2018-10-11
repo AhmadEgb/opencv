@@ -29,48 +29,44 @@
 
 #ifdef HAVE_GPHOTO2
 
-#include <gphoto2/gphoto2.h>
+#    include <gphoto2/gphoto2.h>
 
-#include <algorithm>
-#include <clocale>
-#include <cstdio>
-#include <cstring>
-#include <ctime>
-#include <deque>
-#include <exception>
-#include <map>
-#include <ostream>
-#include <string>
+#    include <algorithm>
+#    include <clocale>
+#    include <cstdio>
+#    include <cstring>
+#    include <ctime>
+#    include <deque>
+#    include <exception>
+#    include <map>
+#    include <ostream>
+#    include <string>
 
-namespace cv
-{
+namespace cv {
 
 namespace gphoto2 {
 
 /**
  * \brief Map gPhoto2 return code into this exception.
  */
-class GPhoto2Exception: public std::exception
+class GPhoto2Exception : public std::exception
 {
 private:
     int result;
-    const char * method;
+    const char* method;
+
 public:
     /**
      * @param methodStr libgphoto2 method name
      * @param gPhoto2Result libgphoto2 method result, should be less than GP_OK
      */
-    GPhoto2Exception(const char * methodStr, int gPhoto2Result)
+    GPhoto2Exception(const char* methodStr, int gPhoto2Result)
     {
         result = gPhoto2Result;
         method = methodStr;
     }
-    virtual const char * what() const throw() CV_OVERRIDE
-    {
-        return gp_result_as_string(result);
-    }
-    friend std::ostream & operator<<(std::ostream & ostream,
-            GPhoto2Exception & e)
+    virtual const char* what() const throw() CV_OVERRIDE { return gp_result_as_string(result); }
+    friend std::ostream& operator<<(std::ostream& ostream, GPhoto2Exception& e)
     {
         return ostream << e.method << ": " << e.what();
     }
@@ -128,15 +124,15 @@ public:
  *  * CV_CAP_PROP_FOCUS,
  *  * CV_CAP_PROP_ISO_SPEED.
  */
-class DigitalCameraCapture: public IVideoCapture
+class DigitalCameraCapture : public IVideoCapture
 {
 public:
-    static const char * separator;
-    static const char * lineDelimiter;
+    static const char* separator;
+    static const char* lineDelimiter;
 
     DigitalCameraCapture();
     DigitalCameraCapture(int index);
-    DigitalCameraCapture(const String &deviceName);
+    DigitalCameraCapture(const String& deviceName);
     virtual ~DigitalCameraCapture() CV_OVERRIDE;
 
     virtual bool isOpened() const CV_OVERRIDE;
@@ -149,76 +145,74 @@ public:
     bool open(int index);
     void close();
     bool deviceExist(int index) const;
-    int findDevice(const char * deviceName) const;
+    int findDevice(const char* deviceName) const;
 
 protected:
     // Known widget names
-    static const char * PROP_EXPOSURE_COMPENSACTION;
-    static const char * PROP_SELF_TIMER_DELAY;
-    static const char * PROP_MANUALFOCUS;
-    static const char * PROP_AUTOFOCUS;
-    static const char * PROP_ISO;
-    static const char * PROP_SPEED;
-    static const char * PROP_APERTURE_NIKON;
-    static const char * PROP_APERTURE_CANON;
-    static const char * PROP_EXPOSURE_PROGRAM;
-    static const char * PROP_VIEWFINDER;
+    static const char* PROP_EXPOSURE_COMPENSACTION;
+    static const char* PROP_SELF_TIMER_DELAY;
+    static const char* PROP_MANUALFOCUS;
+    static const char* PROP_AUTOFOCUS;
+    static const char* PROP_ISO;
+    static const char* PROP_SPEED;
+    static const char* PROP_APERTURE_NIKON;
+    static const char* PROP_APERTURE_CANON;
+    static const char* PROP_EXPOSURE_PROGRAM;
+    static const char* PROP_VIEWFINDER;
 
     // Instance
-    GPContext * context = NULL;
+    GPContext* context = NULL;
     int numDevices;
     void initContext();
 
     // Selected device
     bool opened;
-    Camera * camera = NULL;
+    Camera* camera = NULL;
     Mat frame;
 
     // Properties
-    CameraWidget * rootWidget = NULL;
-    CameraWidget * getGenericProperty(int propertyId, double & output) const;
-    CameraWidget * setGenericProperty(int propertyId, double value,
-            bool & output) const;
+    CameraWidget* rootWidget = NULL;
+    CameraWidget* getGenericProperty(int propertyId, double& output) const;
+    CameraWidget* setGenericProperty(int propertyId, double value, bool& output) const;
 
     // Widgets
     void reloadConfig();
-    CameraWidget * getWidget(int widgetId) const;
-    CameraWidget * findWidgetByName(const char * name) const;
+    CameraWidget* getWidget(int widgetId) const;
+    CameraWidget* findWidgetByName(const char* name) const;
 
     // Loading
-    void readFrameFromFile(CameraFile * file, OutputArray outputFrame);
+    void readFrameFromFile(CameraFile* file, OutputArray outputFrame);
 
     // Context feedback
-    friend void ctxErrorFunc(GPContext *, const char *, void *);
-    friend void ctxStatusFunc(GPContext *, const char *, void *);
-    friend void ctxMessageFunc(GPContext *, const char *, void *);
+    friend void ctxErrorFunc(GPContext*, const char*, void*);
+    friend void ctxStatusFunc(GPContext*, const char*, void*);
+    friend void ctxMessageFunc(GPContext*, const char*, void*);
 
     // Messages / debug
     enum MsgType
     {
-        ERROR = (int) 'E',
-        WARNING = (int) 'W',
-        STATUS = (int) 'S',
-        OTHER = (int) 'O'
+        ERROR = (int)'E',
+        WARNING = (int)'W',
+        STATUS = (int)'S',
+        OTHER = (int)'O'
     };
     template<typename OsstreamPrintable>
-    void message(MsgType msgType, const char * msg,
-            OsstreamPrintable & arg) const;
+    void message(MsgType msgType, const char* msg, OsstreamPrintable& arg) const;
 
 private:
     // Instance
-    CameraAbilitiesList * abilitiesList = NULL;
-    GPPortInfoList * capablePorts = NULL;
-    CameraList * allDevices = NULL;
+    CameraAbilitiesList* abilitiesList = NULL;
+    GPPortInfoList* capablePorts = NULL;
+    CameraList* allDevices = NULL;
 
     // Selected device
     CameraAbilities cameraAbilities;
-    std::deque<CameraFile *> grabbedFrames;
+    std::deque<CameraFile*> grabbedFrames;
 
     // Properties
     bool preview; // CV_CAP_PROP_GPHOTO2_PREVIEW
     std::string widgetInfo; // CV_CAP_PROP_GPHOTO2_WIDGET_ENUMERATE
-    std::map<int, CameraWidget *> widgets;
+    std::map<int, CameraWidget*> widgets;
     bool reloadOnChange; // CV_CAP_PROP_GPHOTO2_RELOAD_ON_CHANGE
     time_t firstCapturedFrameTime;
     unsigned long int capturedFrames;
@@ -228,8 +222,8 @@ private:
 
     // Widgets
     int noOfWidgets;
-    int widgetDescription(std::ostream &os, CameraWidget * widget) const;
-    int collectWidgets(std::ostream &os, CameraWidget * widget);
+    int widgetDescription(std::ostream& os, CameraWidget* widget) const;
+    int collectWidgets(std::ostream& os, CameraWidget* widget);
 
     // Messages / debug
     mutable std::ostringstream msgsBuffer; // CV_CAP_PROP_GPHOTO2_FLUSH_MSGS
@@ -240,21 +234,23 @@ private:
 /**
  * \brief Check if gPhoto2 function ends successfully. If not, throw an exception.
  */
-#define CR(GPHOTO2_FUN) do {\
-    int r_0629c47b758;\
-    if ((r_0629c47b758 = (GPHOTO2_FUN)) < GP_OK) {\
-        throw GPhoto2Exception(#GPHOTO2_FUN, r_0629c47b758);\
-    };\
-} while(0)
+#    define CR(GPHOTO2_FUN) \
+        do \
+        { \
+            int r_0629c47b758; \
+            if ((r_0629c47b758 = (GPHOTO2_FUN)) < GP_OK) \
+            { \
+                throw GPhoto2Exception(#GPHOTO2_FUN, r_0629c47b758); \
+            }; \
+        } while (0)
 
 /**
  * \brief gPhoto2 context error feedback function.
  * @param thatGPhotoCap is required to be pointer to DigitalCameraCapture object.
  */
-void ctxErrorFunc(GPContext *, const char * str, void * thatGPhotoCap)
+void ctxErrorFunc(GPContext*, const char* str, void* thatGPhotoCap)
 {
-    const DigitalCameraCapture * self =
-            (const DigitalCameraCapture *) thatGPhotoCap;
+    const DigitalCameraCapture* self = (const DigitalCameraCapture*)thatGPhotoCap;
     self->message(self->ERROR, "context feedback", str);
 }
 
@@ -262,10 +258,9 @@ void ctxErrorFunc(GPContext *, const char * str, void * thatGPhotoCap)
  * \brief gPhoto2 context status feedback function.
  * @param thatGPhotoCap is required to be pointer to DigitalCameraCapture object.
  */
-void ctxStatusFunc(GPContext *, const char * str, void * thatGPhotoCap)
+void ctxStatusFunc(GPContext*, const char* str, void* thatGPhotoCap)
 {
-    const DigitalCameraCapture * self =
-            (const DigitalCameraCapture *) thatGPhotoCap;
+    const DigitalCameraCapture* self = (const DigitalCameraCapture*)thatGPhotoCap;
     self->message(self->STATUS, "context feedback", str);
 }
 
@@ -273,38 +268,36 @@ void ctxStatusFunc(GPContext *, const char * str, void * thatGPhotoCap)
  * \brief gPhoto2 context message feedback function.
  * @param thatGPhotoCap is required to be pointer to DigitalCameraCapture object.
  */
-void ctxMessageFunc(GPContext *, const char * str, void * thatGPhotoCap)
+void ctxMessageFunc(GPContext*, const char* str, void* thatGPhotoCap)
 {
-    const DigitalCameraCapture * self =
-            (const DigitalCameraCapture *) thatGPhotoCap;
+    const DigitalCameraCapture* self = (const DigitalCameraCapture*)thatGPhotoCap;
     self->message(self->OTHER, "context feedback", str);
 }
 
 /**
  * \brief Separator used while creating CSV.
  */
-const char * DigitalCameraCapture::separator = ",";
+const char* DigitalCameraCapture::separator = ",";
 /**
  * \brief Line delimiter used while creating any readable output.
  */
-const char * DigitalCameraCapture::lineDelimiter = "\n";
+const char* DigitalCameraCapture::lineDelimiter = "\n";
 /**
  * \bief Some known widget names.
  *
  * Those are actually substrings of widget name.
  * ie. for VIEWFINDER, Nikon uses "viewfinder", while Canon can use "eosviewfinder".
  */
-const char * DigitalCameraCapture::PROP_EXPOSURE_COMPENSACTION =
-        "exposurecompensation";
-const char * DigitalCameraCapture::PROP_SELF_TIMER_DELAY = "selftimerdelay";
-const char * DigitalCameraCapture::PROP_MANUALFOCUS = "manualfocusdrive";
-const char * DigitalCameraCapture::PROP_AUTOFOCUS = "autofocusdrive";
-const char * DigitalCameraCapture::PROP_ISO = "iso";
-const char * DigitalCameraCapture::PROP_SPEED = "shutterspeed";
-const char * DigitalCameraCapture::PROP_APERTURE_NIKON = "f-number";
-const char * DigitalCameraCapture::PROP_APERTURE_CANON = "aperture";
-const char * DigitalCameraCapture::PROP_EXPOSURE_PROGRAM = "expprogram";
-const char * DigitalCameraCapture::PROP_VIEWFINDER = "viewfinder";
+const char* DigitalCameraCapture::PROP_EXPOSURE_COMPENSACTION = "exposurecompensation";
+const char* DigitalCameraCapture::PROP_SELF_TIMER_DELAY = "selftimerdelay";
+const char* DigitalCameraCapture::PROP_MANUALFOCUS = "manualfocusdrive";
+const char* DigitalCameraCapture::PROP_AUTOFOCUS = "autofocusdrive";
+const char* DigitalCameraCapture::PROP_ISO = "iso";
+const char* DigitalCameraCapture::PROP_SPEED = "shutterspeed";
+const char* DigitalCameraCapture::PROP_APERTURE_NIKON = "f-number";
+const char* DigitalCameraCapture::PROP_APERTURE_CANON = "aperture";
+const char* DigitalCameraCapture::PROP_EXPOSURE_PROGRAM = "expprogram";
+const char* DigitalCameraCapture::PROP_VIEWFINDER = "viewfinder";
 
 /**
  * Initialize gPhoto2 context, search for all available devices.
@@ -317,9 +310,9 @@ void DigitalCameraCapture::initContext()
 
     context = gp_context_new();
 
-    gp_context_set_error_func(context, ctxErrorFunc, (void*) this);
-    gp_context_set_status_func(context, ctxStatusFunc, (void*) this);
-    gp_context_set_message_func(context, ctxMessageFunc, (void*) this);
+    gp_context_set_error_func(context, ctxErrorFunc, (void*)this);
+    gp_context_set_status_func(context, ctxStatusFunc, (void*)this);
+    gp_context_set_message_func(context, ctxMessageFunc, (void*)this);
 
     try
     {
@@ -336,7 +329,7 @@ void DigitalCameraCapture::initContext()
         CR(gp_camera_autodetect(allDevices, context));
         CR(numDevices = gp_list_count(allDevices));
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         numDevices = 0;
     }
@@ -345,10 +338,7 @@ void DigitalCameraCapture::initContext()
 /**
  * Search for all devices while constructing.
  */
-DigitalCameraCapture::DigitalCameraCapture()
-{
-    initContext();
-}
+DigitalCameraCapture::DigitalCameraCapture() { initContext(); }
 
 /**
  * @see open(int)
@@ -364,7 +354,7 @@ DigitalCameraCapture::DigitalCameraCapture(int index)
  * @see findDevice(const char*)
  * @see open(int)
  */
-DigitalCameraCapture::DigitalCameraCapture(const String & deviceName)
+DigitalCameraCapture::DigitalCameraCapture(const String& deviceName)
 {
     initContext();
     int index = findDevice(deviceName.c_str());
@@ -389,7 +379,7 @@ DigitalCameraCapture::~DigitalCameraCapture()
         gp_context_unref(context);
         context = NULL;
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         message(ERROR, "destruction error", e);
     }
@@ -400,11 +390,12 @@ DigitalCameraCapture::~DigitalCameraCapture()
  */
 bool DigitalCameraCapture::open(int index)
 {
-    const char * model = 0, *path = 0;
+    const char *model = 0, *path = 0;
     int m, p;
     GPPortInfo portInfo;
 
-    if (isOpened()) {
+    if (isOpened())
+    {
         close();
     }
 
@@ -442,7 +433,7 @@ bool DigitalCameraCapture::open(int index)
         opened = true;
         return true;
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         message(WARNING, "opening device failed", e);
         return false;
@@ -452,10 +443,7 @@ bool DigitalCameraCapture::open(int index)
 /**
  *
  */
-bool DigitalCameraCapture::isOpened() const
-{
-    return opened;
-}
+bool DigitalCameraCapture::isOpened() const { return opened; }
 
 /**
  * Close connection to the camera. Remove all unread frames/files.
@@ -479,7 +467,7 @@ void DigitalCameraCapture::close()
         {
             while (frames--)
             {
-                CameraFile * file = grabbedFrames.front();
+                CameraFile* file = grabbedFrames.front();
                 grabbedFrames.pop_front();
                 CR(gp_file_unref(file));
             }
@@ -491,7 +479,7 @@ void DigitalCameraCapture::close()
             rootWidget = NULL;
         }
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         message(ERROR, "cannot close device properly", e);
     }
@@ -501,80 +489,79 @@ void DigitalCameraCapture::close()
  * @param output will be changed if possible, return 0 if changed,
  * @return widget, or NULL if output value was found (saved in argument),
  */
-CameraWidget * DigitalCameraCapture::getGenericProperty(int propertyId,
-        double & output) const
+CameraWidget* DigitalCameraCapture::getGenericProperty(int propertyId, double& output) const
 {
     switch (propertyId)
     {
-        case CV_CAP_PROP_POS_MSEC:
+    case CV_CAP_PROP_POS_MSEC:
+    {
+        // Only seconds level precision, FUTURE: cross-platform milliseconds
+        output = (time(0) - firstCapturedFrameTime) * 1e2;
+        return NULL;
+    }
+    case CV_CAP_PROP_POS_FRAMES:
+    {
+        output = capturedFrames;
+        return NULL;
+    }
+    case CV_CAP_PROP_FRAME_WIDTH:
+    {
+        if (!frame.empty())
         {
-            // Only seconds level precision, FUTURE: cross-platform milliseconds
-            output = (time(0) - firstCapturedFrameTime) * 1e2;
-            return NULL;
+            output = frame.cols;
         }
-        case CV_CAP_PROP_POS_FRAMES:
+        return NULL;
+    }
+    case CV_CAP_PROP_FRAME_HEIGHT:
+    {
+        if (!frame.empty())
         {
-            output = capturedFrames;
-            return NULL;
+            output = frame.rows;
         }
-        case CV_CAP_PROP_FRAME_WIDTH:
+        return NULL;
+    }
+    case CV_CAP_PROP_FORMAT:
+    {
+        if (!frame.empty())
         {
-            if (!frame.empty())
-            {
-                output = frame.cols;
-            }
-            return NULL;
+            output = frame.type();
         }
-        case CV_CAP_PROP_FRAME_HEIGHT:
-        {
-            if (!frame.empty())
-            {
-                output = frame.rows;
-            }
-            return NULL;
-        }
-        case CV_CAP_PROP_FORMAT:
-        {
-            if (!frame.empty())
-            {
-                output = frame.type();
-            }
-            return NULL;
-        }
-        case CV_CAP_PROP_FPS: // returns average fps from the begin
-        {
-            double wholeProcessTime = 0;
-            getGenericProperty(CV_CAP_PROP_POS_MSEC, wholeProcessTime);
-            wholeProcessTime /= 1e2;
-            output = capturedFrames / wholeProcessTime;
-            return NULL;
-        }
-        case CV_CAP_PROP_FRAME_COUNT:
-        {
-            output = capturedFrames;
-            return NULL;
-        }
-        case CV_CAP_PROP_EXPOSURE:
-            return findWidgetByName(PROP_EXPOSURE_COMPENSACTION);
-        case CV_CAP_PROP_TRIGGER_DELAY:
-            return findWidgetByName(PROP_SELF_TIMER_DELAY);
-        case CV_CAP_PROP_ZOOM:
-            return findWidgetByName(PROP_MANUALFOCUS);
-        case CV_CAP_PROP_FOCUS:
-            return findWidgetByName(PROP_AUTOFOCUS);
-        case CV_CAP_PROP_ISO_SPEED:
-            return findWidgetByName(PROP_ISO);
-        case CV_CAP_PROP_SPEED:
-            return findWidgetByName(PROP_SPEED);
-        case CV_CAP_PROP_APERTURE:
-        {
-            CameraWidget * widget = findWidgetByName(PROP_APERTURE_NIKON);
-            return (widget == 0) ? findWidgetByName(PROP_APERTURE_CANON) : widget;
-        }
-        case CV_CAP_PROP_EXPOSUREPROGRAM:
-            return findWidgetByName(PROP_EXPOSURE_PROGRAM);
-        case CV_CAP_PROP_VIEWFINDER:
-            return findWidgetByName(PROP_VIEWFINDER);
+        return NULL;
+    }
+    case CV_CAP_PROP_FPS: // returns average fps from the begin
+    {
+        double wholeProcessTime = 0;
+        getGenericProperty(CV_CAP_PROP_POS_MSEC, wholeProcessTime);
+        wholeProcessTime /= 1e2;
+        output = capturedFrames / wholeProcessTime;
+        return NULL;
+    }
+    case CV_CAP_PROP_FRAME_COUNT:
+    {
+        output = capturedFrames;
+        return NULL;
+    }
+    case CV_CAP_PROP_EXPOSURE:
+        return findWidgetByName(PROP_EXPOSURE_COMPENSACTION);
+    case CV_CAP_PROP_TRIGGER_DELAY:
+        return findWidgetByName(PROP_SELF_TIMER_DELAY);
+    case CV_CAP_PROP_ZOOM:
+        return findWidgetByName(PROP_MANUALFOCUS);
+    case CV_CAP_PROP_FOCUS:
+        return findWidgetByName(PROP_AUTOFOCUS);
+    case CV_CAP_PROP_ISO_SPEED:
+        return findWidgetByName(PROP_ISO);
+    case CV_CAP_PROP_SPEED:
+        return findWidgetByName(PROP_SPEED);
+    case CV_CAP_PROP_APERTURE:
+    {
+        CameraWidget* widget = findWidgetByName(PROP_APERTURE_NIKON);
+        return (widget == 0) ? findWidgetByName(PROP_APERTURE_CANON) : widget;
+    }
+    case CV_CAP_PROP_EXPOSUREPROGRAM:
+        return findWidgetByName(PROP_EXPOSURE_PROGRAM);
+    case CV_CAP_PROP_VIEWFINDER:
+        return findWidgetByName(PROP_VIEWFINDER);
     }
     return NULL;
 }
@@ -585,7 +572,7 @@ CameraWidget * DigitalCameraCapture::getGenericProperty(int propertyId,
  */
 double DigitalCameraCapture::getProperty(int propertyId) const
 {
-    CameraWidget * widget = NULL;
+    CameraWidget* widget = NULL;
     double output = 0;
     if (propertyId < 0)
     {
@@ -595,27 +582,27 @@ double DigitalCameraCapture::getProperty(int propertyId) const
     {
         switch (propertyId)
         {
-            // gphoto2 cap featured
-            case CV_CAP_PROP_GPHOTO2_PREVIEW:
-                return preview;
-            case CV_CAP_PROP_GPHOTO2_WIDGET_ENUMERATE:
-                if (rootWidget == NULL)
-                    return 0;
-                return (intptr_t) widgetInfo.c_str();
-            case CV_CAP_PROP_GPHOTO2_RELOAD_CONFIG:
-                return 0; // Trigger, only by set
-            case CV_CAP_PROP_GPHOTO2_RELOAD_ON_CHANGE:
-                return reloadOnChange;
-            case CV_CAP_PROP_GPHOTO2_COLLECT_MSGS:
-                return collectMsgs;
-            case CV_CAP_PROP_GPHOTO2_FLUSH_MSGS:
-                lastFlush = msgsBuffer.str();
-                msgsBuffer.str("");
-                msgsBuffer.clear();
-                return (intptr_t) lastFlush.c_str();
-            default:
-                widget = getGenericProperty(propertyId, output);
-                /* no break */
+        // gphoto2 cap featured
+        case CV_CAP_PROP_GPHOTO2_PREVIEW:
+            return preview;
+        case CV_CAP_PROP_GPHOTO2_WIDGET_ENUMERATE:
+            if (rootWidget == NULL)
+                return 0;
+            return (intptr_t)widgetInfo.c_str();
+        case CV_CAP_PROP_GPHOTO2_RELOAD_CONFIG:
+            return 0; // Trigger, only by set
+        case CV_CAP_PROP_GPHOTO2_RELOAD_ON_CHANGE:
+            return reloadOnChange;
+        case CV_CAP_PROP_GPHOTO2_COLLECT_MSGS:
+            return collectMsgs;
+        case CV_CAP_PROP_GPHOTO2_FLUSH_MSGS:
+            lastFlush = msgsBuffer.str();
+            msgsBuffer.str("");
+            msgsBuffer.clear();
+            return (intptr_t)lastFlush.c_str();
+        default:
+            widget = getGenericProperty(propertyId, output);
+            /* no break */
         }
     }
     if (widget == NULL)
@@ -626,49 +613,49 @@ double DigitalCameraCapture::getProperty(int propertyId) const
         CR(gp_widget_get_type(widget, &type));
         switch (type)
         {
-            case GP_WIDGET_MENU:
-            case GP_WIDGET_RADIO:
+        case GP_WIDGET_MENU:
+        case GP_WIDGET_RADIO:
+        {
+            int cnt = 0, i;
+            const char* current;
+            CR(gp_widget_get_value(widget, &current));
+            CR(cnt = gp_widget_count_choices(widget));
+            for (i = 0; i < cnt; i++)
             {
-                int cnt = 0, i;
-                const char * current;
-                CR(gp_widget_get_value(widget, &current));
-                CR(cnt = gp_widget_count_choices(widget));
-                for (i = 0; i < cnt; i++)
+                const char* choice;
+                CR(gp_widget_get_choice(widget, i, &choice));
+                if (std::strcmp(choice, current) == 0)
                 {
-                    const char *choice;
-                    CR(gp_widget_get_choice(widget, i, &choice));
-                    if (std::strcmp(choice, current) == 0)
-                    {
-                        return i;
-                    }
+                    return i;
                 }
-                return -1;
             }
-            case GP_WIDGET_TOGGLE:
-            {
-                int value;
-                CR(gp_widget_get_value(widget, &value));
-                return value;
-            }
-            case GP_WIDGET_RANGE:
-            {
-                float value;
-                CR(gp_widget_get_value(widget, &value));
-                return value;
-            }
-            default:
-            {
-                char* value;
-                CR(gp_widget_get_value(widget, &value));
-                return (intptr_t) value;
-            }
+            return -1;
+        }
+        case GP_WIDGET_TOGGLE:
+        {
+            int value;
+            CR(gp_widget_get_value(widget, &value));
+            return value;
+        }
+        case GP_WIDGET_RANGE:
+        {
+            float value;
+            CR(gp_widget_get_value(widget, &value));
+            return value;
+        }
+        default:
+        {
+            char* value;
+            CR(gp_widget_get_value(widget, &value));
+            return (intptr_t)value;
+        }
         }
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         char buf[128] = "";
         sprintf(buf, "cannot get property: %d", propertyId);
-        message(WARNING, (const char *) buf, e);
+        message(WARNING, (const char*)buf, e);
         return 0;
     }
 }
@@ -677,41 +664,40 @@ double DigitalCameraCapture::getProperty(int propertyId) const
  * @param output will be changed if possible, return 0 if changed,
  * @return widget, or 0 if output value was found (saved in argument),
  */
-CameraWidget * DigitalCameraCapture::setGenericProperty(int propertyId,
-        double /*FUTURE: value*/, bool & output) const
+CameraWidget* DigitalCameraCapture::setGenericProperty(int propertyId, double /*FUTURE: value*/, bool& output) const
 {
     switch (propertyId)
     {
-        case CV_CAP_PROP_POS_MSEC:
-        case CV_CAP_PROP_POS_FRAMES:
-        case CV_CAP_PROP_FRAME_WIDTH:
-        case CV_CAP_PROP_FRAME_HEIGHT:
-        case CV_CAP_PROP_FPS:
-        case CV_CAP_PROP_FRAME_COUNT:
-        case CV_CAP_PROP_FORMAT:
-            output = false;
-            return NULL;
-        case CV_CAP_PROP_EXPOSURE:
-            return findWidgetByName(PROP_EXPOSURE_COMPENSACTION);
-        case CV_CAP_PROP_TRIGGER_DELAY:
-            return findWidgetByName(PROP_SELF_TIMER_DELAY);
-        case CV_CAP_PROP_ZOOM:
-            return findWidgetByName(PROP_MANUALFOCUS);
-        case CV_CAP_PROP_FOCUS:
-            return findWidgetByName(PROP_AUTOFOCUS);
-        case CV_CAP_PROP_ISO_SPEED:
-            return findWidgetByName(PROP_ISO);
-        case CV_CAP_PROP_SPEED:
-            return findWidgetByName(PROP_SPEED);
-        case CV_CAP_PROP_APERTURE:
-        {
-            CameraWidget * widget = findWidgetByName(PROP_APERTURE_NIKON);
-            return (widget == NULL) ? findWidgetByName(PROP_APERTURE_CANON) : widget;
-        }
-        case CV_CAP_PROP_EXPOSUREPROGRAM:
-            return findWidgetByName(PROP_EXPOSURE_PROGRAM);
-        case CV_CAP_PROP_VIEWFINDER:
-            return findWidgetByName(PROP_VIEWFINDER);
+    case CV_CAP_PROP_POS_MSEC:
+    case CV_CAP_PROP_POS_FRAMES:
+    case CV_CAP_PROP_FRAME_WIDTH:
+    case CV_CAP_PROP_FRAME_HEIGHT:
+    case CV_CAP_PROP_FPS:
+    case CV_CAP_PROP_FRAME_COUNT:
+    case CV_CAP_PROP_FORMAT:
+        output = false;
+        return NULL;
+    case CV_CAP_PROP_EXPOSURE:
+        return findWidgetByName(PROP_EXPOSURE_COMPENSACTION);
+    case CV_CAP_PROP_TRIGGER_DELAY:
+        return findWidgetByName(PROP_SELF_TIMER_DELAY);
+    case CV_CAP_PROP_ZOOM:
+        return findWidgetByName(PROP_MANUALFOCUS);
+    case CV_CAP_PROP_FOCUS:
+        return findWidgetByName(PROP_AUTOFOCUS);
+    case CV_CAP_PROP_ISO_SPEED:
+        return findWidgetByName(PROP_ISO);
+    case CV_CAP_PROP_SPEED:
+        return findWidgetByName(PROP_SPEED);
+    case CV_CAP_PROP_APERTURE:
+    {
+        CameraWidget* widget = findWidgetByName(PROP_APERTURE_NIKON);
+        return (widget == NULL) ? findWidgetByName(PROP_APERTURE_CANON) : widget;
+    }
+    case CV_CAP_PROP_EXPOSUREPROGRAM:
+        return findWidgetByName(PROP_EXPOSURE_PROGRAM);
+    case CV_CAP_PROP_VIEWFINDER:
+        return findWidgetByName(PROP_VIEWFINDER);
     }
     return NULL;
 }
@@ -722,7 +708,7 @@ CameraWidget * DigitalCameraCapture::setGenericProperty(int propertyId,
  */
 bool DigitalCameraCapture::setProperty(int propertyId, double value)
 {
-    CameraWidget * widget = NULL;
+    CameraWidget* widget = NULL;
     bool output = false;
     if (propertyId < 0)
     {
@@ -732,26 +718,26 @@ bool DigitalCameraCapture::setProperty(int propertyId, double value)
     {
         switch (propertyId)
         {
-            // gphoto2 cap featured
-            case CV_CAP_PROP_GPHOTO2_PREVIEW:
-                preview = value != 0;
-                return true;
-            case CV_CAP_PROP_GPHOTO2_WIDGET_ENUMERATE:
-                return false;
-            case CV_CAP_PROP_GPHOTO2_RELOAD_CONFIG:
-                reloadConfig();
-                return true;
-            case CV_CAP_PROP_GPHOTO2_RELOAD_ON_CHANGE:
-                reloadOnChange = value != 0;
-                return true;
-            case CV_CAP_PROP_GPHOTO2_COLLECT_MSGS:
-                collectMsgs = value != 0;
-                return true;
-            case CV_CAP_PROP_GPHOTO2_FLUSH_MSGS:
-                return false;
-            default:
-                widget = setGenericProperty(propertyId, value, output);
-                /* no break */
+        // gphoto2 cap featured
+        case CV_CAP_PROP_GPHOTO2_PREVIEW:
+            preview = value != 0;
+            return true;
+        case CV_CAP_PROP_GPHOTO2_WIDGET_ENUMERATE:
+            return false;
+        case CV_CAP_PROP_GPHOTO2_RELOAD_CONFIG:
+            reloadConfig();
+            return true;
+        case CV_CAP_PROP_GPHOTO2_RELOAD_ON_CHANGE:
+            reloadOnChange = value != 0;
+            return true;
+        case CV_CAP_PROP_GPHOTO2_COLLECT_MSGS:
+            collectMsgs = value != 0;
+            return true;
+        case CV_CAP_PROP_GPHOTO2_FLUSH_MSGS:
+            return false;
+        default:
+            widget = setGenericProperty(propertyId, value, output);
+            /* no break */
         }
     }
     if (widget == NULL)
@@ -762,32 +748,32 @@ bool DigitalCameraCapture::setProperty(int propertyId, double value)
         CR(gp_widget_get_type(widget, &type));
         switch (type)
         {
-            case GP_WIDGET_RADIO:
-            case GP_WIDGET_MENU:
-            {
-                int i = static_cast<int>(value);
-                char *choice;
-                CR(gp_widget_get_choice(widget, i, (const char**)&choice));
-                CR(gp_widget_set_value(widget, choice));
-                break;
-            }
-            case GP_WIDGET_TOGGLE:
-            {
-                int i = static_cast<int>(value);
-                CR(gp_widget_set_value(widget, &i));
-                break;
-            }
-            case GP_WIDGET_RANGE:
-            {
-                float v = static_cast<float>(value);
-                CR(gp_widget_set_value(widget, &v));
-                break;
-            }
-            default:
-            {
-                CR(gp_widget_set_value(widget, (void* )(intptr_t )&value));
-                break;
-            }
+        case GP_WIDGET_RADIO:
+        case GP_WIDGET_MENU:
+        {
+            int i = static_cast<int>(value);
+            char* choice;
+            CR(gp_widget_get_choice(widget, i, (const char**)&choice));
+            CR(gp_widget_set_value(widget, choice));
+            break;
+        }
+        case GP_WIDGET_TOGGLE:
+        {
+            int i = static_cast<int>(value);
+            CR(gp_widget_set_value(widget, &i));
+            break;
+        }
+        case GP_WIDGET_RANGE:
+        {
+            float v = static_cast<float>(value);
+            CR(gp_widget_set_value(widget, &v));
+            break;
+        }
+        default:
+        {
+            CR(gp_widget_set_value(widget, (void*)(intptr_t)&value));
+            break;
+        }
         }
         if (!reloadOnChange)
         {
@@ -796,22 +782,24 @@ bool DigitalCameraCapture::setProperty(int propertyId, double value)
         }
 
         // Use the same locale setting as while getting rootWidget.
-        char * localeTmp = setlocale(LC_ALL, "C");
+        char* localeTmp = setlocale(LC_ALL, "C");
         CR(gp_camera_set_config(camera, rootWidget, context));
         setlocale(LC_ALL, localeTmp);
 
         if (reloadOnChange)
         {
             reloadConfig();
-        } else {
+        }
+        else
+        {
             CR(gp_widget_set_changed(widget, 0));
         }
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         char buf[128] = "";
         sprintf(buf, "cannot set property: %d to %f", propertyId, value);
-        message(WARNING, (const char *) buf, e);
+        message(WARNING, (const char*)buf, e);
         return false;
     }
     return true;
@@ -824,7 +812,7 @@ bool DigitalCameraCapture::setProperty(int propertyId, double value)
 bool DigitalCameraCapture::grabFrame()
 {
     CameraFilePath filePath;
-    CameraFile * file = NULL;
+    CameraFile* file = NULL;
     try
     {
         CR(gp_file_new(&file));
@@ -837,8 +825,7 @@ bool DigitalCameraCapture::grabFrame()
         {
             // Capture an image
             CR(gp_camera_capture(camera, GP_CAPTURE_IMAGE, &filePath, context));
-            CR(gp_camera_file_get(camera, filePath.folder, filePath.name, GP_FILE_TYPE_NORMAL,
-                    file, context));
+            CR(gp_camera_file_get(camera, filePath.folder, filePath.name, GP_FILE_TYPE_NORMAL, file, context));
             CR(gp_camera_file_delete(camera, filePath.folder, filePath.name, context));
         }
         // State update
@@ -849,7 +836,7 @@ bool DigitalCameraCapture::grabFrame()
         capturedFrames++;
         grabbedFrames.push_back(file);
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         if (file)
             gp_file_unref(file);
@@ -866,14 +853,14 @@ bool DigitalCameraCapture::retrieveFrame(int, OutputArray outputFrame)
 {
     if (grabbedFrames.size() > 0)
     {
-        CameraFile * file = grabbedFrames.front();
+        CameraFile* file = grabbedFrames.front();
         grabbedFrames.pop_front();
         try
         {
             readFrameFromFile(file, outputFrame);
             CR(gp_file_unref(file));
         }
-        catch (GPhoto2Exception & e)
+        catch (GPhoto2Exception& e)
         {
             message(WARNING, "cannot read file grabbed from device", e);
             return false;
@@ -889,17 +876,14 @@ bool DigitalCameraCapture::retrieveFrame(int, OutputArray outputFrame)
 /**
  * @return true if device exists
  */
-bool DigitalCameraCapture::deviceExist(int index) const
-{
-    return (numDevices > 0) && (index < numDevices);
-}
+bool DigitalCameraCapture::deviceExist(int index) const { return (numDevices > 0) && (index < numDevices); }
 
 /**
  * @return device index if exists, otherwise -1
  */
-int DigitalCameraCapture::findDevice(const char * deviceName) const
+int DigitalCameraCapture::findDevice(const char* deviceName) const
 {
-    const char * model = 0;
+    const char* model = 0;
     try
     {
         if (deviceName != 0)
@@ -914,7 +898,7 @@ int DigitalCameraCapture::findDevice(const char * deviceName) const
             }
         }
     }
-    catch (GPhoto2Exception & e)
+    catch (GPhoto2Exception& e)
     {
         ; // pass
     }
@@ -936,11 +920,10 @@ void DigitalCameraCapture::reloadConfig()
         widgets.clear();
     }
     // Make sure, that all configs (getting setting) will use the same locale setting.
-    char * localeTmp = setlocale(LC_ALL, "C");
+    char* localeTmp = setlocale(LC_ALL, "C");
     CR(gp_camera_get_config(camera, &rootWidget, context));
     setlocale(LC_ALL, localeTmp);
-    widgetInfoListStream << "id,label,name,info,readonly,type,value,"
-            << lineDelimiter;
+    widgetInfoListStream << "id,label,name,info,readonly,type,value," << lineDelimiter;
     noOfWidgets = collectWidgets(widgetInfoListStream, rootWidget) + 1;
     widgetInfo = widgetInfoListStream.str();
 }
@@ -948,10 +931,10 @@ void DigitalCameraCapture::reloadConfig()
 /**
  * Get widget which was fetched in time of last call to @reloadConfig().
  */
-CameraWidget * DigitalCameraCapture::getWidget(int widgetId) const
+CameraWidget* DigitalCameraCapture::getWidget(int widgetId) const
 {
-    CameraWidget * widget;
-    std::map<int, CameraWidget *>::const_iterator it = widgets.find(widgetId);
+    CameraWidget* widget;
+    std::map<int, CameraWidget*>::const_iterator it = widgets.find(widgetId);
     if (it == widgets.end())
         return 0;
     widget = it->second;
@@ -961,15 +944,14 @@ CameraWidget * DigitalCameraCapture::getWidget(int widgetId) const
 /**
  * Search for widget with name which has @param subName substring.
  */
-CameraWidget * DigitalCameraCapture::findWidgetByName(
-        const char * subName) const
+CameraWidget* DigitalCameraCapture::findWidgetByName(const char* subName) const
 {
     if (subName != NULL)
     {
         try
         {
-            const char * name;
-            typedef std::map<int, CameraWidget *>::const_iterator it_t;
+            const char* name;
+            typedef std::map<int, CameraWidget*>::const_iterator it_t;
             it_t it = widgets.begin(), end = widgets.end();
             while (it != end)
             {
@@ -980,7 +962,7 @@ CameraWidget * DigitalCameraCapture::findWidgetByName(
             }
             return (it != end) ? it->second : NULL;
         }
-        catch (GPhoto2Exception & e)
+        catch (GPhoto2Exception& e)
         {
             message(WARNING, "error while searching for widget", e);
         }
@@ -993,17 +975,17 @@ CameraWidget * DigitalCameraCapture::findWidgetByName(
  *
  * @FUTURE: RAW format reader.
  */
-void DigitalCameraCapture::readFrameFromFile(CameraFile * file, OutputArray outputFrame)
+void DigitalCameraCapture::readFrameFromFile(CameraFile* file, OutputArray outputFrame)
 
 {
     // FUTURE: OpenCV cannot read RAW files right now.
-    const char * data;
+    const char* data;
     unsigned long int size;
     CR(gp_file_get_data_and_size(file, &data, &size));
     if (size > 0)
     {
-        Mat buf = Mat(1, size, CV_8UC1, (void *) data);
-        if(!buf.empty())
+        Mat buf = Mat(1, size, CV_8UC1, (void*)data);
+        if (!buf.empty())
         {
             frame = imdecode(buf, CV_LOAD_IMAGE_UNCHANGED);
         }
@@ -1016,10 +998,9 @@ void DigitalCameraCapture::readFrameFromFile(CameraFile * file, OutputArray outp
  * @return real widget ID (if config was reloaded couple of times
  *         then IDs won't be the same)
  */
-int DigitalCameraCapture::widgetDescription(std::ostream &os,
-        CameraWidget * widget) const
+int DigitalCameraCapture::widgetDescription(std::ostream& os, CameraWidget* widget) const
 {
-    const char * label, *name, *info;
+    const char *label, *name, *info;
     int id, readonly;
     CameraWidgetType type;
 
@@ -1030,99 +1011,98 @@ int DigitalCameraCapture::widgetDescription(std::ostream &os,
     CR(gp_widget_get_type(widget, &type));
     CR(gp_widget_get_readonly(widget, &readonly));
 
-    if ((type == GP_WIDGET_WINDOW) || (type == GP_WIDGET_SECTION)
-            || (type == GP_WIDGET_BUTTON))
+    if ((type == GP_WIDGET_WINDOW) || (type == GP_WIDGET_SECTION) || (type == GP_WIDGET_BUTTON))
     {
         readonly = 1;
     }
-    os << (id - noOfWidgets) << separator << label << separator << name
-            << separator << info << separator << readonly << separator;
+    os << (id - noOfWidgets) << separator << label << separator << name << separator << info << separator
+       << readonly << separator;
 
     switch (type)
     {
-        case GP_WIDGET_WINDOW:
+    case GP_WIDGET_WINDOW:
+    {
+        os << "window" << separator /* no value */ << separator;
+        break;
+    }
+    case GP_WIDGET_SECTION:
+    {
+        os << "section" << separator /* no value */ << separator;
+        break;
+    }
+    case GP_WIDGET_TEXT:
+    {
+        os << "text" << separator;
+        char* txt;
+        CR(gp_widget_get_value(widget, &txt));
+        os << txt << separator;
+        break;
+    }
+    case GP_WIDGET_RANGE:
+    {
+        os << "range" << separator;
+        float f, t, b, s;
+        CR(gp_widget_get_range(widget, &b, &t, &s));
+        CR(gp_widget_get_value(widget, &f));
+        os << "(" << b << ":" << t << ":" << s << "):" << f << separator;
+        break;
+    }
+    case GP_WIDGET_TOGGLE:
+    {
+        os << "toggle" << separator;
+        int t;
+        CR(gp_widget_get_value(widget, &t));
+        os << t << separator;
+        break;
+    }
+    case GP_WIDGET_RADIO:
+    case GP_WIDGET_MENU:
+    {
+        if (type == GP_WIDGET_RADIO)
         {
-            os << "window" << separator /* no value */<< separator;
-            break;
+            os << "radio" << separator;
         }
-        case GP_WIDGET_SECTION:
+        else
         {
-            os << "section" << separator /* no value */<< separator;
-            break;
+            os << "menu" << separator;
         }
-        case GP_WIDGET_TEXT:
+        int cnt = 0, i;
+        char* current;
+        CR(gp_widget_get_value(widget, &current));
+        CR(cnt = gp_widget_count_choices(widget));
+        os << "(";
+        for (i = 0; i < cnt; i++)
         {
-            os << "text" << separator;
-            char *txt;
-            CR(gp_widget_get_value(widget, &txt));
-            os << txt << separator;
-            break;
-        }
-        case GP_WIDGET_RANGE:
-        {
-            os << "range" << separator;
-            float f, t, b, s;
-            CR(gp_widget_get_range(widget, &b, &t, &s));
-            CR(gp_widget_get_value(widget, &f));
-            os << "(" << b << ":" << t << ":" << s << "):" << f << separator;
-            break;
-        }
-        case GP_WIDGET_TOGGLE:
-        {
-            os << "toggle" << separator;
-            int t;
-            CR(gp_widget_get_value(widget, &t));
-            os << t << separator;
-            break;
-        }
-        case GP_WIDGET_RADIO:
-        case GP_WIDGET_MENU:
-        {
-            if (type == GP_WIDGET_RADIO)
+            const char* choice;
+            CR(gp_widget_get_choice(widget, i, &choice));
+            os << i << ":" << choice;
+            if (i + 1 < cnt)
             {
-                os << "radio" << separator;
+                os << ";";
             }
-            else
-            {
-                os << "menu" << separator;
-            }
-            int cnt = 0, i;
-            char *current;
-            CR(gp_widget_get_value(widget, &current));
-            CR(cnt = gp_widget_count_choices(widget));
-            os << "(";
-            for (i = 0; i < cnt; i++)
-            {
-                const char *choice;
-                CR(gp_widget_get_choice(widget, i, &choice));
-                os << i << ":" << choice;
-                if (i + 1 < cnt)
-                {
-                    os << ";";
-                }
-            }
-            os << "):" << current << separator;
-            break;
         }
-        case GP_WIDGET_BUTTON:
-        {
-            os << "button" << separator /* no value */<< separator;
-            break;
-        }
-        case GP_WIDGET_DATE:
-        {
-            os << "date" << separator;
-            int t;
-            time_t xtime;
-            struct tm *xtm;
-            char timebuf[200];
-            CR(gp_widget_get_value(widget, &t));
-            xtime = t;
-            xtm = localtime(&xtime);
-            strftime(timebuf, sizeof(timebuf), "%c", xtm);
-            os << t << ":" << timebuf << separator;
-            break;
-        }
+        os << "):" << current << separator;
+        break;
+    }
+    case GP_WIDGET_BUTTON:
+    {
+        os << "button" << separator /* no value */ << separator;
+        break;
+    }
+    case GP_WIDGET_DATE:
+    {
+        os << "date" << separator;
+        int t;
+        time_t xtime;
+        struct tm* xtm;
+        char timebuf[200];
+        CR(gp_widget_get_value(widget, &t));
+        xtime = t;
+        xtm = localtime(&xtime);
+        strftime(timebuf, sizeof(timebuf), "%c", xtm);
+        os << t << ":" << timebuf << separator;
+        break;
+    }
     }
     return id;
 }
@@ -1131,15 +1111,14 @@ int DigitalCameraCapture::widgetDescription(std::ostream &os,
  * Write all widget descriptions to @param os.
  * @return maximum of widget ID
  */
-int DigitalCameraCapture::collectWidgets(std::ostream & os,
-        CameraWidget * widget)
+int DigitalCameraCapture::collectWidgets(std::ostream& os, CameraWidget* widget)
 {
     int id = widgetDescription(os, widget);
     os << lineDelimiter;
 
     widgets[id - noOfWidgets] = widget;
 
-    CameraWidget * child;
+    CameraWidget* child;
     CameraWidgetType type;
     CR(gp_widget_get_type(widget, &type));
     if ((type == GP_WIDGET_WINDOW) || (type == GP_WIDGET_SECTION))
@@ -1159,33 +1138,31 @@ int DigitalCameraCapture::collectWidgets(std::ostream & os,
  * Print debug information on screen.
  */
 template<typename OsstreamPrintable>
-void DigitalCameraCapture::message(MsgType msgType, const char * msg,
-        OsstreamPrintable & arg) const
+void DigitalCameraCapture::message(MsgType msgType, const char* msg, OsstreamPrintable& arg) const
 {
-#if defined(NDEBUG)
+#    if defined(NDEBUG)
     if (collectMsgs)
     {
-#endif
-    std::ostringstream msgCreator;
-    std::string out;
-    char type = (char) msgType;
-    msgCreator << "[gPhoto2][" << type << "]: " << msg << ": " << arg
-            << lineDelimiter;
-    out = msgCreator.str();
-#if !defined(NDEBUG)
-    if (collectMsgs)
-    {
-#endif
-        msgsBuffer << out;
+#    endif
+        std::ostringstream msgCreator;
+        std::string out;
+        char type = (char)msgType;
+        msgCreator << "[gPhoto2][" << type << "]: " << msg << ": " << arg << lineDelimiter;
+        out = msgCreator.str();
+#    if !defined(NDEBUG)
+        if (collectMsgs)
+        {
+#    endif
+            msgsBuffer << out;
+        }
+#    if !defined(NDEBUG)
+#        if defined(_WIN32)
+        ::OutputDebugString(out.c_str());
+#        else
+        fputs(out.c_str(), stderr);
+#        endif
+#    endif
     }
-#if !defined(NDEBUG)
-#if defined(_WIN32)
-    ::OutputDebugString(out.c_str());
-#else
-    fputs(out.c_str(), stderr);
-#endif
-#endif
-}
 
 } // namespace gphoto2
 
@@ -1207,7 +1184,7 @@ Ptr<IVideoCapture> createGPhoto2Capture(int index)
  *
  * @param deviceName is a substring in digital camera model name.
  */
-Ptr<IVideoCapture> createGPhoto2Capture(const String & deviceName)
+Ptr<IVideoCapture> createGPhoto2Capture(const String& deviceName)
 {
     Ptr<IVideoCapture> capture = makePtr<gphoto2::DigitalCameraCapture>(deviceName);
 
@@ -1217,6 +1194,6 @@ Ptr<IVideoCapture> createGPhoto2Capture(const String & deviceName)
     return Ptr<gphoto2::DigitalCameraCapture>();
 }
 
-} // namespace cv
+} // namespace gphoto2
 
 #endif

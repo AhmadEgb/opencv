@@ -31,16 +31,16 @@
 #include <mutex>
 #include <memory>
 
-class Video {
+class Video
+{
 public:
-
     // non-blocking
     bool initGrabber(int device, int w, int h);
     void closeGrabber();
     bool isStarted();
 
     // singleton
-    static Video &getInstance();
+    static Video& getInstance();
 
     void CopyOutput();
 
@@ -48,27 +48,26 @@ private:
     // singleton
     Video();
 
-    void _GrabFrameAsync(::Media::CaptureFrameGrabber^ frameGrabber);
+    void _GrabFrameAsync(::Media::CaptureFrameGrabber ^ frameGrabber);
 
     bool listDevices();
 
     Platform::Agile<Windows::Media::Capture::MediaCapture> m_capture;
     Platform::Agile<Windows::Devices::Enumeration::DeviceInformationCollection> m_devices;
 
-    ::Media::CaptureFrameGrabber^ m_frameGrabber;
+    ::Media::CaptureFrameGrabber ^ m_frameGrabber;
 
     bool listDevicesTask();
 
-    bool					bChooseDevice;
-    bool 					bVerbose;
-    bool                    bFlipImageX;
+    bool bChooseDevice;
+    bool bVerbose;
+    bool bFlipImageX;
     //std::atomic<bool>       bGrabberInited;
-    int						m_deviceID;
-    int						attemptFramerate;
-    std::atomic<bool>       bIsFrameNew;
-    std::atomic<bool>       bGrabberInited;
-    std::atomic<bool>       bGrabberInitInProgress;
-    unsigned int			width, height;
-    int                     bytesPerPixel;
-
+    int m_deviceID;
+    int attemptFramerate;
+    std::atomic<bool> bIsFrameNew;
+    std::atomic<bool> bGrabberInited;
+    std::atomic<bool> bGrabberInitInProgress;
+    unsigned int width, height;
+    int bytesPerPixel;
 };

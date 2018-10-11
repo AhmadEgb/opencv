@@ -30,13 +30,13 @@
 #include <agile.h>
 #include "opencv2/core/cvdef.h"
 
-namespace cv
-{
+namespace cv {
 
 //! @addtogroup videoio_winrt
 //! @{
 
-enum {
+enum
+{
     OPEN_CAMERA = 300,
     CLOSE_CAMERA,
     UPDATE_IMAGE_ELEMENT,
@@ -45,10 +45,10 @@ enum {
 
 /********************************** WinRT API ************************************************/
 
-template <typename ...Args>
+template<typename... Args>
 CV_EXPORTS void winrt_startMessageLoop(std::function<void(Args...)>&& callback, Args... args);
 
-template <typename ...Args>
+template<typename... Args>
 CV_EXPORTS void winrt_startMessageLoop(void callback(Args...), Args... args);
 
 /** @brief
@@ -89,8 +89,7 @@ CV_EXPORTS void winrt_startMessageLoop(void callback(Args...), Args... args);
     }
 @endcode
 */
-template
-CV_EXPORTS void winrt_startMessageLoop(void callback(void));
+template CV_EXPORTS void winrt_startMessageLoop(void callback(void));
 
 /** @brief
 @note
@@ -118,7 +117,7 @@ CV_EXPORTS void winrt_onVisibilityChanged(bool visible);
     Must be called to assign WinRT control holding image you're working with.
     Code sample is available for winrt_startMessageLoop().
 */
-CV_EXPORTS void winrt_setFrameContainer(::Windows::UI::Xaml::Controls::Image^ image);
+CV_EXPORTS void winrt_setFrameContainer(::Windows::UI::Xaml::Controls::Image ^ image);
 
 /** @brief
 @note
@@ -129,4 +128,4 @@ CV_EXPORTS void winrt_imshow();
 
 //! @} videoio_winrt
 
-} // cv
+} // namespace cv

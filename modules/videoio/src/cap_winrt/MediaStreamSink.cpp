@@ -28,16 +28,9 @@ using namespace Microsoft::WRL;
 using namespace Platform;
 using namespace Windows::Foundation;
 
-MediaStreamSink::MediaStreamSink(
-    __in const MW::ComPtr<IMFMediaSink>& sink,
-    __in DWORD id,
-    __in const MW::ComPtr<IMFMediaType>& mt,
-    __in MediaSampleHandler^ sampleHandler
-    )
-    : _shutdown(false)
-    , _id(-1)
-    , _width(0)
-    , _height(0)
+MediaStreamSink::MediaStreamSink(__in const MW::ComPtr<IMFMediaSink>& sink, __in DWORD id,
+                                 __in const MW::ComPtr<IMFMediaType>& mt, __in MediaSampleHandler ^ sampleHandler)
+    : _shutdown(false), _id(-1), _width(0), _height(0)
 {
     CHK(MFCreateEventQueue(&_eventQueue));
     CHK(MFCreateMediaType(&_curMT));
@@ -49,10 +42,9 @@ MediaStreamSink::MediaStreamSink(
     _sampleHandler = sampleHandler;
 }
 
-HRESULT MediaStreamSink::GetMediaSink(__deref_out IMFMediaSink **sink)
+HRESULT MediaStreamSink::GetMediaSink(__deref_out IMFMediaSink** sink)
 {
-    return ExceptionBoundary([this, sink]()
-    {
+    return ExceptionBoundary([this, sink]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(sink);
@@ -64,10 +56,9 @@ HRESULT MediaStreamSink::GetMediaSink(__deref_out IMFMediaSink **sink)
     });
 }
 
-HRESULT MediaStreamSink::GetIdentifier(__out DWORD *identifier)
+HRESULT MediaStreamSink::GetIdentifier(__out DWORD* identifier)
 {
-    return ExceptionBoundary([this, identifier]()
-    {
+    return ExceptionBoundary([this, identifier]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(identifier);
@@ -78,10 +69,9 @@ HRESULT MediaStreamSink::GetIdentifier(__out DWORD *identifier)
     });
 }
 
-HRESULT MediaStreamSink::GetMediaTypeHandler(__deref_out IMFMediaTypeHandler **handler)
+HRESULT MediaStreamSink::GetMediaTypeHandler(__deref_out IMFMediaTypeHandler** handler)
 {
-    return ExceptionBoundary([this, handler]()
-    {
+    return ExceptionBoundary([this, handler]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(handler);
@@ -91,7 +81,6 @@ HRESULT MediaStreamSink::GetMediaTypeHandler(__deref_out IMFMediaTypeHandler **h
 
         *handler = this;
         this->AddRef();
-
     });
 }
 
@@ -104,11 +93,10 @@ void MediaStreamSink::RequestSample()
     CHK(_eventQueue->QueueEventParamVar(MEStreamSinkRequestSample, GUID_NULL, S_OK, nullptr));
 }
 
-HRESULT MediaStreamSink::ProcessSample(__in_opt IMFSample *sample)
+HRESULT MediaStreamSink::ProcessSample(__in_opt IMFSample* sample)
 {
-    return ExceptionBoundary([this, sample]()
-    {
-        MediaSampleHandler^ sampleHandler;
+    return ExceptionBoundary([this, sample]() {
+        MediaSampleHandler ^ sampleHandler;
         auto mediaSample = ref new MediaSample();
 
         {
@@ -130,10 +118,10 @@ HRESULT MediaStreamSink::ProcessSample(__in_opt IMFSample *sample)
     });
 }
 
-HRESULT MediaStreamSink::PlaceMarker(__in MFSTREAMSINK_MARKER_TYPE /*markerType*/, __in const PROPVARIANT * /*markerValue*/, __in const PROPVARIANT * contextValue)
+HRESULT MediaStreamSink::PlaceMarker(__in MFSTREAMSINK_MARKER_TYPE /*markerType*/,
+                                     __in const PROPVARIANT* /*markerValue*/, __in const PROPVARIANT* contextValue)
 {
-    return ExceptionBoundary([this, contextValue]()
-    {
+    return ExceptionBoundary([this, contextValue]() {
         auto lock = _lock.LockExclusive();
         CHKNULL(contextValue);
 
@@ -145,18 +133,16 @@ HRESULT MediaStreamSink::PlaceMarker(__in MFSTREAMSINK_MARKER_TYPE /*markerType*
 
 HRESULT MediaStreamSink::Flush()
 {
-    return ExceptionBoundary([this]()
-    {
+    return ExceptionBoundary([this]() {
         auto lock = _lock.LockExclusive();
 
         _VerifyNotShutdown();
     });
 }
 
-HRESULT MediaStreamSink::GetEvent(__in DWORD flags, __deref_out IMFMediaEvent **event)
+HRESULT MediaStreamSink::GetEvent(__in DWORD flags, __deref_out IMFMediaEvent** event)
 {
-    return ExceptionBoundary([this, flags, event]()
-    {
+    return ExceptionBoundary([this, flags, event]() {
         CHKNULL(event);
         *event = nullptr;
 
@@ -175,10 +161,9 @@ HRESULT MediaStreamSink::GetEvent(__in DWORD flags, __deref_out IMFMediaEvent **
     });
 }
 
-HRESULT MediaStreamSink::BeginGetEvent(__in IMFAsyncCallback *callback, __in_opt IUnknown *state)
+HRESULT MediaStreamSink::BeginGetEvent(__in IMFAsyncCallback* callback, __in_opt IUnknown* state)
 {
-    return ExceptionBoundary([this, callback, state]()
-    {
+    return ExceptionBoundary([this, callback, state]() {
         auto lock = _lock.LockExclusive();
 
         _VerifyNotShutdown();
@@ -188,10 +173,9 @@ HRESULT MediaStreamSink::BeginGetEvent(__in IMFAsyncCallback *callback, __in_opt
 }
 
 
-HRESULT MediaStreamSink::EndGetEvent(__in IMFAsyncResult *result, __deref_out IMFMediaEvent **event)
+HRESULT MediaStreamSink::EndGetEvent(__in IMFAsyncResult* result, __deref_out IMFMediaEvent** event)
 {
-    return ExceptionBoundary([this, result, event]()
-    {
+    return ExceptionBoundary([this, result, event]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(event);
@@ -203,15 +187,10 @@ HRESULT MediaStreamSink::EndGetEvent(__in IMFAsyncResult *result, __deref_out IM
     });
 }
 
-HRESULT MediaStreamSink::QueueEvent(
-    __in MediaEventType met,
-    __in REFGUID extendedType,
-    __in HRESULT status,
-    __in_opt const PROPVARIANT *value
-    )
+HRESULT MediaStreamSink::QueueEvent(__in MediaEventType met, __in REFGUID extendedType, __in HRESULT status,
+                                    __in_opt const PROPVARIANT* value)
 {
-    return ExceptionBoundary([this, met, extendedType, status, value]()
-    {
+    return ExceptionBoundary([this, met, extendedType, status, value]() {
         auto lock = _lock.LockExclusive();
 
         _VerifyNotShutdown();
@@ -220,12 +199,12 @@ HRESULT MediaStreamSink::QueueEvent(
     });
 }
 
-HRESULT MediaStreamSink::IsMediaTypeSupported(__in IMFMediaType *mediaType, __deref_out_opt  IMFMediaType **closestMediaType)
+HRESULT MediaStreamSink::IsMediaTypeSupported(__in IMFMediaType* mediaType,
+                                              __deref_out_opt IMFMediaType** closestMediaType)
 {
     bool supported = false;
 
-    HRESULT hr = ExceptionBoundary([this, mediaType, closestMediaType, &supported]()
-    {
+    HRESULT hr = ExceptionBoundary([this, mediaType, closestMediaType, &supported]() {
         auto lock = _lock.LockExclusive();
 
         if (closestMediaType != nullptr)
@@ -244,10 +223,9 @@ HRESULT MediaStreamSink::IsMediaTypeSupported(__in IMFMediaType *mediaType, __de
     return FAILED(hr) ? hr : supported ? S_OK : MF_E_INVALIDMEDIATYPE;
 }
 
-HRESULT MediaStreamSink::GetMediaTypeCount(__out DWORD *typeCount)
+HRESULT MediaStreamSink::GetMediaTypeCount(__out DWORD* typeCount)
 {
-    return ExceptionBoundary([this, typeCount]()
-    {
+    return ExceptionBoundary([this, typeCount]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(typeCount);
@@ -259,10 +237,9 @@ HRESULT MediaStreamSink::GetMediaTypeCount(__out DWORD *typeCount)
     });
 }
 
-HRESULT MediaStreamSink::GetMediaTypeByIndex(__in DWORD /*index*/, __deref_out  IMFMediaType **mediaType)
+HRESULT MediaStreamSink::GetMediaTypeByIndex(__in DWORD /*index*/, __deref_out IMFMediaType** mediaType)
 {
-    HRESULT hr = ExceptionBoundary([this, mediaType]()
-    {
+    HRESULT hr = ExceptionBoundary([this, mediaType]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(mediaType);
@@ -275,10 +252,9 @@ HRESULT MediaStreamSink::GetMediaTypeByIndex(__in DWORD /*index*/, __deref_out  
     return FAILED(hr) ? hr : MF_E_NO_MORE_TYPES;
 }
 
-HRESULT MediaStreamSink::SetCurrentMediaType(__in IMFMediaType *mediaType)
+HRESULT MediaStreamSink::SetCurrentMediaType(__in IMFMediaType* mediaType)
 {
-    return ExceptionBoundary([this, mediaType]()
-    {
+    return ExceptionBoundary([this, mediaType]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(mediaType);
@@ -294,10 +270,9 @@ HRESULT MediaStreamSink::SetCurrentMediaType(__in IMFMediaType *mediaType)
     });
 }
 
-HRESULT MediaStreamSink::GetCurrentMediaType(__deref_out_opt IMFMediaType **mediaType)
+HRESULT MediaStreamSink::GetCurrentMediaType(__deref_out_opt IMFMediaType** mediaType)
 {
-    return ExceptionBoundary([this, mediaType]()
-    {
+    return ExceptionBoundary([this, mediaType]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(mediaType);
@@ -312,10 +287,9 @@ HRESULT MediaStreamSink::GetCurrentMediaType(__deref_out_opt IMFMediaType **medi
     });
 }
 
-HRESULT MediaStreamSink::GetMajorType(__out GUID *majorType)
+HRESULT MediaStreamSink::GetMajorType(__out GUID* majorType)
 {
-    return ExceptionBoundary([this, majorType]()
-    {
+    return ExceptionBoundary([this, majorType]() {
         auto lock = _lock.LockExclusive();
 
         CHKNULL(majorType);
@@ -359,10 +333,8 @@ bool MediaStreamSink::_IsMediaTypeSupported(__in const ComPtr<IMFMediaType>& mt)
 {
     GUID majorType;
     GUID subType;
-    if (SUCCEEDED(mt->GetGUID(MF_MT_MAJOR_TYPE, &majorType)) &&
-        SUCCEEDED(mt->GetGUID(MF_MT_SUBTYPE, &subType)) &&
-        (majorType == _majorType) &&
-        (subType == _subType))
+    if (SUCCEEDED(mt->GetGUID(MF_MT_MAJOR_TYPE, &majorType)) && SUCCEEDED(mt->GetGUID(MF_MT_SUBTYPE, &subType))
+        && (majorType == _majorType) && (subType == _subType))
     {
         return true;
     }

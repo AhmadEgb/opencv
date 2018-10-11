@@ -55,15 +55,35 @@ namespace WMMp = ::Windows::Media::MediaProperties;
 namespace WSS = ::Windows::Storage::Streams;
 
 // Exception-based error handling
-#define CHK(statement)  {HRESULT _hr = (statement); if (FAILED(_hr)) { throw ref new Platform::COMException(_hr); };}
-#define CHKNULL(p)  {if ((p) == nullptr) { throw ref new Platform::NullReferenceException(L#p); };}
+#define CHK(statement) \
+    { \
+        HRESULT _hr = (statement); \
+        if (FAILED(_hr)) \
+        { \
+            throw ref new Platform::COMException(_hr); \
+        }; \
+    }
+#define CHKNULL(p) \
+    { \
+        if ((p) == nullptr) \
+        { \
+            throw ref new Platform::NullReferenceException(L#p); \
+        }; \
+    }
 
 // Exception-free error handling
-#define CHK_RETURN(statement) {hr = (statement); if (FAILED(hr)) { return hr; };}
+#define CHK_RETURN(statement) \
+    { \
+        hr = (statement); \
+        if (FAILED(hr)) \
+        { \
+            return hr; \
+        }; \
+    }
 
 // Cast a C++/CX msartpointer to an ABI smartpointer
 template<typename T, typename U>
-MW::ComPtr<T> As(U^ in)
+MW::ComPtr<T> As(U ^ in)
 {
     MW::ComPtr<T> out;
     CHK(reinterpret_cast<IInspectable*>(in)->QueryInterface(IID_PPV_ARGS(&out)));
@@ -89,7 +109,7 @@ Microsoft::WRL::ComPtr<T> As(U* in)
 }
 
 // Get access to bytes in IBuffer
-inline unsigned char* GetData(_In_ WSS::IBuffer^ buffer)
+inline unsigned char* GetData(_In_ WSS::IBuffer ^ buffer)
 {
     unsigned char* bytes = nullptr;
     CHK(As<WSS::IBufferByteAccess>(buffer)->Buffer(&bytes));
@@ -100,11 +120,7 @@ inline unsigned char* GetData(_In_ WSS::IBuffer^ buffer)
 class AutoMF
 {
 public:
-    AutoMF()
-        : _bInitialized(false)
-    {
-        CHK(MFStartup(MF_VERSION));
-    }
+    AutoMF() : _bInitialized(false) { CHK(MFStartup(MF_VERSION)); }
 
     ~AutoMF()
     {
@@ -119,7 +135,7 @@ private:
 };
 
 // Class to track error origin
-template <size_t N>
+template<size_t N>
 HRESULT OriginateError(__in HRESULT hr, __in wchar_t const (&str)[N])
 {
     if (FAILED(hr))
@@ -140,7 +156,7 @@ inline HRESULT OriginateError(__in HRESULT hr)
 }
 
 // Converts exceptions into HRESULTs
-template <typename Lambda>
+template<typename Lambda>
 HRESULT ExceptionBoundary(Lambda&& lambda)
 {
     try
@@ -148,7 +164,7 @@ HRESULT ExceptionBoundary(Lambda&& lambda)
         lambda();
         return S_OK;
     }
-    catch (Platform::Exception^ e)
+    catch (Platform::Exception ^ e)
     {
         return e->HResult;
     }
@@ -165,8 +181,7 @@ HRESULT ExceptionBoundary(Lambda&& lambda)
 // Wraps an IMFSample in a C++/CX class to be able to define a callback delegate
 ref class MediaSample sealed
 {
-internal:
-    MW::ComPtr<IMFSample> Sample;
+    internal : MW::ComPtr<IMFSample> Sample;
 };
 
-delegate void MediaSampleHandler(MediaSample^ sample);
+delegate void MediaSampleHandler(MediaSample ^ sample);

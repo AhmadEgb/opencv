@@ -5,10 +5,9 @@
 #include "precomp.hpp"
 
 #ifdef HAVE_LIBREALSENSE
-#include "cap_librealsense.hpp"
+#    include "cap_librealsense.hpp"
 
-namespace cv
-{
+namespace cv {
 
 VideoCapture_LibRealsense::VideoCapture_LibRealsense(int) : mAlign(RS2_STREAM_COLOR)
 {
@@ -25,7 +24,7 @@ VideoCapture_LibRealsense::VideoCapture_LibRealsense(int) : mAlign(RS2_STREAM_CO
     {
     }
 }
-VideoCapture_LibRealsense::~VideoCapture_LibRealsense(){}
+VideoCapture_LibRealsense::~VideoCapture_LibRealsense() {}
 
 double VideoCapture_LibRealsense::getProperty(int prop) const
 {
@@ -86,7 +85,7 @@ bool VideoCapture_LibRealsense::retrieveFrame(int outputType, cv::OutputArray fr
         void* data = const_cast<void*>(_frame.get_data());
         Mat(_frame.get_height(), _frame.get_width(), type, data, _frame.get_stride_in_bytes()).copyTo(frame);
 
-        if(_frame.get_profile().format() == RS2_FORMAT_RGB8)
+        if (_frame.get_profile().format() == RS2_FORMAT_RGB8)
             cvtColor(frame, frame, COLOR_RGB2BGR);
     }
     catch (const rs2::error&)
@@ -96,16 +95,10 @@ bool VideoCapture_LibRealsense::retrieveFrame(int outputType, cv::OutputArray fr
 
     return true;
 }
-int VideoCapture_LibRealsense::getCaptureDomain()
-{
-    return CAP_INTELPERC;
-}
+int VideoCapture_LibRealsense::getCaptureDomain() { return CAP_INTELPERC; }
 
-bool VideoCapture_LibRealsense::isOpened() const
-{
-    return bool(std::shared_ptr<rs2_pipeline>(mPipe));
-}
+bool VideoCapture_LibRealsense::isOpened() const { return bool(std::shared_ptr<rs2_pipeline>(mPipe)); }
 
-}
+} // namespace cv
 
 #endif

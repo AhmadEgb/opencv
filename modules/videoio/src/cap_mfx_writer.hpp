@@ -18,30 +18,32 @@ class MFXVideoENCODE;
 class VideoWriter_IntelMFX : public cv::IVideoWriter
 {
 public:
-    VideoWriter_IntelMFX(const cv::String &filename, int _fourcc, double fps, cv::Size frameSize, bool isColor);
+    VideoWriter_IntelMFX(const cv::String& filename, int _fourcc, double fps, cv::Size frameSize, bool isColor);
     virtual ~VideoWriter_IntelMFX();
     virtual double getProperty(int) const;
     virtual bool setProperty(int, double);
     virtual bool isOpened() const;
     virtual void write(cv::InputArray input);
-    static cv::Ptr<VideoWriter_IntelMFX> create(const cv::String& filename, int _fourcc, double fps, cv::Size frameSize, bool isColor);
+    static cv::Ptr<VideoWriter_IntelMFX> create(const cv::String& filename, int _fourcc, double fps,
+                                                cv::Size frameSize, bool isColor);
 
     virtual int getCaptureDomain() const { return cv::CAP_INTEL_MFX; }
+
 protected:
     bool write_one(cv::InputArray bgr);
 
 private:
-    VideoWriter_IntelMFX(const VideoWriter_IntelMFX &);
-    VideoWriter_IntelMFX & operator=(const VideoWriter_IntelMFX &);
+    VideoWriter_IntelMFX(const VideoWriter_IntelMFX&);
+    VideoWriter_IntelMFX& operator=(const VideoWriter_IntelMFX&);
 
 private:
-    MFXVideoSession *session;
-    Plugin *plugin;
-    DeviceHandler *deviceHandler;
-    WriteBitstream *bs;
-    MFXVideoENCODE *encoder;
-    SurfacePool *pool;
-    void *outSurface;
+    MFXVideoSession* session;
+    Plugin* plugin;
+    DeviceHandler* deviceHandler;
+    WriteBitstream* bs;
+    MFXVideoENCODE* encoder;
+    SurfacePool* pool;
+    void* outSurface;
     cv::Size frameSize;
     bool good;
 };

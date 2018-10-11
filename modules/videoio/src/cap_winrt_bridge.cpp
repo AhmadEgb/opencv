@@ -45,10 +45,7 @@ using namespace ::std;
 /***************************** VideoioBridge class ******************************/
 
 // non-blocking
-void VideoioBridge::requestForUIthreadAsync(int action)
-{
-    reporter.report(action);
-}
+void VideoioBridge::requestForUIthreadAsync(int action) { reporter.report(action); }
 
 VideoioBridge& VideoioBridge::getInstance()
 {
@@ -125,34 +122,16 @@ void VideoioBridge::imshow()
     requestForUIthreadAsync(cv::UPDATE_IMAGE_ELEMENT);
 }
 
-int VideoioBridge::getDeviceIndex()
-{
-    return deviceIndex;
-}
+int VideoioBridge::getDeviceIndex() { return deviceIndex; }
 
-void VideoioBridge::setDeviceIndex(int index)
-{
-    deviceIndex = index;
-}
+void VideoioBridge::setDeviceIndex(int index) { deviceIndex = index; }
 
-int VideoioBridge::getWidth()
-{
-    return width;
-}
+int VideoioBridge::getWidth() { return width; }
 
-int VideoioBridge::getHeight()
-{
-    return height;
-}
+int VideoioBridge::getHeight() { return height; }
 
-void VideoioBridge::setWidth(int _width)
-{
-    width = _width;
-}
+void VideoioBridge::setWidth(int _width) { width = _width; }
 
-void VideoioBridge::setHeight(int _height)
-{
-    height = _height;
-}
+void VideoioBridge::setHeight(int _height) { height = _height; }
 
 // end

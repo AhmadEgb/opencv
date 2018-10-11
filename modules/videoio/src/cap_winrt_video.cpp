@@ -54,24 +54,24 @@ using namespace Windows::Devices::Enumeration;
 #pragma comment(lib, "mf")
 #pragma comment(lib, "mfuuid")
 
-#if (WINAPI_FAMILY!=WINAPI_FAMILY_PHONE_APP) && !defined(_M_ARM)
-#pragma comment(lib, "Shlwapi")
+#if (WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP) && !defined(_M_ARM)
+#    pragma comment(lib, "Shlwapi")
 #endif
 
 #include "cap_winrt_bridge.hpp"
 
 Video::Video() {}
 
-Video &Video::getInstance() {
+Video& Video::getInstance()
+{
     static Video v;
     return v;
 }
 
-bool Video::isStarted() {
-    return bGrabberInited.load();
-}
+bool Video::isStarted() { return bGrabberInited.load(); }
 
-void Video::closeGrabber() {
+void Video::closeGrabber()
+{
     // assigning nullptr causes deref of grabber and thus closes the device
     m_frameGrabber = nullptr;
     bGrabberInited = false;
@@ -79,9 +79,11 @@ void Video::closeGrabber() {
 }
 
 // non-blocking
-bool Video::initGrabber(int device, int w, int h) {
+bool Video::initGrabber(int device, int w, int h)
+{
     // already started?
-    if (bGrabberInited || bGrabberInitInProgress) return false;
+    if (bGrabberInited || bGrabberInitInProgress)
+        return false;
 
     width = w;
     height = h;
@@ -92,57 +94,57 @@ bool Video::initGrabber(int device, int w, int h) {
     m_deviceID = device;
 
     create_task(DeviceInformation::FindAllAsync(DeviceClass::VideoCapture))
-        .then([this](task<DeviceInformationCollection^> findTask)
-    {
-        m_devices = findTask.get();
+        .then([this](task<DeviceInformationCollection ^> findTask) {
+            m_devices = findTask.get();
 
-        // got selected device?
-        if ((unsigned)m_deviceID >= m_devices.Get()->Size)
-        {
-            OutputDebugStringA("Video::initGrabber - no video device found\n");
-            return false;
-        }
+            // got selected device?
+            if ((unsigned)m_deviceID >= m_devices.Get()->Size)
+            {
+                OutputDebugStringA("Video::initGrabber - no video device found\n");
+                return false;
+            }
 
-        auto devInfo = m_devices.Get()->GetAt(m_deviceID);
+            auto devInfo = m_devices.Get()->GetAt(m_deviceID);
 
-        auto settings = ref new MediaCaptureInitializationSettings();
-        settings->StreamingCaptureMode = StreamingCaptureMode::Video; // Video-only capture
-        settings->VideoDeviceId = devInfo->Id;
+            auto settings = ref new MediaCaptureInitializationSettings();
+            settings->StreamingCaptureMode = StreamingCaptureMode::Video; // Video-only capture
+            settings->VideoDeviceId = devInfo->Id;
 
-        auto location = devInfo->EnclosureLocation;
-        bFlipImageX = true;
-        if (location != nullptr && location->Panel == Windows::Devices::Enumeration::Panel::Back)
-        {
-            bFlipImageX = false;
-        }
+            auto location = devInfo->EnclosureLocation;
+            bFlipImageX = true;
+            if (location != nullptr && location->Panel == Windows::Devices::Enumeration::Panel::Back)
+            {
+                bFlipImageX = false;
+            }
 
-        m_capture = ref new MediaCapture();
-        create_task(m_capture->InitializeAsync(settings)).then([this](){
+            m_capture = ref new MediaCapture();
+            create_task(m_capture->InitializeAsync(settings))
+                .then([this]() {
+                    auto props = safe_cast<VideoEncodingProperties ^>(
+                        m_capture->VideoDeviceController->GetMediaStreamProperties(MediaStreamType::VideoPreview));
 
-            auto props = safe_cast<VideoEncodingProperties^>(m_capture->VideoDeviceController->GetMediaStreamProperties(MediaStreamType::VideoPreview));
+                    // for 24 bpp
+                    props->Subtype = MediaEncodingSubtypes::Rgb24;
+                    bytesPerPixel = 3;
 
-            // for 24 bpp
-            props->Subtype = MediaEncodingSubtypes::Rgb24;      bytesPerPixel = 3;
+                    // XAML & WBM use BGRA8, so it would look like
+                    // props->Subtype = MediaEncodingSubtypes::Bgra8;   bytesPerPixel = 4;
 
-            // XAML & WBM use BGRA8, so it would look like
-            // props->Subtype = MediaEncodingSubtypes::Bgra8;   bytesPerPixel = 4;
+                    props->Width = width;
+                    props->Height = height;
 
-            props->Width = width;
-            props->Height = height;
+                    return ::Media::CaptureFrameGrabber::CreateAsync(m_capture.Get(), props);
+                })
+                .then([this](::Media::CaptureFrameGrabber ^ frameGrabber) {
+                    m_frameGrabber = frameGrabber;
+                    bGrabberInited = true;
+                    bGrabberInitInProgress = false;
+                    //ready = true;
+                    _GrabFrameAsync(frameGrabber);
+                });
 
-            return ::Media::CaptureFrameGrabber::CreateAsync(m_capture.Get(), props);
-
-        }).then([this](::Media::CaptureFrameGrabber^ frameGrabber)
-        {
-            m_frameGrabber = frameGrabber;
-            bGrabberInited = true;
-            bGrabberInitInProgress = false;
-            //ready = true;
-            _GrabFrameAsync(frameGrabber);
+            return true;
         });
-
-        return true;
-    });
 
     // nb. cannot block here - this will lock the UI thread:
 
@@ -150,88 +152,93 @@ bool Video::initGrabber(int device, int w, int h) {
 }
 
 
-void Video::_GrabFrameAsync(::Media::CaptureFrameGrabber^ frameGrabber) {
+void Video::_GrabFrameAsync(::Media::CaptureFrameGrabber ^ frameGrabber)
+{
     // use rgb24 layout
-    create_task(frameGrabber->GetFrameAsync()).then([this, frameGrabber](const ComPtr<IMF2DBuffer2>& buffer)
-    {
-        // do the RGB swizzle while copying the pixels from the IMF2DBuffer2
-        BYTE *pbScanline;
-        LONG plPitch;
-        unsigned int colBytes = width * bytesPerPixel;
-        CHK(buffer->Lock2D(&pbScanline, &plPitch));
+    create_task(frameGrabber->GetFrameAsync())
+        .then(
+            [this, frameGrabber](const ComPtr<IMF2DBuffer2>& buffer) {
+                // do the RGB swizzle while copying the pixels from the IMF2DBuffer2
+                BYTE* pbScanline;
+                LONG plPitch;
+                unsigned int colBytes = width * bytesPerPixel;
+                CHK(buffer->Lock2D(&pbScanline, &plPitch));
 
-        // flip
-        if (bFlipImageX)
-        {
-            std::lock_guard<std::mutex> lock(VideoioBridge::getInstance().inputBufferMutex);
-
-            // ptr to input Mat data array
-            auto buf = VideoioBridge::getInstance().backInputPtr;
-
-            for (unsigned int row = 0; row < height; row++)
-            {
-                unsigned int i = 0;
-                unsigned int j = colBytes - 1;
-
-                while (i < colBytes)
+                // flip
+                if (bFlipImageX)
                 {
-                    // reverse the scan line
-                    // as a side effect this also swizzles R and B channels
-                    buf[j--] = pbScanline[i++];
-                    buf[j--] = pbScanline[i++];
-                    buf[j--] = pbScanline[i++];
+                    std::lock_guard<std::mutex> lock(VideoioBridge::getInstance().inputBufferMutex);
+
+                    // ptr to input Mat data array
+                    auto buf = VideoioBridge::getInstance().backInputPtr;
+
+                    for (unsigned int row = 0; row < height; row++)
+                    {
+                        unsigned int i = 0;
+                        unsigned int j = colBytes - 1;
+
+                        while (i < colBytes)
+                        {
+                            // reverse the scan line
+                            // as a side effect this also swizzles R and B channels
+                            buf[j--] = pbScanline[i++];
+                            buf[j--] = pbScanline[i++];
+                            buf[j--] = pbScanline[i++];
+                        }
+                        pbScanline += plPitch;
+                        buf += colBytes;
+                    }
+                    VideoioBridge::getInstance().bIsFrameNew = true;
                 }
-                pbScanline += plPitch;
-                buf += colBytes;
-            }
-            VideoioBridge::getInstance().bIsFrameNew = true;
-        } else
-        {
-            std::lock_guard<std::mutex> lock(VideoioBridge::getInstance().inputBufferMutex);
-
-            // ptr to input Mat data array
-            auto buf = VideoioBridge::getInstance().backInputPtr;
-
-            for (unsigned int row = 0; row < height; row++)
-            {
-                // used for Bgr8:
-                //for (unsigned int i = 0; i < colBytes; i++ )
-                //    buf[i] = pbScanline[i];
-
-                // used for RGB24:
-                for (unsigned int i = 0; i < colBytes; i += bytesPerPixel)
+                else
                 {
-                    // swizzle the R and B values (BGR to RGB)
-                    buf[i] = pbScanline[i + 2];
-                    buf[i + 1] = pbScanline[i + 1];
-                    buf[i + 2] = pbScanline[i];
+                    std::lock_guard<std::mutex> lock(VideoioBridge::getInstance().inputBufferMutex);
 
-                    // no swizzle
-                    //buf[i] = pbScanline[i];
-                    //buf[i + 1] = pbScanline[i + 1];
-                    //buf[i + 2] = pbScanline[i + 2];
+                    // ptr to input Mat data array
+                    auto buf = VideoioBridge::getInstance().backInputPtr;
+
+                    for (unsigned int row = 0; row < height; row++)
+                    {
+                        // used for Bgr8:
+                        //for (unsigned int i = 0; i < colBytes; i++ )
+                        //    buf[i] = pbScanline[i];
+
+                        // used for RGB24:
+                        for (unsigned int i = 0; i < colBytes; i += bytesPerPixel)
+                        {
+                            // swizzle the R and B values (BGR to RGB)
+                            buf[i] = pbScanline[i + 2];
+                            buf[i + 1] = pbScanline[i + 1];
+                            buf[i + 2] = pbScanline[i];
+
+                            // no swizzle
+                            //buf[i] = pbScanline[i];
+                            //buf[i + 1] = pbScanline[i + 1];
+                            //buf[i + 2] = pbScanline[i + 2];
+                        }
+
+                        pbScanline += plPitch;
+                        buf += colBytes;
+                    }
+                    VideoioBridge::getInstance().bIsFrameNew = true;
                 }
+                CHK(buffer->Unlock2D());
 
-                pbScanline += plPitch;
-                buf += colBytes;
-            }
-            VideoioBridge::getInstance().bIsFrameNew = true;
-        }
-        CHK(buffer->Unlock2D());
+                VideoioBridge::getInstance().frameCounter++;
 
-        VideoioBridge::getInstance().frameCounter++;
-
-        if (bGrabberInited)
-        {
-            _GrabFrameAsync(frameGrabber);
-        }
-    }, task_continuation_context::use_current());
+                if (bGrabberInited)
+                {
+                    _GrabFrameAsync(frameGrabber);
+                }
+            },
+            task_continuation_context::use_current());
 }
 
 
 // copy from input Mat to output WBM
 // must be on UI thread
-void Video::CopyOutput() {
+void Video::CopyOutput()
+{
     {
         std::lock_guard<std::mutex> lock(VideoioBridge::getInstance().outputBufferMutex);
 
@@ -277,28 +284,28 @@ void Video::CopyOutput() {
 }
 
 
-bool Video::listDevicesTask() {
+bool Video::listDevicesTask()
+{
     std::atomic<bool> ready(false);
 
     auto settings = ref new MediaCaptureInitializationSettings();
 
     create_task(DeviceInformation::FindAllAsync(DeviceClass::VideoCapture))
-        .then([this, &ready](task<DeviceInformationCollection^> findTask)
-    {
-        m_devices = findTask.get();
+        .then([this, &ready](task<DeviceInformationCollection ^> findTask) {
+            m_devices = findTask.get();
 
-        // TODO: collect device data
-        // for (size_t i = 0; i < m_devices->Size; i++)
-        // {
-        //   .. deviceInfo;
-        //   auto d = m_devices->GetAt(i);
-        //   deviceInfo.bAvailable = true;
-        //   deviceInfo.deviceName = PlatformStringToString(d->Name);
-        //   deviceInfo.hardwareName = deviceInfo.deviceName;
-        // }
+            // TODO: collect device data
+            // for (size_t i = 0; i < m_devices->Size; i++)
+            // {
+            //   .. deviceInfo;
+            //   auto d = m_devices->GetAt(i);
+            //   deviceInfo.bAvailable = true;
+            //   deviceInfo.deviceName = PlatformStringToString(d->Name);
+            //   deviceInfo.hardwareName = deviceInfo.deviceName;
+            // }
 
-        ready = true;
-    });
+            ready = true;
+        });
 
     // wait for async task to complete
     int count = 0;
@@ -311,7 +318,8 @@ bool Video::listDevicesTask() {
 }
 
 
-bool Video::listDevices() {
+bool Video::listDevices()
+{
     // synchronous version of listing video devices on WinRT
     std::future<bool> result = std::async(std::launch::async, &Video::listDevicesTask, this);
     return result.get();

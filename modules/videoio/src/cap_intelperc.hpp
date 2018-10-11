@@ -16,12 +16,11 @@
 
 #ifdef HAVE_INTELPERC
 
-#include "pxcsession.h"
-#include "pxcsmartptr.h"
-#include "pxccapture.h"
+#    include "pxcsession.h"
+#    include "pxcsmartptr.h"
+#    include "pxccapture.h"
 
-namespace cv
-{
+namespace cv {
 
 class IntelPerCStreamBase
 {
@@ -32,16 +31,19 @@ public:
     bool isValid();
     bool grabFrame();
     int getProfileIDX() const;
+
 public:
-    virtual bool initStream(PXCSession *session)            = 0;
+    virtual bool initStream(PXCSession* session) = 0;
     virtual double getProperty(int propIdx) const;
     virtual bool setProperty(int propIdx, double propVal);
+
 protected:
     mutable PXCSmartPtr<PXCCapture::Device> m_device;
-    bool initDevice(PXCSession *session);
+    bool initDevice(PXCSession* session);
 
     PXCSmartPtr<PXCCapture::VideoStream> m_stream;
     void initStreamImpl(PXCImage::ImageType type);
+
 protected:
     std::vector<PXCCapture::VideoStream::ProfileInfo> m_profiles;
     int m_profileIdx;
@@ -54,36 +56,38 @@ protected:
     void enumProfiles();
 };
 
-class IntelPerCStreamImage
-    : public IntelPerCStreamBase
+class IntelPerCStreamImage : public IntelPerCStreamBase
 {
 public:
     IntelPerCStreamImage();
     virtual ~IntelPerCStreamImage();
 
-    virtual bool initStream(PXCSession *session);
+    virtual bool initStream(PXCSession* session);
     virtual double getProperty(int propIdx) const;
     virtual bool setProperty(int propIdx, double propVal);
+
 public:
     bool retrieveAsOutputArray(OutputArray image);
 };
 
-class IntelPerCStreamDepth
-    : public IntelPerCStreamBase
+class IntelPerCStreamDepth : public IntelPerCStreamBase
 {
 public:
     IntelPerCStreamDepth();
     virtual ~IntelPerCStreamDepth();
 
-    virtual bool initStream(PXCSession *session);
+    virtual bool initStream(PXCSession* session);
     virtual double getProperty(int propIdx) const;
     virtual bool setProperty(int propIdx, double propVal);
+
 public:
     bool retrieveDepthAsOutputArray(OutputArray image);
     bool retrieveIRAsOutputArray(OutputArray image);
     bool retrieveUVAsOutputArray(OutputArray image);
+
 protected:
     virtual bool validProfile(const PXCCapture::VideoStream::ProfileInfo& pinfo);
+
 protected:
     bool retriveFrame(int type, int planeIdx, OutputArray frame);
 };
@@ -101,6 +105,7 @@ public:
     virtual bool retrieveFrame(int outputType, OutputArray frame) CV_OVERRIDE;
     virtual int getCaptureDomain() CV_OVERRIDE;
     virtual bool isOpened() const CV_OVERRIDE;
+
 protected:
     bool m_contextOpened;
 
@@ -109,7 +114,7 @@ protected:
     IntelPerCStreamDepth m_depthStream;
 };
 
-}
+} // namespace cv
 
 #endif //HAVE_INTELPERC
 #endif //_CAP_INTELPERC_HPP_

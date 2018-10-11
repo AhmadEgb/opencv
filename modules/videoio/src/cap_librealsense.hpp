@@ -7,10 +7,9 @@
 
 #ifdef HAVE_LIBREALSENSE
 
-#include <librealsense2/rs.hpp>
+#    include <librealsense2/rs.hpp>
 
-namespace cv
-{
+namespace cv {
 
 class VideoCapture_LibRealsense : public IVideoCapture
 {
@@ -25,13 +24,14 @@ public:
     virtual bool retrieveFrame(int outputType, OutputArray frame) CV_OVERRIDE;
     virtual int getCaptureDomain() CV_OVERRIDE;
     virtual bool isOpened() const CV_OVERRIDE;
+
 protected:
     rs2::pipeline mPipe;
     rs2::frameset mData;
-    rs2::align    mAlign;
+    rs2::align mAlign;
 };
 
-}
+} // namespace cv
 
 #endif
 #endif

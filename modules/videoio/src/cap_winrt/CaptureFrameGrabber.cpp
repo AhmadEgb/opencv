@@ -34,7 +34,9 @@ using namespace concurrency;
 using namespace Microsoft::WRL::Details;
 using namespace Microsoft::WRL;
 
-task<Media::CaptureFrameGrabber^> Media::CaptureFrameGrabber::CreateAsync(_In_ MediaCapture^ capture, _In_ VideoEncodingProperties^ props, CaptureStreamType streamType)
+task<Media::CaptureFrameGrabber ^> Media::CaptureFrameGrabber::CreateAsync(_In_ MediaCapture ^ capture,
+                                                                           _In_ VideoEncodingProperties ^ props,
+                                                                           CaptureStreamType streamType)
 {
     auto reader = ref new Media::CaptureFrameGrabber(capture, props, streamType);
 
@@ -51,22 +53,20 @@ task<Media::CaptureFrameGrabber^> Media::CaptureFrameGrabber::CreateAsync(_In_ M
         task = create_task(capture->StartRecordToCustomSinkAsync(profile, reader->_mediaExtension));
     }
 
-    return task.then([reader]()
-    {
+    return task.then([reader]() {
         reader->_state = State::Started;
         return reader;
     });
 }
 
-Media::CaptureFrameGrabber::CaptureFrameGrabber(_In_ MediaCapture^ capture, _In_ VideoEncodingProperties^ props, CaptureStreamType streamType)
-: _state(State::Created)
-, _streamType(streamType)
-, _capture(capture)
+Media::CaptureFrameGrabber::CaptureFrameGrabber(_In_ MediaCapture ^ capture, _In_ VideoEncodingProperties ^ props,
+                                                CaptureStreamType streamType)
+    : _state(State::Created), _streamType(streamType), _capture(capture)
 {
     auto videoSampleHandler = ref new MediaSampleHandler(this, &Media::CaptureFrameGrabber::ProcessSample);
 
     _mediaSink = Make<MediaSink>(nullptr, props, nullptr, videoSampleHandler);
-    _mediaExtension = reinterpret_cast<IMediaExtension^>(static_cast<AWM::IMediaExtension*>(_mediaSink.Get()));
+    _mediaExtension = reinterpret_cast<IMediaExtension ^>(static_cast<AWM::IMediaExtension*>(_mediaSink.Get()));
 }
 
 Media::CaptureFrameGrabber::~CaptureFrameGrabber()
@@ -94,7 +94,7 @@ Media::CaptureFrameGrabber::~CaptureFrameGrabber()
 
 void Media::CaptureFrameGrabber::ShowCameraSettings()
 {
-#if WINAPI_FAMILY!=WINAPI_FAMILY_PHONE_APP
+#if WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
     if (_state == State::Started)
     {
         CameraOptionsUI::Show(_capture.Get());
@@ -129,8 +129,7 @@ task<void> Media::CaptureFrameGrabber::FinishAsync()
         task = create_task(_capture->StopRecordAsync());
     }
 
-    return task.then([this]()
-    {
+    return task.then([this]() {
         auto lock = _lock.LockExclusive();
         _state = State::Closed;
         _capture = nullptr;
@@ -154,7 +153,7 @@ task<ComPtr<IMF2DBuffer2>> Media::CaptureFrameGrabber::GetFrameAsync()
     return create_task(taskEvent);
 }
 
-void Media::CaptureFrameGrabber::ProcessSample(_In_ MediaSample^ sample)
+void Media::CaptureFrameGrabber::ProcessSample(_In_ MediaSample ^ sample)
 {
     task_completion_event<ComPtr<IMF2DBuffer2>> t;
 

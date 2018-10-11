@@ -1,26 +1,15 @@
 #ifdef HAVE_INTELPERC
 
-#include "cap_intelperc.hpp"
+#    include "cap_intelperc.hpp"
 
-namespace cv
-{
+namespace cv {
 
 ///////////////// IntelPerCStreamBase //////////////////
 
-IntelPerCStreamBase::IntelPerCStreamBase()
-    : m_profileIdx(-1)
-    , m_frameIdx(0)
-    , m_timeStampStartNS(0)
-{
-}
-IntelPerCStreamBase::~IntelPerCStreamBase()
-{
-}
+IntelPerCStreamBase::IntelPerCStreamBase() : m_profileIdx(-1), m_frameIdx(0), m_timeStampStartNS(0) {}
+IntelPerCStreamBase::~IntelPerCStreamBase() {}
 
-bool IntelPerCStreamBase::isValid()
-{
-    return (m_device.IsValid() && m_stream.IsValid());
-}
+bool IntelPerCStreamBase::isValid() { return (m_device.IsValid() && m_stream.IsValid()); }
 bool IntelPerCStreamBase::grabFrame()
 {
     if (!m_stream.IsValid())
@@ -42,10 +31,7 @@ bool IntelPerCStreamBase::grabFrame()
     m_frameIdx++;
     return true;
 }
-int IntelPerCStreamBase::getProfileIDX() const
-{
-    return m_profileIdx;
-}
+int IntelPerCStreamBase::getProfileIDX() const { return m_profileIdx; }
 double IntelPerCStreamBase::getProperty(int propIdx) const
 {
     double ret = 0.0;
@@ -54,26 +40,29 @@ double IntelPerCStreamBase::getProperty(int propIdx) const
     case CV_CAP_PROP_INTELPERC_PROFILE_COUNT:
         ret = (double)m_profiles.size();
         break;
-    case CV_CAP_PROP_FRAME_WIDTH :
+    case CV_CAP_PROP_FRAME_WIDTH:
         if ((0 <= m_profileIdx) && (m_profileIdx < m_profiles.size()))
             ret = (double)m_profiles[m_profileIdx].imageInfo.width;
         break;
-    case CV_CAP_PROP_FRAME_HEIGHT :
+    case CV_CAP_PROP_FRAME_HEIGHT:
         if ((0 <= m_profileIdx) && (m_profileIdx < m_profiles.size()))
             ret = (double)m_profiles[m_profileIdx].imageInfo.height;
         break;
-    case CV_CAP_PROP_FPS :
+    case CV_CAP_PROP_FPS:
         if ((0 <= m_profileIdx) && (m_profileIdx < m_profiles.size()))
         {
-            ret = ((double)m_profiles[m_profileIdx].frameRateMin.numerator / (double)m_profiles[m_profileIdx].frameRateMin.denominator
-                    + (double)m_profiles[m_profileIdx].frameRateMax.numerator / (double)m_profiles[m_profileIdx].frameRateMax.denominator) / 2.0;
+            ret = ((double)m_profiles[m_profileIdx].frameRateMin.numerator
+                       / (double)m_profiles[m_profileIdx].frameRateMin.denominator
+                   + (double)m_profiles[m_profileIdx].frameRateMax.numerator
+                         / (double)m_profiles[m_profileIdx].frameRateMax.denominator)
+                  / 2.0;
         }
         break;
     case CV_CAP_PROP_POS_FRAMES:
-        ret  = (double)m_frameIdx;
+        ret = (double)m_frameIdx;
         break;
     case CV_CAP_PROP_POS_MSEC:
-        ret  = m_timeStamp;
+        ret = m_timeStamp;
         break;
     };
     return ret;
@@ -84,40 +73,40 @@ bool IntelPerCStreamBase::setProperty(int propIdx, double propVal)
     switch (propIdx)
     {
     case CV_CAP_PROP_INTELPERC_PROFILE_IDX:
+    {
+        int propValInt = (int)propVal;
+        if (0 > propValInt)
         {
-            int propValInt = (int)propVal;
-            if (0 > propValInt)
+            m_profileIdx = propValInt;
+            isSet = true;
+        }
+        else if (propValInt < m_profiles.size())
+        {
+            if (m_profileIdx != propValInt)
             {
                 m_profileIdx = propValInt;
-                isSet = true;
+                if (m_stream.IsValid())
+                    m_stream->SetProfile(&m_profiles[m_profileIdx]);
+                m_frameIdx = 0;
+                m_timeStampStartNS = 0;
             }
-            else if (propValInt < m_profiles.size())
-            {
-                if (m_profileIdx != propValInt)
-                {
-                    m_profileIdx = propValInt;
-                    if (m_stream.IsValid())
-                        m_stream->SetProfile(&m_profiles[m_profileIdx]);
-                    m_frameIdx = 0;
-                    m_timeStampStartNS = 0;
-                }
-                isSet = true;
-            }
+            isSet = true;
         }
-        break;
+    }
+    break;
     };
     return isSet;
 }
-bool IntelPerCStreamBase::initDevice(PXCSession *session)
+bool IntelPerCStreamBase::initDevice(PXCSession* session)
 {
     if (NULL == session)
         return false;
 
     pxcStatus sts = PXC_STATUS_NO_ERROR;
     PXCSession::ImplDesc templat;
-    memset(&templat,0,sizeof(templat));
-    templat.group   = PXCSession::IMPL_GROUP_SENSOR;
-    templat.subgroup= PXCSession::IMPL_SUBGROUP_VIDEO_CAPTURE;
+    memset(&templat, 0, sizeof(templat));
+    templat.group = PXCSession::IMPL_GROUP_SENSOR;
+    templat.subgroup = PXCSession::IMPL_SUBGROUP_VIDEO_CAPTURE;
 
     for (int modidx = 0; PXC_STATUS_NO_ERROR <= sts; modidx++)
     {
@@ -170,10 +159,7 @@ void IntelPerCStreamBase::initStreamImpl(PXCImage::ImageType type)
         m_stream.ReleaseRef();
     }
 }
-bool IntelPerCStreamBase::validProfile(const PXCCapture::VideoStream::ProfileInfo& /*pinfo*/)
-{
-    return true;
-}
+bool IntelPerCStreamBase::validProfile(const PXCCapture::VideoStream::ProfileInfo& /*pinfo*/) { return true; }
 void IntelPerCStreamBase::enumProfiles()
 {
     m_profiles.clear();
@@ -193,14 +179,10 @@ void IntelPerCStreamBase::enumProfiles()
 
 ///////////////// IntelPerCStreamImage //////////////////
 
-IntelPerCStreamImage::IntelPerCStreamImage()
-{
-}
-IntelPerCStreamImage::~IntelPerCStreamImage()
-{
-}
+IntelPerCStreamImage::IntelPerCStreamImage() {}
+IntelPerCStreamImage::~IntelPerCStreamImage() {}
 
-bool IntelPerCStreamImage::initStream(PXCSession *session)
+bool IntelPerCStreamImage::initStream(PXCSession* session)
 {
     if (!initDevice(session))
         return false;
@@ -215,96 +197,97 @@ double IntelPerCStreamImage::getProperty(int propIdx) const
     switch (propIdx)
     {
     case CV_CAP_PROP_BRIGHTNESS:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_BRIGHTNESS, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_BRIGHTNESS, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_CONTRAST:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_CONTRAST, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_CONTRAST, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_SATURATION:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_SATURATION, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_SATURATION, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_HUE:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_HUE, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_HUE, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_GAMMA:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_GAMMA, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_GAMMA, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_SHARPNESS:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_SHARPNESS, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_SHARPNESS, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_GAIN:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_GAIN, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_GAIN, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_BACKLIGHT:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_BACK_LIGHT_COMPENSATION, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR
+            == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_BACK_LIGHT_COMPENSATION, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_EXPOSURE:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_EXPOSURE, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
-    //Add image stream specific properties
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_COLOR_EXPOSURE, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
+        //Add image stream specific properties
     }
     return IntelPerCStreamBase::getProperty(propIdx);
 }
@@ -313,69 +296,77 @@ bool IntelPerCStreamImage::setProperty(int propIdx, double propVal)
     switch (propIdx)
     {
     case CV_CAP_PROP_BRIGHTNESS:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_BRIGHTNESS, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_BRIGHTNESS, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_CONTRAST:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_CONTRAST, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_CONTRAST, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_SATURATION:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_SATURATION, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_SATURATION, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_HUE:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_HUE, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_HUE, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_GAMMA:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_GAMMA, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_GAMMA, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_SHARPNESS:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_SHARPNESS, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_SHARPNESS, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_GAIN:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_GAIN, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_GAIN, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_BACKLIGHT:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_BACK_LIGHT_COMPENSATION, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_BACK_LIGHT_COMPENSATION, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_EXPOSURE:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_EXPOSURE, (float)propVal));
-        }
-        break;
-    //Add image stream specific properties
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_COLOR_EXPOSURE, (float)propVal));
+    }
+    break;
+        //Add image stream specific properties
     }
     return IntelPerCStreamBase::setProperty(propIdx, propVal);
 }
@@ -401,14 +392,10 @@ bool IntelPerCStreamImage::retrieveAsOutputArray(cv::OutputArray image)
 
 ///////////////// IntelPerCStreamDepth //////////////////
 
-IntelPerCStreamDepth::IntelPerCStreamDepth()
-{
-}
-IntelPerCStreamDepth::~IntelPerCStreamDepth()
-{
-}
+IntelPerCStreamDepth::IntelPerCStreamDepth() {}
+IntelPerCStreamDepth::~IntelPerCStreamDepth() {}
 
-bool IntelPerCStreamDepth::initStream(PXCSession *session)
+bool IntelPerCStreamDepth::initStream(PXCSession* session)
 {
     if (!initDevice(session))
         return false;
@@ -423,55 +410,60 @@ double IntelPerCStreamDepth::getProperty(int propIdx) const
     switch (propIdx)
     {
     case CV_CAP_PROP_INTELPERC_DEPTH_LOW_CONFIDENCE_VALUE:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_DEPTH_LOW_CONFIDENCE_VALUE, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR
+            == m_device->QueryProperty(PXCCapture::Device::PROPERTY_DEPTH_LOW_CONFIDENCE_VALUE, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_INTELPERC_DEPTH_SATURATION_VALUE:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_DEPTH_SATURATION_VALUE, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR
+            == m_device->QueryProperty(PXCCapture::Device::PROPERTY_DEPTH_SATURATION_VALUE, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_INTELPERC_DEPTH_CONFIDENCE_THRESHOLD:
-        {
-            if (!m_device.IsValid())
-                return 0.0;
-            float fret = 0.0f;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryProperty(PXCCapture::Device::PROPERTY_DEPTH_CONFIDENCE_THRESHOLD, &fret))
-                return (double)fret;
+    {
+        if (!m_device.IsValid())
             return 0.0;
-        }
-        break;
+        float fret = 0.0f;
+        if (PXC_STATUS_NO_ERROR
+            == m_device->QueryProperty(PXCCapture::Device::PROPERTY_DEPTH_CONFIDENCE_THRESHOLD, &fret))
+            return (double)fret;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_INTELPERC_DEPTH_FOCAL_LENGTH_HORZ:
-        {
-            if (!m_device.IsValid())
-                return 0.0f;
-            PXCPointF32 ptf;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryPropertyAsPoint(PXCCapture::Device::PROPERTY_DEPTH_FOCAL_LENGTH, &ptf))
-                return (double)ptf.x;
-            return 0.0;
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return 0.0f;
+        PXCPointF32 ptf;
+        if (PXC_STATUS_NO_ERROR
+            == m_device->QueryPropertyAsPoint(PXCCapture::Device::PROPERTY_DEPTH_FOCAL_LENGTH, &ptf))
+            return (double)ptf.x;
+        return 0.0;
+    }
+    break;
     case CV_CAP_PROP_INTELPERC_DEPTH_FOCAL_LENGTH_VERT:
-        {
-            if (!m_device.IsValid())
-                return 0.0f;
-            PXCPointF32 ptf;
-            if (PXC_STATUS_NO_ERROR == m_device->QueryPropertyAsPoint(PXCCapture::Device::PROPERTY_DEPTH_FOCAL_LENGTH, &ptf))
-                return (double)ptf.y;
-            return 0.0;
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return 0.0f;
+        PXCPointF32 ptf;
+        if (PXC_STATUS_NO_ERROR
+            == m_device->QueryPropertyAsPoint(PXCCapture::Device::PROPERTY_DEPTH_FOCAL_LENGTH, &ptf))
+            return (double)ptf.y;
+        return 0.0;
+    }
+    break;
         //Add depth stream sepcific properties
     }
     return IntelPerCStreamBase::getProperty(propIdx);
@@ -481,27 +473,30 @@ bool IntelPerCStreamDepth::setProperty(int propIdx, double propVal)
     switch (propIdx)
     {
     case CV_CAP_PROP_INTELPERC_DEPTH_LOW_CONFIDENCE_VALUE:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_DEPTH_LOW_CONFIDENCE_VALUE, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_DEPTH_LOW_CONFIDENCE_VALUE, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_INTELPERC_DEPTH_SATURATION_VALUE:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_DEPTH_SATURATION_VALUE, (float)propVal));
-        }
-        break;
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_DEPTH_SATURATION_VALUE, (float)propVal));
+    }
+    break;
     case CV_CAP_PROP_INTELPERC_DEPTH_CONFIDENCE_THRESHOLD:
-        {
-            if (!m_device.IsValid())
-                return false;
-            return (PXC_STATUS_NO_ERROR == m_device->SetProperty(PXCCapture::Device::PROPERTY_DEPTH_CONFIDENCE_THRESHOLD, (float)propVal));
-        }
-        break;
-    //Add depth stream sepcific properties
+    {
+        if (!m_device.IsValid())
+            return false;
+        return (PXC_STATUS_NO_ERROR
+                == m_device->SetProperty(PXCCapture::Device::PROPERTY_DEPTH_CONFIDENCE_THRESHOLD, (float)propVal));
+    }
+    break;
+        //Add depth stream sepcific properties
     }
     return IntelPerCStreamBase::setProperty(propIdx, propVal);
 }
@@ -543,8 +538,7 @@ bool IntelPerCStreamDepth::retriveFrame(int type, int planeIdx, cv::OutputArray 
 
 ///////////////// VideoCapture_IntelPerC //////////////////
 
-VideoCapture_IntelPerC::VideoCapture_IntelPerC()
-    : m_contextOpened(false)
+VideoCapture_IntelPerC::VideoCapture_IntelPerC() : m_contextOpened(false)
 {
     pxcStatus sts = PXCSession_Create(&m_session);
     if (PXC_STATUS_NO_ERROR > sts)
@@ -552,7 +546,7 @@ VideoCapture_IntelPerC::VideoCapture_IntelPerC()
     m_contextOpened = m_imageStream.initStream(m_session);
     m_contextOpened &= m_depthStream.initStream(m_session);
 }
-VideoCapture_IntelPerC::~VideoCapture_IntelPerC(){}
+VideoCapture_IntelPerC::~VideoCapture_IntelPerC() {}
 
 double VideoCapture_IntelPerC::getProperty(int propIdx) const
 {
@@ -619,16 +613,10 @@ bool VideoCapture_IntelPerC::retrieveFrame(int outputType, cv::OutputArray frame
     }
     return false;
 }
-int VideoCapture_IntelPerC::getCaptureDomain()
-{
-    return CV_CAP_INTELPERC;
-}
+int VideoCapture_IntelPerC::getCaptureDomain() { return CV_CAP_INTELPERC; }
 
-bool VideoCapture_IntelPerC::isOpened() const
-{
-    return m_contextOpened;
-}
+bool VideoCapture_IntelPerC::isOpened() const { return m_contextOpened; }
 
-}
+} // namespace cv
 
 #endif //HAVE_INTELPERC

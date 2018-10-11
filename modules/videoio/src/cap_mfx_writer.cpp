@@ -29,7 +29,7 @@ inline mfxU32 codecIdByFourCC(int fourcc)
         return (mfxU32)-1;
 }
 
-VideoWriter_IntelMFX::VideoWriter_IntelMFX(const String &filename, int _fourcc, double fps, Size frameSize_, bool)
+VideoWriter_IntelMFX::VideoWriter_IntelMFX(const String& filename, int _fourcc, double fps, Size frameSize_, bool)
     : session(0), plugin(0), deviceHandler(0), bs(0), encoder(0), pool(0), frameSize(frameSize_), good(false)
 {
     mfxStatus res = MFX_ERR_NONE;
@@ -115,7 +115,8 @@ VideoWriter_IntelMFX::VideoWriter_IntelMFX(const String &filename, int _fourcc, 
         mfxVideoParam par;
         memset(&par, 0, sizeof(par));
         res = encoder->GetVideoParam(&par);
-        DBG(cout << "MFX GetVideoParam: " << res << endl << "requested " << par.mfx.BufferSizeInKB << " kB" << endl);
+        DBG(cout << "MFX GetVideoParam: " << res << endl
+                 << "requested " << par.mfx.BufferSizeInKB << " kB" << endl);
         CV_Assert(res >= MFX_ERR_NONE);
         bs = new WriteBitstream(filename.c_str(), par.mfx.BufferSizeInKB * 1024 * 2);
         if (!bs->isOpened())
@@ -134,7 +135,9 @@ VideoWriter_IntelMFX::~VideoWriter_IntelMFX()
     {
         DBG(cout << "====== Drain bitstream..." << endl);
         Mat dummy;
-        while (write_one(dummy)) {}
+        while (write_one(dummy))
+        {
+        }
         DBG(cout << "====== Drain Finished" << endl);
     }
     cleanup(bs);
@@ -157,29 +160,22 @@ bool VideoWriter_IntelMFX::setProperty(int, double)
     return false;
 }
 
-bool VideoWriter_IntelMFX::isOpened() const
-{
-    return good;
-}
+bool VideoWriter_IntelMFX::isOpened() const { return good; }
 
-void VideoWriter_IntelMFX::write(cv::InputArray input)
-{
-    write_one(input);
-}
+void VideoWriter_IntelMFX::write(cv::InputArray input) { write_one(input); }
 
 bool VideoWriter_IntelMFX::write_one(cv::InputArray bgr)
 {
     mfxStatus res;
-    mfxFrameSurface1 *workSurface = 0;
+    mfxFrameSurface1* workSurface = 0;
     mfxSyncPoint sync;
 
     if (!bgr.empty() && (bgr.dims() != 2 || bgr.type() != CV_8UC3 || bgr.size() != frameSize))
     {
         MSG(cerr << "MFX: invalid frame passed to encoder: "
-            << "dims/depth/cn=" << bgr.dims() << "/" << bgr.depth() << "/" << bgr.channels()
-            << ", size=" << bgr.size() << endl);
+                 << "dims/depth/cn=" << bgr.dims() << "/" << bgr.depth() << "/" << bgr.channels()
+                 << ", size=" << bgr.size() << endl);
         return false;
-
     }
     if (!bgr.empty())
     {
@@ -191,10 +187,9 @@ bool VideoWriter_IntelMFX::write_one(cv::InputArray bgr)
             return false;
         }
         Mat src = bgr.getMat();
-        hal::cvtBGRtoTwoPlaneYUV(src.data, src.step,
-                                 workSurface->Data.Y, workSurface->Data.UV, workSurface->Data.Pitch,
-                                 workSurface->Info.CropW, workSurface->Info.CropH,
-                                 3, false, 1);
+        hal::cvtBGRtoTwoPlaneYUV(src.data, src.step, workSurface->Data.Y, workSurface->Data.UV,
+                                 workSurface->Data.Pitch, workSurface->Info.CropW, workSurface->Info.CropH, 3,
+                                 false, 1);
     }
 
     while (true)
@@ -244,7 +239,8 @@ bool VideoWriter_IntelMFX::write_one(cv::InputArray bgr)
     }
 }
 
-Ptr<VideoWriter_IntelMFX> VideoWriter_IntelMFX::create(const String &filename, int _fourcc, double fps, Size frameSize, bool isColor)
+Ptr<VideoWriter_IntelMFX> VideoWriter_IntelMFX::create(const String& filename, int _fourcc, double fps,
+                                                       Size frameSize, bool isColor)
 {
     if (codecIdByFourCC(_fourcc) > 0)
     {

@@ -42,29 +42,28 @@
 
 namespace cv {
 
-    class VideoCapture_WinRT : public IVideoCapture
-    {
-    public:
-        VideoCapture_WinRT() : started(false) {}
-        VideoCapture_WinRT(int device);
-        virtual ~VideoCapture_WinRT() {}
+class VideoCapture_WinRT : public IVideoCapture
+{
+public:
+    VideoCapture_WinRT() : started(false) {}
+    VideoCapture_WinRT(int device);
+    virtual ~VideoCapture_WinRT() {}
 
-        // from base class IVideoCapture
-        virtual double getProperty(int) { return 0; }
-        virtual bool setProperty(int, double);
-        virtual bool grabFrame();
-        virtual bool retrieveFrame(int channel, cv::OutputArray outArray);
+    // from base class IVideoCapture
+    virtual double getProperty(int) { return 0; }
+    virtual bool setProperty(int, double);
+    virtual bool grabFrame();
+    virtual bool retrieveFrame(int channel, cv::OutputArray outArray);
 
-        virtual int getCaptureDomain() CV_OVERRIDE { return CAP_WINRT; }
+    virtual int getCaptureDomain() CV_OVERRIDE { return CAP_WINRT; }
 
-        virtual bool isOpened() const;
+    virtual bool isOpened() const;
 
-    protected:
-
-        bool                    started;
-        CvSize                  size;
-        int                     bytesPerPixel;
-        unsigned long           frameCurrent;
-        std::atomic<bool>       isFrameNew;
-    };
-}
+protected:
+    bool started;
+    CvSize size;
+    int bytesPerPixel;
+    unsigned long frameCurrent;
+    std::atomic<bool> isFrameNew;
+};
+} // namespace cv

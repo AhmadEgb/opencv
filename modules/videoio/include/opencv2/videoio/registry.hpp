@@ -39,6 +39,6 @@ CV_EXPORTS_W std::vector<VideoCaptureAPIs> getStreamBackends();
 CV_EXPORTS_W std::vector<VideoCaptureAPIs> getWriterBackends();
 
 //! @}
-}} // namespace
+}} // namespace cv::videoio_registry
 
 #endif // OPENCV_VIDEOIO_REGISTRY_HPP

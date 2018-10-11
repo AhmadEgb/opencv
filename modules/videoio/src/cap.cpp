@@ -46,12 +46,11 @@
 
 namespace cv {
 
-void DefaultDeleter<CvCapture>::operator ()(CvCapture* obj) const { cvReleaseCapture(&obj); }
-void DefaultDeleter<CvVideoWriter>::operator ()(CvVideoWriter* obj) const { cvReleaseVideoWriter(&obj); }
+void DefaultDeleter<CvCapture>::operator()(CvCapture* obj) const { cvReleaseCapture(&obj); }
+void DefaultDeleter<CvVideoWriter>::operator()(CvVideoWriter* obj) const { cvReleaseVideoWriter(&obj); }
 
 
-VideoCapture::VideoCapture()
-{}
+VideoCapture::VideoCapture() {}
 
 VideoCapture::VideoCapture(const String& filename, int apiPreference)
 {
@@ -83,7 +82,8 @@ bool VideoCapture::open(const String& filename, int apiPreference)
 {
     CV_TRACE_FUNCTION();
 
-    if (isOpened()) release();
+    if (isOpened())
+        release();
 
     const std::vector<VideoBackendInfo> backends = cv::videoio_registry::getAvailableBackends_CaptureByFilename();
     for (size_t i = 0; i < backends.size(); i++)
@@ -117,11 +117,12 @@ bool VideoCapture::open(const String& filename)
     return open(filename, CAP_ANY);
 }
 
-bool  VideoCapture::open(int cameraNum, int apiPreference)
+bool VideoCapture::open(int cameraNum, int apiPreference)
 {
     CV_TRACE_FUNCTION();
 
-    if (isOpened()) release();
+    if (isOpened())
+        release();
 
     const std::vector<VideoBackendInfo> backends = cv::videoio_registry::getAvailableBackends_CaptureByIndex();
     for (size_t i = 0; i < backends.size(); i++)
@@ -166,7 +167,7 @@ bool VideoCapture::isOpened() const
 {
     if (!icap.empty())
         return icap->isOpened();
-    return !cap.empty();  // legacy interface doesn't support closed files
+    return !cap.empty(); // legacy interface doesn't support closed files
 }
 
 String VideoCapture::getBackendName() const
@@ -204,12 +205,12 @@ bool VideoCapture::retrieve(OutputArray image, int channel)
         return icap->retrieveFrame(channel, image);
 
     IplImage* _img = cvRetrieveFrame(cap, channel);
-    if( !_img )
+    if (!_img)
     {
         image.release();
         return false;
     }
-    if(_img->origin == IPL_ORIGIN_TL)
+    if (_img->origin == IPL_ORIGIN_TL)
         cv::cvarrToMat(_img).copyTo(image);
     else
     {
@@ -223,14 +224,14 @@ bool VideoCapture::read(OutputArray image)
 {
     CV_INSTRUMENT_REGION();
 
-    if(grab())
+    if (grab())
         retrieve(image);
     else
         image.release();
     return !image.empty();
 }
 
-VideoCapture& VideoCapture::operator >> (Mat& image)
+VideoCapture& VideoCapture::operator>>(Mat& image)
 {
 #ifdef WINRT_VIDEO
     // FIXIT grab/retrieve methods() should work too
@@ -258,7 +259,7 @@ VideoCapture& VideoCapture::operator >> (Mat& image)
     return *this;
 }
 
-VideoCapture& VideoCapture::operator >> (UMat& image)
+VideoCapture& VideoCapture::operator>>(UMat& image)
 {
     CV_INSTRUMENT_REGION();
 
@@ -297,9 +298,7 @@ double VideoCapture::get(int propId) const
 //=================================================================================================
 
 
-
-VideoWriter::VideoWriter()
-{}
+VideoWriter::VideoWriter() {}
 
 VideoWriter::VideoWriter(const String& filename, int _fourcc, double fps, Size frameSize, bool isColor)
 {
@@ -307,7 +306,8 @@ VideoWriter::VideoWriter(const String& filename, int _fourcc, double fps, Size f
 }
 
 
-VideoWriter::VideoWriter(const String& filename, int apiPreference, int _fourcc, double fps, Size frameSize, bool isColor)
+VideoWriter::VideoWriter(const String& filename, int apiPreference, int _fourcc, double fps, Size frameSize,
+                         bool isColor)
 {
     open(filename, apiPreference, _fourcc, fps, frameSize, isColor);
 }
@@ -318,21 +318,20 @@ void VideoWriter::release()
     writer.release();
 }
 
-VideoWriter::~VideoWriter()
-{
-    release();
-}
+VideoWriter::~VideoWriter() { release(); }
 
 bool VideoWriter::open(const String& filename, int _fourcc, double fps, Size frameSize, bool isColor)
 {
     return open(filename, CAP_ANY, _fourcc, fps, frameSize, isColor);
 }
 
-bool VideoWriter::open(const String& filename, int apiPreference, int _fourcc, double fps, Size frameSize, bool isColor)
+bool VideoWriter::open(const String& filename, int apiPreference, int _fourcc, double fps, Size frameSize,
+                       bool isColor)
 {
     CV_INSTRUMENT_REGION();
 
-    if (isOpened()) release();
+    if (isOpened())
+        release();
 
     const std::vector<VideoBackendInfo> backends = cv::videoio_registry::getAvailableBackends_Writer();
     for (size_t i = 0; i < backends.size(); i++)
@@ -359,10 +358,7 @@ bool VideoWriter::open(const String& filename, int apiPreference, int _fourcc, d
     return false;
 }
 
-bool VideoWriter::isOpened() const
-{
-    return !iwriter.empty() || !writer.empty();
-}
+bool VideoWriter::isOpened() const { return !iwriter.empty() || !writer.empty(); }
 
 
 bool VideoWriter::set(int propId, double value)
@@ -407,7 +403,7 @@ void VideoWriter::write(const Mat& image)
 {
     CV_INSTRUMENT_REGION();
 
-    if( iwriter )
+    if (iwriter)
         iwriter->write(image);
     else
     {
@@ -416,7 +412,7 @@ void VideoWriter::write(const Mat& image)
     }
 }
 
-VideoWriter& VideoWriter::operator << (const Mat& image)
+VideoWriter& VideoWriter::operator<<(const Mat& image)
 {
     CV_INSTRUMENT_REGION();
 
@@ -430,4 +426,4 @@ int VideoWriter::fourcc(char c1, char c2, char c3, char c4)
     return (c1 & 255) + ((c2 & 255) << 8) + ((c3 & 255) << 16) + ((c4 & 255) << 24);
 }
 
-} // namespace
+} // namespace cv

@@ -34,7 +34,8 @@ CV_IMPL CvCapture* cvCreateCameraCapture(int index)
             }
             if (!icap.empty())
             {
-                CV_LOG_WARNING(NULL, "cvCreateFileCaptureWithPreference: backend " << info.name << " doesn't support legacy API anymore.")
+                CV_LOG_WARNING(NULL, "cvCreateFileCaptureWithPreference: backend "
+                                         << info.name << " doesn't support legacy API anymore.")
             }
         }
     }
@@ -58,20 +59,21 @@ CV_IMPL CvCapture* cvCreateFileCaptureWithPreference(const char* filename, int a
             }
             if (!icap.empty())
             {
-                CV_LOG_WARNING(NULL, "cvCreateFileCaptureWithPreference: backend " << info.name << " doesn't support legacy API anymore.")
+                CV_LOG_WARNING(NULL, "cvCreateFileCaptureWithPreference: backend "
+                                         << info.name << " doesn't support legacy API anymore.")
             }
         }
     }
     return NULL;
 }
 
-CV_IMPL CvCapture* cvCreateFileCapture(const char * filename)
+CV_IMPL CvCapture* cvCreateFileCapture(const char* filename)
 {
     return cvCreateFileCaptureWithPreference(filename, CAP_ANY);
 }
 
-CV_IMPL CvVideoWriter* cvCreateVideoWriter(const char* filename, int fourcc,
-                                           double fps, CvSize frameSize, int is_color)
+CV_IMPL CvVideoWriter* cvCreateVideoWriter(const char* filename, int fourcc, double fps, CvSize frameSize,
+                                           int is_color)
 {
     const std::vector<VideoBackendInfo> backends = cv::videoio_registry::getAvailableBackends_Writer();
     for (size_t i = 0; i < backends.size(); i++)
@@ -79,7 +81,7 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter(const char* filename, int fourcc,
         const VideoBackendInfo& info = backends[i];
         {
             CvVideoWriter* writer_ = NULL;
-            Ptr<IVideoWriter> iwriter;  // unused
+            Ptr<IVideoWriter> iwriter; // unused
             VideoWriter_create(writer_, iwriter, info.id, filename, fourcc, fps, frameSize, is_color != 0);
             if (writer_)
             {
@@ -87,7 +89,8 @@ CV_IMPL CvVideoWriter* cvCreateVideoWriter(const char* filename, int fourcc,
             }
             if (!iwriter.empty())
             {
-                CV_LOG_WARNING(NULL, "cvCreateVideoWriter: backend " << info.name << " doesn't support legacy API anymore.")
+                CV_LOG_WARNING(NULL, "cvCreateVideoWriter: backend " << info.name
+                                                                     << " doesn't support legacy API anymore.")
             }
         }
     }
@@ -101,7 +104,7 @@ CV_IMPL int cvWriteFrame(CvVideoWriter* writer, const IplImage* image)
 
 CV_IMPL void cvReleaseVideoWriter(CvVideoWriter** pwriter)
 {
-    if( pwriter && *pwriter )
+    if (pwriter && *pwriter)
     {
         delete *pwriter;
         *pwriter = 0;
@@ -126,27 +129,18 @@ CV_IMPL IplImage* cvQueryFrame(CvCapture* capture)
     return capture->retrieveFrame(0);
 }
 
-CV_IMPL int cvGrabFrame(CvCapture* capture)
-{
-    return capture ? capture->grabFrame() : 0;
-}
+CV_IMPL int cvGrabFrame(CvCapture* capture) { return capture ? capture->grabFrame() : 0; }
 
 CV_IMPL IplImage* cvRetrieveFrame(CvCapture* capture, int idx)
 {
     return capture ? capture->retrieveFrame(idx) : 0;
 }
 
-CV_IMPL double cvGetCaptureProperty(CvCapture* capture, int id)
-{
-    return capture ? capture->getProperty(id) : 0;
-}
+CV_IMPL double cvGetCaptureProperty(CvCapture* capture, int id) { return capture ? capture->getProperty(id) : 0; }
 
 CV_IMPL int cvSetCaptureProperty(CvCapture* capture, int id, double value)
 {
     return capture ? capture->setProperty(id, value) : 0;
 }
 
-CV_IMPL int cvGetCaptureDomain(CvCapture* capture)
-{
-    return capture ? capture->getCaptureDomain() : 0;
-}
+CV_IMPL int cvGetCaptureDomain(CvCapture* capture) { return capture ? capture->getCaptureDomain() : 0; }

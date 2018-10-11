@@ -46,46 +46,45 @@
 class VideoioBridge
 {
 public:
-
     static VideoioBridge& getInstance();
 
     // call after initialization
-    void    setReporter(Concurrency::progress_reporter<int> pr) { reporter = pr; }
+    void setReporter(Concurrency::progress_reporter<int> pr) { reporter = pr; }
 
     // to be called from cvMain via cap_winrt on bg thread - non-blocking (async)
-    void    requestForUIthreadAsync(int action);
+    void requestForUIthreadAsync(int action);
 
     // TODO: modify in window.cpp: void cv::imshow( const String& winname, InputArray _img )
-    void    imshow(/*cv::InputArray matToShow*/);   // shows Mat in the cvImage element
-    void    swapInputBuffers();
-    void    allocateOutputBuffers();
-    void    swapOutputBuffers();
-    void    updateFrameContainer();
-    bool    openCamera();
-    void    allocateBuffers(int width, int height);
+    void imshow(/*cv::InputArray matToShow*/); // shows Mat in the cvImage element
+    void swapInputBuffers();
+    void allocateOutputBuffers();
+    void swapOutputBuffers();
+    void updateFrameContainer();
+    bool openCamera();
+    void allocateBuffers(int width, int height);
 
-    int     getDeviceIndex();
-    void    setDeviceIndex(int index);
-    int     getWidth();
-    void    setWidth(int width);
-    int     getHeight();
-    void    setHeight(int height);
+    int getDeviceIndex();
+    void setDeviceIndex(int index);
+    int getWidth();
+    void setWidth(int width);
+    int getHeight();
+    void setHeight(int height);
 
-    std::atomic<bool>           bIsFrameNew;
-    std::mutex                  inputBufferMutex;   // input is double buffered
-    unsigned char *             frontInputPtr;      // OpenCV reads this
-    unsigned char *             backInputPtr;       // Video grabber writes this
-    std::atomic<unsigned long>  frameCounter;
-    unsigned long               currentFrame;
+    std::atomic<bool> bIsFrameNew;
+    std::mutex inputBufferMutex; // input is double buffered
+    unsigned char* frontInputPtr; // OpenCV reads this
+    unsigned char* backInputPtr; // Video grabber writes this
+    std::atomic<unsigned long> frameCounter;
+    unsigned long currentFrame;
 
-    std::mutex                  outputBufferMutex;  // output is double buffered
-    Windows::UI::Xaml::Media::Imaging::WriteableBitmap^ frontOutputBuffer;  // OpenCV write this
-    Windows::UI::Xaml::Media::Imaging::WriteableBitmap^ backOutputBuffer;   // XAML reads this
-    Windows::UI::Xaml::Controls::Image ^cvImage;
+    std::mutex outputBufferMutex; // output is double buffered
+    Windows::UI::Xaml::Media::Imaging::WriteableBitmap ^ frontOutputBuffer; // OpenCV write this
+    Windows::UI::Xaml::Media::Imaging::WriteableBitmap ^ backOutputBuffer; // XAML reads this
+    Windows::UI::Xaml::Controls::Image ^ cvImage;
 
 private:
-
-    VideoioBridge() {
+    VideoioBridge()
+    {
         deviceIndex = 0;
         width = 640;
         height = 480;
@@ -96,10 +95,10 @@ private:
     };
 
     // singleton
-    VideoioBridge(VideoioBridge const &);
-    void operator=(const VideoioBridge &);
+    VideoioBridge(VideoioBridge const&);
+    void operator=(const VideoioBridge&);
 
-    std::atomic<bool>   deviceReady;
+    std::atomic<bool> deviceReady;
     Concurrency::progress_reporter<int> reporter;
 
     // Mats are wrapped with singleton class, we do not support more than one

@@ -45,21 +45,20 @@ using namespace ::std;
 
 namespace cv {
 
-    /******************************* exported API functions **************************************/
+/******************************* exported API functions **************************************/
 
-    template <typename ...Args>
-    void winrt_startMessageLoop(std::function<void(Args...)>&& callback, Args... args)
-    {
-        auto asyncTask = ::concurrency::create_async([=](::concurrency::progress_reporter<int> reporter)
-        {
-            VideoioBridge::getInstance().setReporter(reporter);
+template<typename... Args>
+void winrt_startMessageLoop(std::function<void(Args...)>&& callback, Args... args)
+{
+    auto asyncTask = ::concurrency::create_async([=](::concurrency::progress_reporter<int> reporter) {
+        VideoioBridge::getInstance().setReporter(reporter);
 
-            // frame reading loop
-            callback(args...);
-        });
+        // frame reading loop
+        callback(args...);
+    });
 
-        asyncTask->Progress = ref new AsyncActionProgressHandler<int>([=](IAsyncActionWithProgress<int>^ act, int progress)
-        {
+    asyncTask->Progress = ref new AsyncActionProgressHandler<int>(
+        [=](IAsyncActionWithProgress<int> ^ act, int progress) {
             int action = progress;
 
             // these actions will be processed on the UI thread asynchronously
@@ -76,125 +75,129 @@ namespace cv {
                 break;
             }
         });
-    }
+}
 
-    template <typename ...Args>
-    void winrt_startMessageLoop(void callback(Args...), Args... args)
+template<typename... Args>
+void winrt_startMessageLoop(void callback(Args...), Args... args)
+{
+    winrt_startMessageLoop(std::function<void(Args...)>(callback), args...);
+}
+
+void winrt_onVisibilityChanged(bool visible)
+{
+    if (visible)
     {
-        winrt_startMessageLoop(std::function<void(Args...)>(callback), args...);
-    }
+        VideoioBridge& bridge = VideoioBridge::getInstance();
 
-    void winrt_onVisibilityChanged(bool visible)
-    {
-        if (visible)
+        // only start the grabber if the camera was opened in OpenCV
+        if (bridge.backInputPtr != nullptr)
         {
-            VideoioBridge& bridge = VideoioBridge::getInstance();
+            if (Video::getInstance().isStarted())
+                return;
 
-            // only start the grabber if the camera was opened in OpenCV
-            if (bridge.backInputPtr != nullptr)
-            {
-                if (Video::getInstance().isStarted()) return;
+            int device = bridge.getDeviceIndex();
+            int width = bridge.getWidth();
+            int height = bridge.getHeight();
 
-                int device = bridge.getDeviceIndex();
-                int width = bridge.getWidth();
-                int height = bridge.getHeight();
-
-                Video::getInstance().initGrabber(device, width, height);
-            }
-        } else
-        {
-            //grabberStarted = false;
-            Video::getInstance().closeGrabber();
+            Video::getInstance().initGrabber(device, width, height);
         }
     }
-
-    void winrt_imshow()
+    else
     {
-        VideoioBridge::getInstance().imshow();
+        //grabberStarted = false;
+        Video::getInstance().closeGrabber();
+    }
+}
+
+void winrt_imshow() { VideoioBridge::getInstance().imshow(); }
+
+void winrt_setFrameContainer(::Windows::UI::Xaml::Controls::Image ^ image)
+{
+    VideoioBridge::getInstance().cvImage = image;
+}
+
+/********************************* VideoCapture_WinRT class ****************************/
+
+VideoCapture_WinRT::VideoCapture_WinRT(int device) : started(false)
+{
+    VideoioBridge::getInstance().setDeviceIndex(device);
+}
+
+bool VideoCapture_WinRT::isOpened() const
+{
+    return true; // started;
+}
+
+// grab a frame:
+// this will NOT block per spec
+// should be called on the image processing thread, not the UI thread
+bool VideoCapture_WinRT::grabFrame()
+{
+    // if device is not started we must return true so retrieveFrame() is called to start device
+    // nb. we cannot start the device here because we do not know the size of the input Mat
+    if (!started)
+        return true;
+
+    if (VideoioBridge::getInstance().bIsFrameNew)
+    {
+        return true;
     }
 
-    void winrt_setFrameContainer(::Windows::UI::Xaml::Controls::Image^ image)
+    // nb. if blocking is to be added:
+    // unique_lock<mutex> lock(VideoioBridge::getInstance().frameReadyMutex);
+    // VideoioBridge::getInstance().frameReadyEvent.wait(lock);
+    return false;
+}
+
+// should be called on the image processing thread after grabFrame
+// see VideoCapture::read
+bool VideoCapture_WinRT::retrieveFrame(int channel, cv::OutputArray outArray)
+{
+    if (!started)
     {
-        VideoioBridge::getInstance().cvImage = image;
-    }
 
-    /********************************* VideoCapture_WinRT class ****************************/
+        int width, height;
+        width = outArray.size().width;
+        height = outArray.size().height;
+        if (width == 0)
+            width = 640;
+        if (height == 0)
+            height = 480;
 
-    VideoCapture_WinRT::VideoCapture_WinRT(int device) : started(false)
-    {
-        VideoioBridge::getInstance().setDeviceIndex(device);
-    }
+        VideoioBridge::getInstance().setWidth(width);
+        VideoioBridge::getInstance().setHeight(height);
 
-    bool VideoCapture_WinRT::isOpened() const
-    {
-        return true; // started;
-    }
+        // nb. Mats will be alloc'd on UI thread
 
-    // grab a frame:
-    // this will NOT block per spec
-    // should be called on the image processing thread, not the UI thread
-    bool VideoCapture_WinRT::grabFrame()
-    {
-        // if device is not started we must return true so retrieveFrame() is called to start device
-        // nb. we cannot start the device here because we do not know the size of the input Mat
-        if (!started) return true;
+        // request device init on UI thread - this does not block, and is async
+        VideoioBridge::getInstance().requestForUIthreadAsync(OPEN_CAMERA);
 
-        if (VideoioBridge::getInstance().bIsFrameNew)
-        {
-            return true;
-        }
-
-        // nb. if blocking is to be added:
-        // unique_lock<mutex> lock(VideoioBridge::getInstance().frameReadyMutex);
-        // VideoioBridge::getInstance().frameReadyEvent.wait(lock);
+        started = true;
         return false;
     }
 
-    // should be called on the image processing thread after grabFrame
-    // see VideoCapture::read
-    bool VideoCapture_WinRT::retrieveFrame(int channel, cv::OutputArray outArray)
-    {
-        if (!started) {
+    if (!started)
+        return false;
 
-            int width, height;
-            width = outArray.size().width;
-            height = outArray.size().height;
-            if (width == 0) width = 640;
-            if (height == 0) height = 480;
-
-            VideoioBridge::getInstance().setWidth(width);
-            VideoioBridge::getInstance().setHeight(height);
-
-            // nb. Mats will be alloc'd on UI thread
-
-            // request device init on UI thread - this does not block, and is async
-            VideoioBridge::getInstance().requestForUIthreadAsync(OPEN_CAMERA);
-
-            started = true;
-            return false;
-        }
-
-        if (!started) return false;
-
-        return VideoioBridge::getInstance().bIsFrameNew;
-    }
-
-
-    bool VideoCapture_WinRT::setProperty(int property_id, double value)
-    {
-        switch (property_id)
-        {
-        case CAP_PROP_FRAME_WIDTH:
-            size.width = (int)value;
-            break;
-        case CAP_PROP_FRAME_HEIGHT:
-            size.height = (int)value;
-            break;
-        default:
-            return false;
-        }
-        return true;
-    }
+    return VideoioBridge::getInstance().bIsFrameNew;
 }
+
+
+bool VideoCapture_WinRT::setProperty(int property_id, double value)
+{
+    switch (property_id)
+    {
+    case CAP_PROP_FRAME_WIDTH:
+        size.width = (int)value;
+        break;
+    case CAP_PROP_FRAME_HEIGHT:
+        size.height = (int)value;
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
+} // namespace cv
 
 // end

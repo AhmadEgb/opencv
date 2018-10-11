@@ -6,15 +6,14 @@
 #define CONTAINER_AVI_HPP
 
 #ifndef __OPENCV_BUILD
-#  error this is a private header which should not be used from outside of the OpenCV library
+#    error this is a private header which should not be used from outside of the OpenCV library
 #endif
 
 #include "opencv2/core/cvdef.h"
 #include "opencv2/videoio/videoio_c.h"
 #include <deque>
 
-namespace cv
-{
+namespace cv {
 
 /*
 AVI struct:
@@ -65,12 +64,15 @@ RIFF ('AVI '
      JUNK section may pad any data section and must be ignored
 */
 
-typedef std::deque< std::pair<uint64_t, uint32_t> > frame_list;
+typedef std::deque<std::pair<uint64_t, uint32_t>> frame_list;
 typedef frame_list::iterator frame_iterator;
 struct RiffChunk;
 struct RiffList;
 class VideoInputStream;
-enum Codecs { MJPEG };
+enum Codecs
+{
+    MJPEG
+};
 
 //Represents single MJPEG video stream within single AVI/AVIX entry
 //Multiple video streams within single AVI/AVIX entry are not supported
@@ -87,17 +89,19 @@ public:
     //stores founded frames in m_frame_list which can be accessed via getFrames
     bool parseAvi(Codecs codec_) { return parseAviWithFrameList(m_frame_list, codec_); }
     //stores founded frames in in_frame_list. getFrames() would return empty list
-    bool parseAvi(frame_list& in_frame_list, Codecs codec_) { return parseAviWithFrameList(in_frame_list, codec_); }
+    bool parseAvi(frame_list& in_frame_list, Codecs codec_)
+    {
+        return parseAviWithFrameList(in_frame_list, codec_);
+    }
     size_t getFramesCount() { return m_frame_list.size(); }
     frame_list& getFrames() { return m_frame_list; }
     unsigned int getWidth() { return m_width; }
     unsigned int getHeight() { return m_height; }
     double getFps() { return m_fps; }
     std::vector<char> readFrame(frame_iterator it);
-    bool parseRiff(frame_list &m_mjpeg_frames);
+    bool parseRiff(frame_list& m_mjpeg_frames);
 
 protected:
-
     bool parseAviWithFrameList(frame_list& in_frame_list, Codecs codec_);
     void skipJunk(RiffChunk& chunk);
     void skipJunk(RiffList& list);
@@ -122,18 +126,30 @@ protected:
     void printError(RiffChunk& chunk, unsigned int expected_fourcc);
 
     Ptr<VideoInputStream> m_file_stream;
-    unsigned int   m_stream_id;
-    unsigned long long int   m_movi_start;
-    unsigned long long int    m_movi_end;
+    unsigned int m_stream_id;
+    unsigned long long int m_movi_start;
+    unsigned long long int m_movi_end;
     frame_list m_frame_list;
-    unsigned int   m_width;
-    unsigned int   m_height;
-    double     m_fps;
-    bool       m_is_indx_present;
+    unsigned int m_width;
+    unsigned int m_height;
+    double m_fps;
+    bool m_is_indx_present;
 };
 
-enum { COLORSPACE_GRAY=0, COLORSPACE_RGBA=1, COLORSPACE_BGR=2, COLORSPACE_YUV444P=3 };
-enum StreamType { db, dc, pc, wb };
+enum
+{
+    COLORSPACE_GRAY = 0,
+    COLORSPACE_RGBA = 1,
+    COLORSPACE_BGR = 2,
+    COLORSPACE_YUV444P = 3
+};
+enum StreamType
+{
+    db,
+    dc,
+    pc,
+    wb
+};
 class BitStream;
 
 // {xxdb|xxdc|xxpc|xxwb}
@@ -187,6 +203,6 @@ private:
     std::vector<size_t> frameOffset, frameSize, AVIChunkSizeIndex, frameNumIndexes;
 };
 
-}
+} // namespace cv
 
 #endif //CONTAINER_AVI_HPP

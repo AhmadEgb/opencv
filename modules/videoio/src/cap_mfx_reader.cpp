@@ -10,7 +10,7 @@
 using namespace cv;
 using namespace std;
 
-inline bool hasExtension(const String &filename, const String &ext)
+inline bool hasExtension(const String& filename, const String& ext)
 {
     if (filename.size() <= ext.size())
         return false;
@@ -19,7 +19,7 @@ inline bool hasExtension(const String &filename, const String &ext)
     return found_at == diff;
 }
 
-inline mfxU32 determineCodecId(const String &filename)
+inline mfxU32 determineCodecId(const String& filename)
 {
     if (hasExtension(filename, ".h264") || hasExtension(filename, ".264"))
         return MFX_CODEC_AVC;
@@ -33,7 +33,7 @@ inline mfxU32 determineCodecId(const String &filename)
 
 //==========================================================================
 
-VideoCapture_IntelMFX::VideoCapture_IntelMFX(const cv::String &filename)
+VideoCapture_IntelMFX::VideoCapture_IntelMFX(const cv::String& filename)
     : session(0), plugin(0), deviceHandler(0), bs(0), decoder(0), pool(0), outSurface(0), good(false)
 {
     mfxStatus res = MFX_ERR_NONE;
@@ -141,7 +141,7 @@ bool VideoCapture_IntelMFX::setProperty(int, double)
 bool VideoCapture_IntelMFX::grabFrame()
 {
     mfxStatus res;
-    mfxFrameSurface1 *workSurface = 0;
+    mfxFrameSurface1* workSurface = 0;
     mfxSyncPoint sync;
 
     workSurface = pool->getFreeSurface();
@@ -156,7 +156,8 @@ bool VideoCapture_IntelMFX::grabFrame()
         }
 
         outSurface = 0;
-        res = decoder->DecodeFrameAsync(bs->drain ? 0 : &bs->stream, workSurface, (mfxFrameSurface1**)&outSurface, &sync);
+        res = decoder->DecodeFrameAsync(bs->drain ? 0 : &bs->stream, workSurface, (mfxFrameSurface1**)&outSurface,
+                                        &sync);
         if (res == MFX_ERR_NONE)
         {
             res = session->SyncOperation(sync, 1000); // 1 sec, TODO: provide interface to modify timeout
@@ -238,9 +239,9 @@ bool VideoCapture_IntelMFX::retrieveFrame(int, OutputArray out)
         MSG(cerr << "MFX: No frame ready to retrieve" << endl);
         return false;
     }
-    mfxFrameSurface1 * s = (mfxFrameSurface1*)outSurface;
-    mfxFrameInfo &info = s->Info;
-    mfxFrameData &data = s->Data;
+    mfxFrameSurface1* s = (mfxFrameSurface1*)outSurface;
+    mfxFrameInfo& info = s->Info;
+    mfxFrameData& data = s->Data;
 
     const int cols = info.CropW;
     const int rows = info.CropH;
@@ -253,14 +254,8 @@ bool VideoCapture_IntelMFX::retrieveFrame(int, OutputArray out)
     return true;
 }
 
-bool VideoCapture_IntelMFX::isOpened() const
-{
-    return good;
-}
+bool VideoCapture_IntelMFX::isOpened() const { return good; }
 
-int VideoCapture_IntelMFX::getCaptureDomain()
-{
-    return CAP_INTEL_MFX;
-}
+int VideoCapture_IntelMFX::getCaptureDomain() { return CAP_INTEL_MFX; }
 
 //==================================================================================================

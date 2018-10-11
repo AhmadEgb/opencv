@@ -57,9 +57,9 @@ using namespace cv;
 class XINECapture : public IVideoCapture
 {
     // method call table
-    xine_t *xine;
-    xine_stream_t *stream;
-    xine_video_port_t *vo_port;
+    xine_t* xine;
+    xine_stream_t* stream;
+    xine_video_port_t* vo_port;
     xine_video_frame_t xine_frame;
     Size size;
     int frame_number;
@@ -67,10 +67,9 @@ class XINECapture : public IVideoCapture
     double frame_duration; // ms
     bool seekable;
 
-  public:
+public:
     XINECapture()
-        : xine(0), stream(0), vo_port(0), frame_number(-1), frame_rate(0.), frame_duration(0.),
-          seekable(false)
+        : xine(0), stream(0), vo_port(0), frame_number(-1), frame_rate(0.), frame_duration(0.), seekable(false)
     {
         xine_video_frame_t z = {};
         xine_frame = z;
@@ -105,7 +104,7 @@ class XINECapture : public IVideoCapture
         }
     }
 
-    bool open(const char *filename)
+    bool open(const char* filename)
     {
         CV_Assert_N(!xine, !stream, !vo_port);
         char configfile[2048] = {0};
@@ -132,27 +131,27 @@ class XINECapture : public IVideoCapture
         frame_number = 0;
 
 
-        if ( !xine_get_next_video_frame( vo_port, &xine_frame ) )
+        if (!xine_get_next_video_frame(vo_port, &xine_frame))
             return false;
 
-        size = Size( xine_frame.width, xine_frame.height );
+        size = Size(xine_frame.width, xine_frame.height);
 
-        xine_free_video_frame( vo_port, &xine_frame );
+        xine_free_video_frame(vo_port, &xine_frame);
         xine_frame.data = 0;
 
         {
             xine_video_frame_t tmp;
-            if (!xine_play( stream, 0, 300 )) /* 300msec */
+            if (!xine_play(stream, 0, 300)) /* 300msec */
                 return false;
-            if (!xine_get_next_video_frame( vo_port, &tmp ))
+            if (!xine_get_next_video_frame(vo_port, &tmp))
                 return false;
-            seekable = ( tmp.frame_number != 0 );
-            xine_free_video_frame( vo_port, &tmp );
-            if (!xine_play( stream, 0, 0 ))
+            seekable = (tmp.frame_number != 0);
+            xine_free_video_frame(vo_port, &tmp);
+            if (!xine_play(stream, 0, 0))
                 return false;
         }
 
-        frame_duration = xine_get_stream_info( stream, XINE_STREAM_INFO_FRAME_DURATION ) / 90.;
+        frame_duration = xine_get_stream_info(stream, XINE_STREAM_INFO_FRAME_DURATION) / 90.;
         frame_rate = frame_duration > 0 ? 1000 / frame_duration : 0.;
         return true;
     }
@@ -213,13 +212,20 @@ class XINECapture : public IVideoCapture
 
         switch (property_id)
         {
-        case CV_CAP_PROP_POS_MSEC: return res ? pos_t : 0;
-        case CV_CAP_PROP_POS_FRAMES: return frame_number;
-        case CV_CAP_PROP_POS_AVI_RATIO: return length && res ? pos_l / 65535.0 : 0.0;
-        case CV_CAP_PROP_FRAME_WIDTH: return size.width;
-        case CV_CAP_PROP_FRAME_HEIGHT: return size.height;
-        case CV_CAP_PROP_FPS: return frame_rate;
-        case CV_CAP_PROP_FOURCC: return (double)xine_get_stream_info(stream, XINE_STREAM_INFO_VIDEO_FOURCC);
+        case CV_CAP_PROP_POS_MSEC:
+            return res ? pos_t : 0;
+        case CV_CAP_PROP_POS_FRAMES:
+            return frame_number;
+        case CV_CAP_PROP_POS_AVI_RATIO:
+            return length && res ? pos_l / 65535.0 : 0.0;
+        case CV_CAP_PROP_FRAME_WIDTH:
+            return size.width;
+        case CV_CAP_PROP_FRAME_HEIGHT:
+            return size.height;
+        case CV_CAP_PROP_FPS:
+            return frame_rate;
+        case CV_CAP_PROP_FOURCC:
+            return (double)xine_get_stream_info(stream, XINE_STREAM_INFO_VIDEO_FOURCC);
         }
         return 0;
     }
@@ -230,10 +236,14 @@ class XINECapture : public IVideoCapture
         CV_Assert(vo_port);
         switch (property_id)
         {
-        case CV_CAP_PROP_POS_MSEC: return seekTime((int)value);
-        case CV_CAP_PROP_POS_FRAMES: return seekFrame((int)value);
-        case CV_CAP_PROP_POS_AVI_RATIO: return seekRatio(value);
-        default: return false;
+        case CV_CAP_PROP_POS_MSEC:
+            return seekTime((int)value);
+        case CV_CAP_PROP_POS_FRAMES:
+            return seekFrame((int)value);
+        case CV_CAP_PROP_POS_AVI_RATIO:
+            return seekRatio(value);
+        default:
+            return false;
         }
     }
 
@@ -346,7 +356,7 @@ protected:
     }
 };
 
-Ptr<IVideoCapture> cv::createXINECapture(const char *filename)
+Ptr<IVideoCapture> cv::createXINECapture(const char* filename)
 {
     Ptr<XINECapture> res = makePtr<XINECapture>();
     if (res && res->open(filename))

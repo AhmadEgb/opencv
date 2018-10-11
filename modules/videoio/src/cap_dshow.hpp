@@ -15,8 +15,7 @@
 #ifdef HAVE_DSHOW
 
 class videoInput;
-namespace cv
-{
+namespace cv {
 
 class VideoCapture_DShow : public IVideoCapture
 {
@@ -31,6 +30,7 @@ public:
     virtual bool retrieveFrame(int outputType, OutputArray frame) CV_OVERRIDE;
     virtual int getCaptureDomain() CV_OVERRIDE;
     virtual bool isOpened() const;
+
 protected:
     void open(int index);
     void close();
@@ -40,7 +40,7 @@ protected:
     static videoInput g_VI;
 };
 
-}
+} // namespace cv
 
 #endif //HAVE_DSHOW
 #endif //_CAP_DSHOW_HPP_

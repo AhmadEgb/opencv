@@ -31,49 +31,30 @@ const unsigned int c_audioStreamSinkId = 0;
 const unsigned int c_videoStreamSinkId = 1;
 
 class MediaSink WrlSealed
-    : public MW::RuntimeClass<
-    MW::RuntimeClassFlags<
-    MW::RuntimeClassType::WinRtClassicComMix>
-    , AWM::IMediaExtension
-    , IMFMediaSink
-    , IMFClockStateSink
-    , MW::FtmBase
-    >
+    : public MW::RuntimeClass<MW::RuntimeClassFlags<MW::RuntimeClassType::WinRtClassicComMix>,
+                              AWM::IMediaExtension, IMFMediaSink, IMFClockStateSink, MW::FtmBase>
 {
     InspectableClass(L"MediaSink", BaseTrust)
 
-public:
+        public :
 
-    MediaSink(
-        _In_opt_ WMMp::AudioEncodingProperties^ audioProps,
-        _In_opt_ WMMp::VideoEncodingProperties^ videoProps,
-        _In_opt_ MediaSampleHandler^ audioSampleHandler,
-        _In_opt_ MediaSampleHandler^ videoSampleHandler
-        )
+        MediaSink(_In_opt_ WMMp::AudioEncodingProperties ^ audioProps,
+                  _In_opt_ WMMp::VideoEncodingProperties ^ videoProps,
+                  _In_opt_ MediaSampleHandler ^ audioSampleHandler, _In_opt_ MediaSampleHandler ^ videoSampleHandler)
         : _shutdown(false)
     {
         MW::ComPtr<IMFMediaType> audioMT;
         if (audioProps != nullptr)
         {
             CHK(MFCreateMediaTypeFromProperties(As<IUnknown>(audioProps).Get(), &audioMT));
-            _audioStreamSink = MW::Make<MediaStreamSink>(
-                this,
-                c_audioStreamSinkId,
-                audioMT,
-                audioSampleHandler
-                );
+            _audioStreamSink = MW::Make<MediaStreamSink>(this, c_audioStreamSinkId, audioMT, audioSampleHandler);
         }
 
         MW::ComPtr<IMFMediaType> videoMT;
         if (videoProps != nullptr)
         {
             CHK(MFCreateMediaTypeFromProperties(As<IUnknown>(videoProps).Get(), &videoMT));
-            _videoStreamSink = MW::Make<MediaStreamSink>(
-                this,
-                c_videoStreamSinkId,
-                videoMT,
-                videoSampleHandler
-                );
+            _videoStreamSink = MW::Make<MediaStreamSink>(this, c_videoStreamSinkId, videoMT, videoSampleHandler);
         }
     }
 
@@ -117,10 +98,9 @@ public:
     // IMediaExtension
     //
 
-    IFACEMETHODIMP SetProperties(_In_ AWFC::IPropertySet * /*configuration*/)
+    IFACEMETHODIMP SetProperties(_In_ AWFC::IPropertySet* /*configuration*/)
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             auto lock = _lock.LockExclusive();
 
             _VerifyNotShutdown();
@@ -131,10 +111,9 @@ public:
     // IMFMediaSink
     //
 
-    IFACEMETHODIMP GetCharacteristics(_Out_ DWORD *characteristics)
+    IFACEMETHODIMP GetCharacteristics(_Out_ DWORD* characteristics)
     {
-        return ExceptionBoundary([this, characteristics]()
-        {
+        return ExceptionBoundary([this, characteristics]() {
             _VerifyNotShutdown();
 
             CHKNULL(characteristics);
@@ -142,14 +121,10 @@ public:
         });
     }
 
-    IFACEMETHODIMP AddStreamSink(
-        DWORD /*streamSinkIdentifier*/,
-        _In_ IMFMediaType * /*mediaType*/,
-        _COM_Outptr_ IMFStreamSink **streamSink
-        )
+    IFACEMETHODIMP AddStreamSink(DWORD /*streamSinkIdentifier*/, _In_ IMFMediaType* /*mediaType*/,
+                                 _COM_Outptr_ IMFStreamSink** streamSink)
     {
-        return ExceptionBoundary([this, streamSink]()
-        {
+        return ExceptionBoundary([this, streamSink]() {
             _VerifyNotShutdown();
 
             CHKNULL(streamSink);
@@ -161,18 +136,16 @@ public:
 
     IFACEMETHODIMP RemoveStreamSink(DWORD /*streamSinkIdentifier*/)
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             _VerifyNotShutdown();
 
             CHK(MF_E_STREAMSINKS_FIXED);
         });
     }
 
-    IFACEMETHODIMP GetStreamSinkCount(_Out_ DWORD *streamSinkCount)
+    IFACEMETHODIMP GetStreamSinkCount(_Out_ DWORD* streamSinkCount)
     {
-        return ExceptionBoundary([this, streamSinkCount]()
-        {
+        return ExceptionBoundary([this, streamSinkCount]() {
             CHKNULL(streamSinkCount);
 
             _VerifyNotShutdown();
@@ -181,10 +154,9 @@ public:
         });
     }
 
-    IFACEMETHODIMP GetStreamSinkByIndex(DWORD index, _COM_Outptr_ IMFStreamSink **streamSink)
+    IFACEMETHODIMP GetStreamSinkByIndex(DWORD index, _COM_Outptr_ IMFStreamSink** streamSink)
     {
-        return ExceptionBoundary([this, index, streamSink]()
-        {
+        return ExceptionBoundary([this, index, streamSink]() {
             auto lock = _lock.LockExclusive();
 
             CHKNULL(streamSink);
@@ -222,10 +194,9 @@ public:
         });
     }
 
-    IFACEMETHODIMP GetStreamSinkById(DWORD identifier, _COM_Outptr_ IMFStreamSink **streamSink)
+    IFACEMETHODIMP GetStreamSinkById(DWORD identifier, _COM_Outptr_ IMFStreamSink** streamSink)
     {
-        return ExceptionBoundary([this, identifier, streamSink]()
-        {
+        return ExceptionBoundary([this, identifier, streamSink]() {
             auto lock = _lock.LockExclusive();
 
             CHKNULL(streamSink);
@@ -248,10 +219,9 @@ public:
         });
     }
 
-    IFACEMETHODIMP SetPresentationClock(_In_ IMFPresentationClock *clock)
+    IFACEMETHODIMP SetPresentationClock(_In_ IMFPresentationClock* clock)
     {
-        return ExceptionBoundary([this, clock]()
-        {
+        return ExceptionBoundary([this, clock]() {
             auto lock = _lock.LockExclusive();
 
             _VerifyNotShutdown();
@@ -270,10 +240,9 @@ public:
         });
     }
 
-    IFACEMETHODIMP GetPresentationClock(_COM_Outptr_ IMFPresentationClock **clock)
+    IFACEMETHODIMP GetPresentationClock(_COM_Outptr_ IMFPresentationClock** clock)
     {
-        return ExceptionBoundary([this, clock]()
-        {
+        return ExceptionBoundary([this, clock]() {
             auto lock = _lock.LockExclusive();
 
             CHKNULL(clock);
@@ -290,8 +259,7 @@ public:
 
     IFACEMETHODIMP Shutdown()
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             auto lock = _lock.LockExclusive();
 
             if (_shutdown)
@@ -326,8 +294,7 @@ public:
 
     IFACEMETHODIMP OnClockStart(MFTIME /*hnsSystemTime*/, LONGLONG /*llClockStartOffset*/)
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             auto lock = _lock.LockExclusive();
 
             _VerifyNotShutdown();
@@ -336,8 +303,7 @@ public:
 
     IFACEMETHODIMP OnClockStop(MFTIME /*hnsSystemTime*/)
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             auto lock = _lock.LockExclusive();
 
             _VerifyNotShutdown();
@@ -346,8 +312,7 @@ public:
 
     IFACEMETHODIMP OnClockPause(MFTIME /*hnsSystemTime*/)
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             auto lock = _lock.LockExclusive();
 
             _VerifyNotShutdown();
@@ -356,8 +321,7 @@ public:
 
     IFACEMETHODIMP OnClockRestart(MFTIME /*hnsSystemTime*/)
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             auto lock = _lock.LockExclusive();
 
             _VerifyNotShutdown();
@@ -366,8 +330,7 @@ public:
 
     IFACEMETHODIMP OnClockSetRate(MFTIME /*hnsSystemTime*/, float /*flRate*/)
     {
-        return ExceptionBoundary([this]()
-        {
+        return ExceptionBoundary([this]() {
             auto lock = _lock.LockExclusive();
 
             _VerifyNotShutdown();
@@ -375,7 +338,6 @@ public:
     }
 
 private:
-
     bool _shutdown;
 
     void _VerifyNotShutdown()
@@ -393,4 +355,4 @@ private:
     MWW::SRWLock _lock;
 };
 
-}
+} // namespace Media

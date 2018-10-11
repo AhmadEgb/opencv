@@ -38,32 +38,34 @@ enum class CaptureStreamType
 ref class CaptureFrameGrabber sealed
 {
 public:
-
     // IClosable
     virtual ~CaptureFrameGrabber();
 
     virtual void ShowCameraSettings();
 
-internal:
+    internal :
 
-    static concurrency::task<CaptureFrameGrabber^> CreateAsync(_In_ WMC::MediaCapture^ capture, _In_ WMMp::VideoEncodingProperties^ props)
+        static concurrency::task<CaptureFrameGrabber ^>
+        CreateAsync(_In_ WMC::MediaCapture ^ capture, _In_ WMMp::VideoEncodingProperties ^ props)
     {
         return CreateAsync(capture, props, CaptureStreamType::Preview);
     }
 
-    static concurrency::task<CaptureFrameGrabber^> CreateAsync(_In_ WMC::MediaCapture^ capture, _In_ WMMp::VideoEncodingProperties^ props, CaptureStreamType streamType);
+    static concurrency::task<CaptureFrameGrabber ^> CreateAsync(_In_ WMC::MediaCapture ^ capture,
+                                                                _In_ WMMp::VideoEncodingProperties ^ props,
+                                                                CaptureStreamType streamType);
 
     concurrency::task<MW::ComPtr<IMF2DBuffer2>> GetFrameAsync();
     concurrency::task<void> FinishAsync();
 
 private:
+    CaptureFrameGrabber(_In_ WMC::MediaCapture ^ capture, _In_ WMMp::VideoEncodingProperties ^ props,
+                        CaptureStreamType streamType);
 
-    CaptureFrameGrabber(_In_ WMC::MediaCapture^ capture, _In_ WMMp::VideoEncodingProperties^ props, CaptureStreamType streamType);
-
-    void ProcessSample(_In_ MediaSample^ sample);
+    void ProcessSample(_In_ MediaSample ^ sample);
 
     Platform::Agile<WMC::MediaCapture> _capture;
-    ::Windows::Media::IMediaExtension^ _mediaExtension;
+    ::Windows::Media::IMediaExtension ^ _mediaExtension;
 
     MW::ComPtr<MediaSink> _mediaSink;
 
@@ -82,4 +84,4 @@ private:
     MWW::SRWLock _lock;
 };
 
-}
+} // namespace Media
