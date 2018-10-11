@@ -41,8 +41,7 @@
 //M*/
 
 #include "precomp.hpp"
-namespace cv {
-namespace ml {
+namespace cv { namespace ml {
 
 //////////////////////////////////////////////////////////////////////////////////////////
 //                                  Random trees                                        //
@@ -55,9 +54,7 @@ RTreeParams::RTreeParams()
     termCrit = TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 50, 0.1);
 }
 
-RTreeParams::RTreeParams(bool _calcVarImportance,
-                         int _nactiveVars,
-                         TermCriteria _termCrit )
+RTreeParams::RTreeParams(bool _calcVarImportance, int _nactiveVars, TermCriteria _termCrit)
 {
     CV_TRACE_FUNCTION();
     calcVarImportance = _calcVarImportance;
@@ -97,18 +94,18 @@ public:
     {
         CV_TRACE_FUNCTION();
         int i, nvars = (int)allVars.size(), m = (int)activeVars.size();
-        for( i = 0; i < nvars; i++ )
+        for (i = 0; i < nvars; i++)
         {
             int i1 = rng.uniform(0, nvars);
             int i2 = rng.uniform(0, nvars);
             std::swap(allVars[i1], allVars[i2]);
         }
-        for( i = 0; i < m; i++ )
+        for (i = 0; i < m; i++)
             activeVars[i] = allVars[i];
         return activeVars;
     }
 
-    void startTraining( const Ptr<TrainData>& trainData, int flags ) CV_OVERRIDE
+    void startTraining(const Ptr<TrainData>& trainData, int flags) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         DTreesImpl::startTraining(trainData, flags);
@@ -117,7 +114,7 @@ public:
         m = std::min(std::max(m, 1), nvars);
         allVars.resize(nvars);
         activeVars.resize(m);
-        for( i = 0; i < nvars; i++ )
+        for (i = 0; i < nvars; i++)
             allVars[i] = varIdx[i];
     }
 
@@ -130,23 +127,23 @@ public:
         std::swap(activeVars, b);
     }
 
-    bool train( const Ptr<TrainData>& trainData, int flags ) CV_OVERRIDE
+    bool train(const Ptr<TrainData>& trainData, int flags) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         startTraining(trainData, flags);
-        int treeidx, ntrees = (rparams.termCrit.type & TermCriteria::COUNT) != 0 ?
-            rparams.termCrit.maxCount : 10000;
+        int treeidx, ntrees = (rparams.termCrit.type & TermCriteria::COUNT) != 0 ? rparams.termCrit.maxCount : 10000;
         int i, j, k, vi, vi_, n = (int)w->sidx.size();
         int nclasses = (int)classLabels.size();
-        double eps = (rparams.termCrit.type & TermCriteria::EPS) != 0 &&
-            rparams.termCrit.epsilon > 0 ? rparams.termCrit.epsilon : 0.;
+        double eps = (rparams.termCrit.type & TermCriteria::EPS) != 0 && rparams.termCrit.epsilon > 0
+                         ? rparams.termCrit.epsilon
+                         : 0.;
         vector<int> sidx(n);
         vector<uchar> oobmask(n);
         vector<int> oobidx;
         vector<int> oobperm;
         vector<double> oobres(n, 0.);
         vector<int> oobcount(n, 0);
-        vector<int> oobvotes(n*nclasses, 0);
+        vector<int> oobvotes(n * nclasses, 0);
         int nvars = w->data->getNVars();
         int nallvars = w->data->getNAllVars();
         const int* vidx = !varIdx.empty() ? &varIdx[0] : 0;
@@ -160,12 +157,12 @@ public:
         bool calcOOBError = eps > 0 || rparams.calcVarImportance;
         double max_response = 0.;
 
-        if( w->data->getLayout() == COL_SAMPLE )
+        if (w->data->getLayout() == COL_SAMPLE)
             std::swap(sstep0, sstep1);
 
-        if( !_isClassifier )
+        if (!_isClassifier)
         {
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
             {
                 double val = std::abs(w->ord_responses[w->sidx[i]]);
                 max_response = std::max(max_response, val);
@@ -173,65 +170,65 @@ public:
             CV_Assert(fabs(max_response) > 0);
         }
 
-        if( rparams.calcVarImportance )
+        if (rparams.calcVarImportance)
             varImportance.resize(nallvars, 0.f);
 
-        for( treeidx = 0; treeidx < ntrees; treeidx++ )
+        for (treeidx = 0; treeidx < ntrees; treeidx++)
         {
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
                 oobmask[i] = (uchar)1;
 
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
             {
                 j = rng.uniform(0, n);
                 sidx[i] = w->sidx[j];
                 oobmask[j] = (uchar)0;
             }
-            int root = addTree( sidx );
-            if( root < 0 )
+            int root = addTree(sidx);
+            if (root < 0)
                 return false;
 
-            if( calcOOBError )
+            if (calcOOBError)
             {
                 oobidx.clear();
-                for( i = 0; i < n; i++ )
+                for (i = 0; i < n; i++)
                 {
-                    if( oobmask[i] )
+                    if (oobmask[i])
                         oobidx.push_back(i);
                 }
                 int n_oob = (int)oobidx.size();
                 // if there is no out-of-bag samples, we can not compute OOB error
                 // nor update the variable importance vector; so we proceed to the next tree
-                if( n_oob == 0 )
+                if (n_oob == 0)
                     continue;
                 double ncorrect_responses = 0.;
 
                 oobError = 0.;
-                for( i = 0; i < n_oob; i++ )
+                for (i = 0; i < n_oob; i++)
                 {
                     j = oobidx[i];
-                    sample = Mat( nallvars, 1, CV_32F, psamples + sstep0*w->sidx[j], sstep1*sizeof(psamples[0]) );
+                    sample = Mat(nallvars, 1, CV_32F, psamples + sstep0 * w->sidx[j], sstep1 * sizeof(psamples[0]));
 
-                    double val = predictTrees(Range(treeidx, treeidx+1), sample, predictFlags);
-                    if( !_isClassifier )
+                    double val = predictTrees(Range(treeidx, treeidx + 1), sample, predictFlags);
+                    if (!_isClassifier)
                     {
                         oobres[j] += val;
                         oobcount[j]++;
                         double true_val = w->ord_responses[w->sidx[j]];
-                        double a = oobres[j]/oobcount[j] - true_val;
-                        oobError += a*a;
-                        val = (val - true_val)/max_response;
-                        ncorrect_responses += std::exp( -val*val );
+                        double a = oobres[j] / oobcount[j] - true_val;
+                        oobError += a * a;
+                        val = (val - true_val) / max_response;
+                        ncorrect_responses += std::exp(-val * val);
                     }
                     else
                     {
                         int ival = cvRound(val);
                         //Voting scheme to combine OOB errors of each tree
-                        int* votes = &oobvotes[j*nclasses];
+                        int* votes = &oobvotes[j * nclasses];
                         votes[ival]++;
                         int best_class = 0;
-                        for( k = 1; k < nclasses; k++ )
-                            if( votes[best_class] < votes[k] )
+                        for (k = 1; k < nclasses; k++)
+                            if (votes[best_class] < votes[k])
                                 best_class = k;
                         int diff = best_class != w->cat_responses[w->sidx[j]];
                         oobError += diff;
@@ -240,36 +237,38 @@ public:
                 }
 
                 oobError /= n_oob;
-                if( rparams.calcVarImportance && n_oob > 1 )
+                if (rparams.calcVarImportance && n_oob > 1)
                 {
                     Mat sample_clone;
                     oobperm.resize(n_oob);
-                    for( i = 0; i < n_oob; i++ )
+                    for (i = 0; i < n_oob; i++)
                         oobperm[i] = oobidx[i];
-                    for (i = n_oob - 1; i > 0; --i)  //Randomly shuffle indices so we can permute features
+                    for (i = n_oob - 1; i > 0; --i) //Randomly shuffle indices so we can permute features
                     {
                         int r_i = rng.uniform(0, n_oob);
                         std::swap(oobperm[i], oobperm[r_i]);
                     }
 
-                    for( vi_ = 0; vi_ < nvars; vi_++ )
+                    for (vi_ = 0; vi_ < nvars; vi_++)
                     {
-                        vi = vidx ? vidx[vi_] : vi_; //Ensure that only the user specified predictors are used for training
+                        vi = vidx ? vidx[vi_]
+                                  : vi_; //Ensure that only the user specified predictors are used for training
                         double ncorrect_responses_permuted = 0;
 
-                        for( i = 0; i < n_oob; i++ )
+                        for (i = 0; i < n_oob; i++)
                         {
                             j = oobidx[i];
                             int vj = oobperm[i];
-                            sample0 = Mat( nallvars, 1, CV_32F, psamples + sstep0*w->sidx[j], sstep1*sizeof(psamples[0]) );
+                            sample0 = Mat(nallvars, 1, CV_32F, psamples + sstep0 * w->sidx[j],
+                                          sstep1 * sizeof(psamples[0]));
                             sample0.copyTo(sample_clone); //create a copy so we don't mess up the original data
-                            sample_clone.at<float>(vi) = psamples[sstep0*w->sidx[vj] + sstep1*vi];
+                            sample_clone.at<float>(vi) = psamples[sstep0 * w->sidx[vj] + sstep1 * vi];
 
-                            double val = predictTrees(Range(treeidx, treeidx+1), sample_clone, predictFlags);
-                            if( !_isClassifier )
+                            double val = predictTrees(Range(treeidx, treeidx + 1), sample_clone, predictFlags);
+                            if (!_isClassifier)
                             {
-                                val = (val - w->ord_responses[w->sidx[j]])/max_response;
-                                ncorrect_responses_permuted += exp( -val*val );
+                                val = (val - w->ord_responses[w->sidx[j]]) / max_response;
+                                ncorrect_responses_permuted += exp(-val * val);
                             }
                             else
                             {
@@ -280,13 +279,13 @@ public:
                     }
                 }
             }
-            if( calcOOBError && oobError < eps )
+            if (calcOOBError && oobError < eps)
                 break;
         }
 
-        if( rparams.calcVarImportance )
+        if (rparams.calcVarImportance)
         {
-            for( vi_ = 0; vi_ < nallvars; vi_++ )
+            for (vi_ = 0; vi_ < nallvars; vi_++)
                 varImportance[vi_] = std::max(varImportance[vi_], 0.f);
             normalize(varImportance, varImportance, 1., 0, NORM_L1);
         }
@@ -294,32 +293,32 @@ public:
         return true;
     }
 
-    void writeTrainingParams( FileStorage& fs ) const CV_OVERRIDE
+    void writeTrainingParams(FileStorage& fs) const CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         DTreesImpl::writeTrainingParams(fs);
         fs << "nactive_vars" << rparams.nactiveVars;
     }
 
-    void write( FileStorage& fs ) const CV_OVERRIDE
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
-        if( roots.empty() )
-            CV_Error( CV_StsBadArg, "RTrees have not been trained" );
+        if (roots.empty())
+            CV_Error(CV_StsBadArg, "RTrees have not been trained");
 
         writeFormat(fs);
         writeParams(fs);
 
         fs << "oob_error" << oobError;
-        if( !varImportance.empty() )
+        if (!varImportance.empty())
             fs << "var_importance" << varImportance;
 
         int k, ntrees = (int)roots.size();
 
-        fs << "ntrees" << ntrees
-           << "trees" << "[";
+        fs << "ntrees" << ntrees << "trees"
+           << "[";
 
-        for( k = 0; k < ntrees; k++ )
+        for (k = 0; k < ntrees; k++)
         {
             fs << "{";
             writeTree(fs, roots[k]);
@@ -329,7 +328,7 @@ public:
         fs << "]";
     }
 
-    void readParams( const FileNode& fn ) CV_OVERRIDE
+    void readParams(const FileNode& fn) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         DTreesImpl::readParams(fn);
@@ -338,7 +337,7 @@ public:
         rparams.nactiveVars = (int)tparams_node["nactive_vars"];
     }
 
-    void read( const FileNode& fn ) CV_OVERRIDE
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         clear();
@@ -354,65 +353,67 @@ public:
 
         FileNode trees_node = fn["trees"];
         FileNodeIterator it = trees_node.begin();
-        CV_Assert( ntrees == (int)trees_node.size() );
+        CV_Assert(ntrees == (int)trees_node.size());
 
-        for( int treeidx = 0; treeidx < ntrees; treeidx++, ++it )
+        for (int treeidx = 0; treeidx < ntrees; treeidx++, ++it)
         {
             FileNode nfn = (*it)["nodes"];
             readTree(nfn);
         }
     }
 
-    void getVotes( InputArray input, OutputArray output, int flags ) const
+    void getVotes(InputArray input, OutputArray output, int flags) const
     {
         CV_TRACE_FUNCTION();
-        CV_Assert( !roots.empty() );
+        CV_Assert(!roots.empty());
         int nclasses = (int)classLabels.size(), ntrees = (int)roots.size();
         Mat samples = input.getMat(), results;
         int i, j, nsamples = samples.rows;
 
         int predictType = flags & PREDICT_MASK;
-        if( predictType == PREDICT_AUTO )
+        if (predictType == PREDICT_AUTO)
         {
-            predictType = !_isClassifier || (classLabels.size() == 2 && (flags & RAW_OUTPUT) != 0) ?
-                PREDICT_SUM : PREDICT_MAX_VOTE;
+            predictType = !_isClassifier || (classLabels.size() == 2 && (flags & RAW_OUTPUT) != 0)
+                              ? PREDICT_SUM
+                              : PREDICT_MAX_VOTE;
         }
 
-        if( predictType == PREDICT_SUM )
+        if (predictType == PREDICT_SUM)
         {
             output.create(nsamples, ntrees, CV_32F);
             results = output.getMat();
-            for( i = 0; i < nsamples; i++ )
+            for (i = 0; i < nsamples; i++)
             {
-                for( j = 0; j < ntrees; j++ )
+                for (j = 0; j < ntrees; j++)
                 {
-                    float val = predictTrees( Range(j, j+1), samples.row(i), flags);
-                    results.at<float> (i, j) = val;
+                    float val = predictTrees(Range(j, j + 1), samples.row(i), flags);
+                    results.at<float>(i, j) = val;
                 }
             }
-        } else
+        }
+        else
         {
             vector<int> votes;
-            output.create(nsamples+1, nclasses, CV_32S);
+            output.create(nsamples + 1, nclasses, CV_32S);
             results = output.getMat();
 
-            for ( j = 0; j < nclasses; j++)
+            for (j = 0; j < nclasses; j++)
             {
-                results.at<int> (0, j) = classLabels[j];
+                results.at<int>(0, j) = classLabels[j];
             }
 
-            for( i = 0; i < nsamples; i++ )
+            for (i = 0; i < nsamples; i++)
             {
                 votes.clear();
-                for( j = 0; j < ntrees; j++ )
+                for (j = 0; j < ntrees; j++)
                 {
-                    int val = (int)predictTrees( Range(j, j+1), samples.row(i), flags);
+                    int val = (int)predictTrees(Range(j, j + 1), samples.row(i), flags);
                     votes.push_back(val);
                 }
 
-                for ( j = 0; j < nclasses; j++)
+                for (j = 0; j < nclasses; j++)
                 {
-                    results.at<int> (i+1, j) = (int)std::count(votes.begin(), votes.end(), classLabels[j]);
+                    results.at<int>(i + 1, j) = (int)std::count(votes.begin(), votes.end(), classLabels[j]);
                 }
             }
         }
@@ -454,14 +455,17 @@ public:
     inline void setRegressionAccuracy(float val) CV_OVERRIDE { impl.params.setRegressionAccuracy(val); }
     inline cv::Mat getPriors() const CV_OVERRIDE { return impl.params.getPriors(); }
     inline void setPriors(const cv::Mat& val) CV_OVERRIDE { impl.params.setPriors(val); }
-    inline void getVotes(InputArray input, OutputArray output, int flags) const CV_OVERRIDE {return impl.getVotes(input,output,flags);}
+    inline void getVotes(InputArray input, OutputArray output, int flags) const CV_OVERRIDE
+    {
+        return impl.getVotes(input, output, flags);
+    }
 
     RTreesImpl() {}
     virtual ~RTreesImpl() CV_OVERRIDE {}
 
     String getDefaultName() const CV_OVERRIDE { return "opencv_ml_rtrees"; }
 
-    bool train( const Ptr<TrainData>& trainData, int flags ) CV_OVERRIDE
+    bool train(const Ptr<TrainData>& trainData, int flags) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         if (impl.getCVFolds() != 0)
@@ -469,19 +473,19 @@ public:
         return impl.train(trainData, flags);
     }
 
-    float predict( InputArray samples, OutputArray results, int flags ) const CV_OVERRIDE
+    float predict(InputArray samples, OutputArray results, int flags) const CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         return impl.predict(samples, results, flags);
     }
 
-    void write( FileStorage& fs ) const CV_OVERRIDE
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         impl.write(fs);
     }
 
-    void read( const FileNode& fn ) CV_OVERRIDE
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         CV_TRACE_FUNCTION();
         impl.read(fn);
@@ -515,6 +519,6 @@ Ptr<RTrees> RTrees::load(const String& filepath, const String& nodeName)
     return Algorithm::load<RTrees>(filepath, nodeName);
 }
 
-}}
+}} // namespace cv::ml
 
 // End of file.

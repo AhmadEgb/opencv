@@ -44,13 +44,12 @@
 
 namespace cv { namespace ml {
 
-static inline double
-log_ratio( double val )
+static inline double log_ratio(double val)
 {
     const double eps = 1e-5;
-    val = std::max( val, eps );
-    val = std::min( val, 1. - eps );
-    return log( val/(1. - val) );
+    val = std::max(val, eps);
+    val = std::min(val, 1. - eps);
+    return log(val / (1. - val));
 }
 
 
@@ -61,8 +60,7 @@ BoostTreeParams::BoostTreeParams()
     weightTrimRate = 0.95;
 }
 
-BoostTreeParams::BoostTreeParams( int _boostType, int _weak_count,
-                                  double _weightTrimRate)
+BoostTreeParams::BoostTreeParams(int _boostType, int _weak_count, double _weightTrimRate)
 {
     boostType = _boostType;
     weakCount = _weak_count;
@@ -81,28 +79,25 @@ public:
 
     bool isClassifier() const CV_OVERRIDE { return true; }
 
-    void clear() CV_OVERRIDE
-    {
-        DTreesImpl::clear();
-    }
+    void clear() CV_OVERRIDE { DTreesImpl::clear(); }
 
-    void startTraining( const Ptr<TrainData>& trainData, int flags ) CV_OVERRIDE
+    void startTraining(const Ptr<TrainData>& trainData, int flags) CV_OVERRIDE
     {
         DTreesImpl::startTraining(trainData, flags);
         sumResult.assign(w->sidx.size(), 0.);
 
-        if( bparams.boostType != Boost::DISCRETE )
+        if (bparams.boostType != Boost::DISCRETE)
         {
             _isClassifier = false;
             int i, n = (int)w->cat_responses.size();
             w->ord_responses.resize(n);
 
             double a = -1, b = 1;
-            if( bparams.boostType == Boost::LOGIT )
+            if (bparams.boostType == Boost::LOGIT)
             {
                 a = -2, b = 2;
             }
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
                 w->ord_responses[i] = w->cat_responses[i] > 0 ? b : a;
         }
 
@@ -113,11 +108,11 @@ public:
     {
         int i, n = (int)w->sidx.size();
         double sumw = 0, a, b;
-        for( i = 0; i < n; i++ )
+        for (i = 0; i < n; i++)
             sumw += w->sample_weights[w->sidx[i]];
-        if( sumw > DBL_EPSILON )
+        if (sumw > DBL_EPSILON)
         {
-            a = 1./sumw;
+            a = 1. / sumw;
             b = 0;
         }
         else
@@ -125,10 +120,10 @@ public:
             a = 0;
             b = 1;
         }
-        for( i = 0; i < n; i++ )
+        for (i = 0; i < n; i++)
         {
             double& wval = w->sample_weights[w->sidx[i]];
-            wval = wval*a + b;
+            wval = wval * a + b;
         }
     }
 
@@ -139,67 +134,66 @@ public:
         std::swap(sumResult, e);
     }
 
-    void scaleTree( int root, double scale )
+    void scaleTree(int root, double scale)
     {
         int nidx = root, pidx = 0;
-        Node *node = 0;
+        Node* node = 0;
 
         // traverse the tree and save all the nodes in depth-first order
-        for(;;)
+        for (;;)
         {
-            for(;;)
+            for (;;)
             {
                 node = &nodes[nidx];
                 node->value *= scale;
-                if( node->left < 0 )
+                if (node->left < 0)
                     break;
                 nidx = node->left;
             }
 
-            for( pidx = node->parent; pidx >= 0 && nodes[pidx].right == nidx;
-                 nidx = pidx, pidx = nodes[pidx].parent )
+            for (pidx = node->parent; pidx >= 0 && nodes[pidx].right == nidx; nidx = pidx, pidx = nodes[pidx].parent)
                 ;
 
-            if( pidx < 0 )
+            if (pidx < 0)
                 break;
 
             nidx = nodes[pidx].right;
         }
     }
 
-    void calcValue( int nidx, const vector<int>& _sidx ) CV_OVERRIDE
+    void calcValue(int nidx, const vector<int>& _sidx) CV_OVERRIDE
     {
         DTreesImpl::calcValue(nidx, _sidx);
         WNode* node = &w->wnodes[nidx];
-        if( bparams.boostType == Boost::DISCRETE )
+        if (bparams.boostType == Boost::DISCRETE)
         {
             node->value = node->class_idx == 0 ? -1 : 1;
         }
-        else if( bparams.boostType == Boost::REAL )
+        else if (bparams.boostType == Boost::REAL)
         {
-            double p = (node->value+1)*0.5;
-            node->value = 0.5*log_ratio(p);
+            double p = (node->value + 1) * 0.5;
+            node->value = 0.5 * log_ratio(p);
         }
     }
 
-    bool train( const Ptr<TrainData>& trainData, int flags ) CV_OVERRIDE
+    bool train(const Ptr<TrainData>& trainData, int flags) CV_OVERRIDE
     {
         startTraining(trainData, flags);
         int treeidx, ntrees = bparams.weakCount >= 0 ? bparams.weakCount : 10000;
         vector<int> sidx = w->sidx;
 
-        for( treeidx = 0; treeidx < ntrees; treeidx++ )
+        for (treeidx = 0; treeidx < ntrees; treeidx++)
         {
-            int root = addTree( sidx );
-            if( root < 0 )
+            int root = addTree(sidx);
+            if (root < 0)
                 return false;
-            updateWeightsAndTrim( treeidx, sidx );
+            updateWeightsAndTrim(treeidx, sidx);
         }
         endTraining();
         return true;
     }
 
-    void updateWeightsAndTrim( int treeidx, vector<int>& sidx )
+    void updateWeightsAndTrim(int treeidx, vector<int>& sidx)
     {
         int i, n = (int)w->sidx.size();
         int nvars = (int)varIdx.size();
@@ -211,14 +205,14 @@ public:
         int predictFlags = bparams.boostType == Boost::DISCRETE ? (PREDICT_MAX_VOTE | RAW_OUTPUT) : PREDICT_SUM;
         predictFlags |= COMPRESSED_INPUT;
 
-        for( i = 0; i < n; i++ )
+        for (i = 0; i < n; i++)
         {
-            w->data->getSample(varIdx, w->sidx[i], sbuf );
-            result[i] = predictTrees(Range(treeidx, treeidx+1), sample, predictFlags);
+            w->data->getSample(varIdx, w->sidx[i], sbuf);
+            result[i] = predictTrees(Range(treeidx, treeidx + 1), sample, predictFlags);
         }
 
         // now update weights and other parameters for each type of boosting
-        if( bparams.boostType == Boost::DISCRETE )
+        if (bparams.boostType == Boost::DISCRETE)
         {
             // Discrete AdaBoost:
             //   weak_eval[i] (=f(x_i)) is in {-1,1}
@@ -227,25 +221,25 @@ public:
             //   w_i *= exp(C*(f(x_i) != y_i))
             double err = 0.;
 
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
             {
                 int si = w->sidx[i];
                 double wval = w->sample_weights[si];
                 sumw += wval;
-                err += wval*(result[i] != w->cat_responses[si]);
+                err += wval * (result[i] != w->cat_responses[si]);
             }
 
-            if( sumw != 0 )
+            if (sumw != 0)
                 err /= sumw;
-            C = -log_ratio( err );
+            C = -log_ratio(err);
             double scale = std::exp(C);
 
             sumw = 0;
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
             {
                 int si = w->sidx[i];
                 double wval = w->sample_weights[si];
-                if( result[i] != w->cat_responses[si] )
+                if (result[i] != w->cat_responses[si])
                     wval *= scale;
                 sumw += wval;
                 w->sample_weights[si] = wval;
@@ -253,7 +247,7 @@ public:
 
             scaleTree(roots[treeidx], C);
         }
-        else if( bparams.boostType == Boost::REAL || bparams.boostType == Boost::GENTLE )
+        else if (bparams.boostType == Boost::REAL || bparams.boostType == Boost::GENTLE)
         {
             // Real AdaBoost:
             //   weak_eval[i] = f(x_i) = 0.5*log(p(x_i)/(1-p(x_i))), p(x_i)=P(y=1|x_i)
@@ -262,16 +256,16 @@ public:
             // Gentle AdaBoost:
             //   weak_eval[i] = f(x_i) in [-1,1]
             //   w_i *= exp(-y_i*f(x_i))
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
             {
                 int si = w->sidx[i];
-                CV_Assert( std::abs(w->ord_responses[si]) == 1 );
-                double wval = w->sample_weights[si]*std::exp(-result[i]*w->ord_responses[si]);
+                CV_Assert(std::abs(w->ord_responses[si]) == 1);
+                double wval = w->sample_weights[si] * std::exp(-result[i] * w->ord_responses[si]);
                 sumw += wval;
                 w->sample_weights[si] = wval;
             }
         }
-        else if( bparams.boostType == Boost::LOGIT )
+        else if (bparams.boostType == Boost::LOGIT)
         {
             // LogitBoost:
             //   weak_eval[i] = f(x_i) in [-z_max,z_max]
@@ -285,22 +279,22 @@ public:
             const double lb_weight_thresh = FLT_EPSILON;
             const double lb_z_max = 10.;
 
-            for( i = 0; i < n; i++ )
+            for (i = 0; i < n; i++)
             {
                 int si = w->sidx[i];
-                sumResult[i] += 0.5*result[i];
-                double p = 1./(1 + std::exp(-2*sumResult[i]));
-                double wval = std::max( p*(1 - p), lb_weight_thresh ), z;
+                sumResult[i] += 0.5 * result[i];
+                double p = 1. / (1 + std::exp(-2 * sumResult[i]));
+                double wval = std::max(p * (1 - p), lb_weight_thresh), z;
                 w->sample_weights[si] = wval;
                 sumw += wval;
-                if( w->ord_responses[si] > 0 )
+                if (w->ord_responses[si] > 0)
                 {
-                    z = 1./p;
+                    z = 1. / p;
                     w->ord_responses[si] = std::min(z, lb_z_max);
                 }
                 else
                 {
-                    z = 1./(1-p);
+                    z = 1. / (1 - p);
                     w->ord_responses[si] = -std::min(z, lb_z_max);
                 }
             }
@@ -323,13 +317,13 @@ public:
         }*/
 
         // renormalize weights
-        if( sumw > FLT_EPSILON )
+        if (sumw > FLT_EPSILON)
             normalizeWeights();
 
-        if( bparams.weightTrimRate <= 0. || bparams.weightTrimRate >= 1. )
+        if (bparams.weightTrimRate <= 0. || bparams.weightTrimRate >= 1.)
             return;
 
-        for( i = 0; i < n; i++ )
+        for (i = 0; i < n; i++)
             result[i] = w->sample_weights[w->sidx[i]];
         std::sort(result, result + n);
 
@@ -337,10 +331,10 @@ public:
         // where they are renormalized, we assume that the weight sum = 1.
         sumw = 1. - bparams.weightTrimRate;
 
-        for( i = 0; i < n; i++ )
+        for (i = 0; i < n; i++)
         {
             double wval = result[i];
-            if( sumw <= 0 )
+            if (sumw <= 0)
                 break;
             sumw -= wval;
         }
@@ -348,54 +342,57 @@ public:
         double threshold = i < n ? result[i] : DBL_MAX;
         sidx.clear();
 
-        for( i = 0; i < n; i++ )
+        for (i = 0; i < n; i++)
         {
             int si = w->sidx[i];
-            if( w->sample_weights[si] >= threshold )
+            if (w->sample_weights[si] >= threshold)
                 sidx.push_back(si);
         }
     }
 
-    float predictTrees( const Range& range, const Mat& sample, int flags0 ) const CV_OVERRIDE
+    float predictTrees(const Range& range, const Mat& sample, int flags0) const CV_OVERRIDE
     {
         int flags = (flags0 & ~PREDICT_MASK) | PREDICT_SUM;
         float val = DTreesImpl::predictTrees(range, sample, flags);
-        if( flags != flags0 )
+        if (flags != flags0)
         {
             int ival = (int)(val > 0);
-            if( !(flags0 & RAW_OUTPUT) )
+            if (!(flags0 & RAW_OUTPUT))
                 ival = classLabels[ival];
             val = (float)ival;
         }
         return val;
     }
 
-    void writeTrainingParams( FileStorage& fs ) const CV_OVERRIDE
+    void writeTrainingParams(FileStorage& fs) const CV_OVERRIDE
     {
-        fs << "boosting_type" <<
-        (bparams.boostType == Boost::DISCRETE ? "DiscreteAdaboost" :
-        bparams.boostType == Boost::REAL ? "RealAdaboost" :
-        bparams.boostType == Boost::LOGIT ? "LogitBoost" :
-        bparams.boostType == Boost::GENTLE ? "GentleAdaboost" : "Unknown");
+        fs << "boosting_type"
+           << (bparams.boostType == Boost::DISCRETE
+                   ? "DiscreteAdaboost"
+                   : bparams.boostType == Boost::REAL
+                         ? "RealAdaboost"
+                         : bparams.boostType == Boost::LOGIT
+                               ? "LogitBoost"
+                               : bparams.boostType == Boost::GENTLE ? "GentleAdaboost" : "Unknown");
 
         DTreesImpl::writeTrainingParams(fs);
         fs << "weight_trimming_rate" << bparams.weightTrimRate;
     }
 
-    void write( FileStorage& fs ) const CV_OVERRIDE
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
-        if( roots.empty() )
-            CV_Error( CV_StsBadArg, "RTrees have not been trained" );
+        if (roots.empty())
+            CV_Error(CV_StsBadArg, "RTrees have not been trained");
 
         writeFormat(fs);
         writeParams(fs);
 
         int k, ntrees = (int)roots.size();
 
-        fs << "ntrees" << ntrees
-        << "trees" << "[";
+        fs << "ntrees" << ntrees << "trees"
+           << "[";
 
-        for( k = 0; k < ntrees; k++ )
+        for (k = 0; k < ntrees; k++)
         {
             fs << "{";
             writeTree(fs, roots[k]);
@@ -405,25 +402,26 @@ public:
         fs << "]";
     }
 
-    void readParams( const FileNode& fn ) CV_OVERRIDE
+    void readParams(const FileNode& fn) CV_OVERRIDE
     {
         DTreesImpl::readParams(fn);
 
         FileNode tparams_node = fn["training_params"];
         // check for old layout
-        String bts = (String)(fn["boosting_type"].empty() ?
-                         tparams_node["boosting_type"] : fn["boosting_type"]);
-        bparams.boostType = (bts == "DiscreteAdaboost" ? Boost::DISCRETE :
-                             bts == "RealAdaboost" ? Boost::REAL :
-                             bts == "LogitBoost" ? Boost::LOGIT :
-                             bts == "GentleAdaboost" ? Boost::GENTLE : -1);
+        String bts = (String)(fn["boosting_type"].empty() ? tparams_node["boosting_type"] : fn["boosting_type"]);
+        bparams.boostType = (bts == "DiscreteAdaboost"
+                                 ? Boost::DISCRETE
+                                 : bts == "RealAdaboost"
+                                       ? Boost::REAL
+                                       : bts == "LogitBoost" ? Boost::LOGIT
+                                                             : bts == "GentleAdaboost" ? Boost::GENTLE : -1);
         _isClassifier = bparams.boostType == Boost::DISCRETE;
         // check for old layout
-        bparams.weightTrimRate = (double)(fn["weight_trimming_rate"].empty() ?
-                                    tparams_node["weight_trimming_rate"] : fn["weight_trimming_rate"]);
+        bparams.weightTrimRate = (double)(fn["weight_trimming_rate"].empty() ? tparams_node["weight_trimming_rate"]
+                                                                             : fn["weight_trimming_rate"]);
     }
 
-    void read( const FileNode& fn ) CV_OVERRIDE
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         clear();
 
@@ -432,9 +430,9 @@ public:
 
         FileNode trees_node = fn["trees"];
         FileNodeIterator it = trees_node.begin();
-        CV_Assert( ntrees == (int)trees_node.size() );
+        CV_Assert(ntrees == (int)trees_node.size());
 
-        for( int treeidx = 0; treeidx < ntrees; treeidx++, ++it )
+        for (int treeidx = 0; treeidx < ntrees; treeidx++, ++it)
         {
             FileNode nfn = (*it)["nodes"];
             readTree(nfn);
@@ -480,25 +478,16 @@ public:
 
     String getDefaultName() const CV_OVERRIDE { return "opencv_ml_boost"; }
 
-    bool train( const Ptr<TrainData>& trainData, int flags ) CV_OVERRIDE
-    {
-        return impl.train(trainData, flags);
-    }
+    bool train(const Ptr<TrainData>& trainData, int flags) CV_OVERRIDE { return impl.train(trainData, flags); }
 
-    float predict( InputArray samples, OutputArray results, int flags ) const CV_OVERRIDE
+    float predict(InputArray samples, OutputArray results, int flags) const CV_OVERRIDE
     {
         return impl.predict(samples, results, flags);
     }
 
-    void write( FileStorage& fs ) const CV_OVERRIDE
-    {
-        impl.write(fs);
-    }
+    void write(FileStorage& fs) const CV_OVERRIDE { impl.write(fs); }
 
-    void read( const FileNode& fn ) CV_OVERRIDE
-    {
-        impl.read(fn);
-    }
+    void read(const FileNode& fn) CV_OVERRIDE { impl.read(fn); }
 
     int getVarCount() const CV_OVERRIDE { return impl.getVarCount(); }
 
@@ -514,16 +503,13 @@ public:
 };
 
 
-Ptr<Boost> Boost::create()
-{
-    return makePtr<BoostImpl>();
-}
+Ptr<Boost> Boost::create() { return makePtr<BoostImpl>(); }
 
 Ptr<Boost> Boost::load(const String& filepath, const String& nodeName)
 {
     return Algorithm::load<Boost>(filepath, nodeName);
 }
 
-}}
+}} // namespace cv::ml
 
 /* End of file. */

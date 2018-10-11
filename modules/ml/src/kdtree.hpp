@@ -3,10 +3,7 @@
 
 #include "precomp.hpp"
 
-namespace cv
-{
-namespace ml
-{
+namespace cv { namespace ml {
 
 /*!
  Fast Nearest Neighbor Search Class.
@@ -42,7 +39,9 @@ public:
     {
         Node() : idx(-1), left(-1), right(-1), boundary(0.f) {}
         Node(int _idx, int _left, int _right, float _boundary)
-            : idx(_idx), left(_left), right(_right), boundary(_boundary) {}
+            : idx(_idx), left(_left), right(_right), boundary(_boundary)
+        {
+        }
 
         //! split dimension; >=0 for nodes (dim), < 0 for leaves (index of the point)
         int idx;
@@ -57,28 +56,20 @@ public:
     //! the full constructor that builds the search tree
     CV_WRAP KDTree(InputArray points, bool copyAndReorderPoints = false);
     //! the full constructor that builds the search tree
-    CV_WRAP KDTree(InputArray points, InputArray _labels,
-                   bool copyAndReorderPoints = false);
+    CV_WRAP KDTree(InputArray points, InputArray _labels, bool copyAndReorderPoints = false);
     //! builds the search tree
     CV_WRAP void build(InputArray points, bool copyAndReorderPoints = false);
     //! builds the search tree
-    CV_WRAP void build(InputArray points, InputArray labels,
-                       bool copyAndReorderPoints = false);
+    CV_WRAP void build(InputArray points, InputArray labels, bool copyAndReorderPoints = false);
     //! finds the K nearest neighbors of "vec" while looking at Emax (at most) leaves
-    CV_WRAP int findNearest(InputArray vec, int K, int Emax,
-                            OutputArray neighborsIdx,
-                            OutputArray neighbors = noArray(),
-                            OutputArray dist = noArray(),
+    CV_WRAP int findNearest(InputArray vec, int K, int Emax, OutputArray neighborsIdx,
+                            OutputArray neighbors = noArray(), OutputArray dist = noArray(),
                             OutputArray labels = noArray()) const;
     //! finds all the points from the initial set that belong to the specified box
-    CV_WRAP void findOrthoRange(InputArray minBounds,
-                                InputArray maxBounds,
-                                OutputArray neighborsIdx,
-                                OutputArray neighbors = noArray(),
-                                OutputArray labels = noArray()) const;
+    CV_WRAP void findOrthoRange(InputArray minBounds, InputArray maxBounds, OutputArray neighborsIdx,
+                                OutputArray neighbors = noArray(), OutputArray labels = noArray()) const;
     //! returns vectors with the specified indices
-    CV_WRAP void getPoints(InputArray idx, OutputArray pts,
-                           OutputArray labels = noArray()) const;
+    CV_WRAP void getPoints(InputArray idx, OutputArray pts, OutputArray labels = noArray()) const;
     //! return a vector with the specified index
     const float* getPoint(int ptidx, int* label = 0) const;
     //! returns the search space dimensionality
@@ -91,7 +82,6 @@ public:
     CV_PROP_RW int normType; //!< type of the distance (cv::NORM_L1 or cv::NORM_L2) used for search. Initially set to cv::NORM_L2, but you can modify it
 };
 
-}
-}
+}} // namespace cv::ml
 
 #endif

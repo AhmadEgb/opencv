@@ -4,8 +4,8 @@
 
 #if 0
 
-#define pCvSeq CvSeq*
-#define pCvDTreeNode CvDTreeNode*
+#    define pCvSeq CvSeq*
+#    define pCvDTreeNode CvDTreeNode*
 
 //===========================================================================
 //----------------------------- CvGBTreesParams -----------------------------

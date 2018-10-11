@@ -42,7 +42,11 @@
 
 namespace cv { namespace ml {
 
-ParamGrid::ParamGrid() { minVal = maxVal = 0.; logStep = 1; }
+ParamGrid::ParamGrid()
+{
+    minVal = maxVal = 0.;
+    logStep = 1;
+}
 ParamGrid::ParamGrid(double _minVal, double _maxVal, double _logStep)
 {
     CV_TRACE_FUNCTION();
@@ -51,22 +55,23 @@ ParamGrid::ParamGrid(double _minVal, double _maxVal, double _logStep)
     logStep = std::max(_logStep, 1.);
 }
 
-Ptr<ParamGrid> ParamGrid::create(double minval, double maxval, double logstep) {
-  return makePtr<ParamGrid>(minval, maxval, logstep);
+Ptr<ParamGrid> ParamGrid::create(double minval, double maxval, double logstep)
+{
+    return makePtr<ParamGrid>(minval, maxval, logstep);
 }
 
 bool StatModel::empty() const { return !isTrained(); }
 
 int StatModel::getVarCount() const { return 0; }
 
-bool StatModel::train( const Ptr<TrainData>&, int )
+bool StatModel::train(const Ptr<TrainData>&, int)
 {
     CV_TRACE_FUNCTION();
     CV_Error(CV_StsNotImplemented, "");
     return false;
 }
 
-bool StatModel::train( InputArray samples, int layout, InputArray responses )
+bool StatModel::train(InputArray samples, int layout, InputArray responses)
 {
     CV_TRACE_FUNCTION();
     return train(TrainData::create(samples, layout, responses));
@@ -76,17 +81,14 @@ class ParallelCalcError : public ParallelLoopBody
 {
 private:
     const Ptr<TrainData>& data;
-    bool &testerr;
-    Mat &resp;
-    const StatModel &s;
-    vector<double> &errStrip;
+    bool& testerr;
+    Mat& resp;
+    const StatModel& s;
+    vector<double>& errStrip;
+
 public:
-    ParallelCalcError(const Ptr<TrainData>& d, bool &t, Mat &_r,const StatModel &w, vector<double> &e) :
-        data(d),
-        testerr(t),
-        resp(_r),
-        s(w),
-        errStrip(e)
+    ParallelCalcError(const Ptr<TrainData>& d, bool& t, Mat& _r, const StatModel& w, vector<double>& e)
+        : data(d), testerr(t), resp(_r), s(w), errStrip(e)
     {
     }
     virtual void operator()(const Range& range) const CV_OVERRIDE
@@ -94,7 +96,7 @@ public:
         int idxErr = range.start;
         CV_TRACE_FUNCTION_SKIP_NESTED();
         Mat samples = data->getSamples();
-        Mat weights=testerr? data->getTestSampleWeights() : data->getTrainSampleWeights();
+        Mat weights = testerr ? data->getTestSampleWeights() : data->getTrainSampleWeights();
         int layout = data->getLayout();
         Mat sidx = testerr ? data->getTestSampleIdx() : data->getTrainSampleIdx();
         const int* sidx_ptr = sidx.ptr<int>();
@@ -116,18 +118,15 @@ public:
             if (isclassifier)
                 err += sweight * fabs(val - val0) > FLT_EPSILON;
             else
-                err += sweight * (val - val0)*(val - val0);
+                err += sweight * (val - val0) * (val - val0);
             if (!resp.empty())
                 resp.at<float>(i) = val;
         }
 
 
-        errStrip[idxErr]=err ;
-
+        errStrip[idxErr] = err;
     };
-    ParallelCalcError& operator=(const ParallelCalcError &) {
-        return *this;
-    };
+    ParallelCalcError& operator=(const ParallelCalcError&) { return *this; };
 };
 
 
@@ -145,7 +144,7 @@ float StatModel::calcError(const Ptr<TrainData>& data, bool testerr, OutputArray
     {
         n = data->getNSamples();
         weights = data->getTrainSampleWeights();
-        testerr =false;
+        testerr = false;
     }
 
     if (n == 0)
@@ -156,45 +155,45 @@ float StatModel::calcError(const Ptr<TrainData>& data, bool testerr, OutputArray
         resp.create(n, 1, CV_32F);
 
     double err = 0;
-    vector<double> errStrip(n,0.0);
-    ParallelCalcError x(data, testerr, resp, *this,errStrip);
+    vector<double> errStrip(n, 0.0);
+    ParallelCalcError x(data, testerr, resp, *this, errStrip);
 
-    parallel_for_(Range(0,n),x);
+    parallel_for_(Range(0, n), x);
 
     for (size_t i = 0; i < errStrip.size(); i++)
         err += errStrip[i];
-    float weightSum= weights.empty() ? n: static_cast<float>(sum(weights)(0));
+    float weightSum = weights.empty() ? n : static_cast<float>(sum(weights)(0));
     if (_resp.needed())
         resp.copyTo(_resp);
 
-    return (float)(err/ weightSum * (isclassifier ? 100 : 1));
+    return (float)(err / weightSum * (isclassifier ? 100 : 1));
 }
 
 /* Calculates upper triangular matrix S, where A is a symmetrical matrix A=S'*S */
-static void Cholesky( const Mat& A, Mat& S )
+static void Cholesky(const Mat& A, Mat& S)
 {
     CV_TRACE_FUNCTION();
     CV_Assert(A.type() == CV_32F);
 
     S = A.clone();
-    cv::Cholesky ((float*)S.ptr(),S.step, S.rows,NULL, 0, 0);
+    cv::Cholesky((float*)S.ptr(), S.step, S.rows, NULL, 0, 0);
     S = S.t();
-    for (int i=1;i<S.rows;i++)
-        for (int j=0;j<i;j++)
-            S.at<float>(i,j)=0;
+    for (int i = 1; i < S.rows; i++)
+        for (int j = 0; j < i; j++)
+            S.at<float>(i, j) = 0;
 }
 
 /* Generates <sample> from multivariate normal distribution, where <mean> - is an
    average row vector, <cov> - symmetric covariation matrix */
-void randMVNormal( InputArray _mean, InputArray _cov, int nsamples, OutputArray _samples )
+void randMVNormal(InputArray _mean, InputArray _cov, int nsamples, OutputArray _samples)
 {
     CV_TRACE_FUNCTION();
     // check mean vector and covariance matrix
     Mat mean = _mean.getMat(), cov = _cov.getMat();
-    int dim = (int)mean.total();  // dimensionality
+    int dim = (int)mean.total(); // dimensionality
     CV_Assert(mean.rows == 1 || mean.cols == 1);
     CV_Assert(cov.rows == dim && cov.cols == dim);
-    mean = mean.reshape(1,1);     // ensure a row vector
+    mean = mean.reshape(1, 1); // ensure a row vector
 
     // generate n-samples of the same dimension, from ~N(0,1)
     _samples.create(nsamples, dim, CV_32F);
@@ -207,13 +206,13 @@ void randMVNormal( InputArray _mean, InputArray _cov, int nsamples, OutputArray 
     Cholesky(cov, utmat);
 
     // transform random numbers using specified mean and covariance
-    for( int i = 0; i < nsamples; i++ )
+    for (int i = 0; i < nsamples; i++)
     {
         Mat sample = samples.row(i);
         sample = sample * utmat + mean;
     }
 }
 
-}}
+}} // namespace cv::ml
 
 /* End of file */

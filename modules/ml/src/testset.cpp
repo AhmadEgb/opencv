@@ -45,33 +45,33 @@ namespace cv { namespace ml {
 struct PairDI
 {
     double d;
-    int    i;
+    int i;
 };
 
 struct CmpPairDI
 {
-    bool operator ()(const PairDI& e1, const PairDI& e2) const
+    bool operator()(const PairDI& e1, const PairDI& e2) const
     {
         return (e1.d < e2.d) || (e1.d == e2.d && e1.i < e2.i);
     }
 };
 
-void createConcentricSpheresTestSet( int num_samples, int num_features, int num_classes,
-                                     OutputArray _samples, OutputArray _responses)
+void createConcentricSpheresTestSet(int num_samples, int num_features, int num_classes, OutputArray _samples,
+                                    OutputArray _responses)
 {
-    if( num_samples < 1 )
-        CV_Error( CV_StsBadArg, "num_samples parameter must be positive" );
+    if (num_samples < 1)
+        CV_Error(CV_StsBadArg, "num_samples parameter must be positive");
 
-    if( num_features < 1 )
-        CV_Error( CV_StsBadArg, "num_features parameter must be positive" );
+    if (num_features < 1)
+        CV_Error(CV_StsBadArg, "num_features parameter must be positive");
 
-    if( num_classes < 1 )
-        CV_Error( CV_StsBadArg, "num_classes parameter must be positive" );
+    if (num_classes < 1)
+        CV_Error(CV_StsBadArg, "num_classes parameter must be positive");
 
     int i, cur_class;
 
-    _samples.create( num_samples, num_features, CV_32F );
-    _responses.create( 1, num_samples, CV_32S );
+    _samples.create(num_samples, num_features, CV_32F);
+    _responses.create(1, num_samples, CV_32S);
 
     Mat responses = _responses.getMat();
 
@@ -79,14 +79,14 @@ void createConcentricSpheresTestSet( int num_samples, int num_features, int num_
     Mat cov = Mat::eye(num_features, num_features, CV_32F);
 
     // fill the feature values matrix with random numbers drawn from standard normal distribution
-    randMVNormal( mean, cov, num_samples, _samples );
+    randMVNormal(mean, cov, num_samples, _samples);
     Mat samples = _samples.getMat();
 
     // calculate distances from the origin to the samples and put them
     // into the sequence along with indices
     std::vector<PairDI> dis(samples.rows);
 
-    for( i = 0; i < samples.rows; i++ )
+    for (i = 0; i < samples.rows; i++)
     {
         PairDI& elem = dis[i];
         elem.i = i;
@@ -96,18 +96,18 @@ void createConcentricSpheresTestSet( int num_samples, int num_features, int num_
     std::sort(dis.begin(), dis.end(), CmpPairDI());
 
     // assign class labels
-    num_classes = std::min( num_samples, num_classes );
-    for( i = 0, cur_class = 0; i < num_samples; ++cur_class )
+    num_classes = std::min(num_samples, num_classes);
+    for (i = 0, cur_class = 0; i < num_samples; ++cur_class)
     {
         int last_idx = num_samples * (cur_class + 1) / num_classes - 1;
         double max_dst = dis[last_idx].d;
-        max_dst = std::max( max_dst, dis[i].d );
+        max_dst = std::max(max_dst, dis[i].d);
 
-        for( ; i < num_samples && dis[i].d <= max_dst; ++i )
+        for (; i < num_samples && dis[i].d <= max_dst; ++i)
             responses.at<int>(dis[i].i) = cur_class;
     }
 }
 
-}}
+}} // namespace cv::ml
 
 /* End of file. */

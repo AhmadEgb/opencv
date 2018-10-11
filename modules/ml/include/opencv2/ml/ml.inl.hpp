@@ -9,12 +9,9 @@ namespace cv { namespace ml {
 
 // declared in ml.hpp
 template<class SimulatedAnnealingSolverSystem>
-int simulatedAnnealingSolver(SimulatedAnnealingSolverSystem& solverSystem,
-     double initialTemperature, double finalTemperature, double coolingRatio,
-     size_t iterationsPerStep,
-     CV_OUT double* lastTemperature,
-     cv::RNG& rngEnergy
-)
+int simulatedAnnealingSolver(SimulatedAnnealingSolverSystem& solverSystem, double initialTemperature,
+                             double finalTemperature, double coolingRatio, size_t iterationsPerStep,
+                             CV_OUT double* lastTemperature, cv::RNG& rngEnergy)
 {
     CV_Assert(finalTemperature > 0);
     CV_Assert(initialTemperature > finalTemperature);
@@ -55,6 +52,6 @@ int simulatedAnnealingSolver(SimulatedAnnealingSolverSystem& solverSystem,
     return exchange;
 }
 
-}} //namespace
+}} // namespace cv::ml
 
 #endif // OPENCV_ML_INL_HPP

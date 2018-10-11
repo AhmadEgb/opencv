@@ -41,17 +41,13 @@
 
 #include "precomp.hpp"
 
-namespace cv
-{
-namespace ml
-{
+namespace cv { namespace ml {
 
 const double minEigenValue = DBL_EPSILON;
 
 class CV_EXPORTS EMImpl CV_FINAL : public EM
 {
 public:
-
     int nclusters;
     int covMatType;
     TermCriteria termCrit;
@@ -65,29 +61,22 @@ public:
         CV_Assert(nclusters >= 1);
     }
 
-    int getClustersNumber() const CV_OVERRIDE
-    {
-        return nclusters;
-    }
+    int getClustersNumber() const CV_OVERRIDE { return nclusters; }
 
     void setCovarianceMatrixType(int val) CV_OVERRIDE
     {
         covMatType = val;
-        CV_Assert(covMatType == COV_MAT_SPHERICAL ||
-                  covMatType == COV_MAT_DIAGONAL ||
-                  covMatType == COV_MAT_GENERIC);
+        CV_Assert(covMatType == COV_MAT_SPHERICAL || covMatType == COV_MAT_DIAGONAL
+                  || covMatType == COV_MAT_GENERIC);
     }
 
-    int getCovarianceMatrixType() const CV_OVERRIDE
-    {
-        return covMatType;
-    }
+    int getCovarianceMatrixType() const CV_OVERRIDE { return covMatType; }
 
     EMImpl()
     {
         nclusters = DEFAULT_NCLUSTERS;
-        covMatType=EM::COV_MAT_DIAGONAL;
-        termCrit = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, EM::DEFAULT_MAX_ITERS, 1e-6);
+        covMatType = EM::COV_MAT_DIAGONAL;
+        termCrit = TermCriteria(TermCriteria::COUNT + TermCriteria::EPS, EM::DEFAULT_MAX_ITERS, 1e-6);
     }
 
     virtual ~EMImpl() {}
@@ -116,23 +105,15 @@ public:
         return trainEM(samples, labels, noArray(), noArray());
     }
 
-    bool trainEM(InputArray samples,
-               OutputArray logLikelihoods,
-               OutputArray labels,
-               OutputArray probs) CV_OVERRIDE
+    bool trainEM(InputArray samples, OutputArray logLikelihoods, OutputArray labels, OutputArray probs) CV_OVERRIDE
     {
         Mat samplesMat = samples.getMat();
         setTrainData(START_AUTO_STEP, samplesMat, 0, 0, 0, 0);
         return doTrain(START_AUTO_STEP, logLikelihoods, labels, probs);
     }
 
-    bool trainE(InputArray samples,
-                InputArray _means0,
-                InputArray _covs0,
-                InputArray _weights0,
-                OutputArray logLikelihoods,
-                OutputArray labels,
-                OutputArray probs) CV_OVERRIDE
+    bool trainE(InputArray samples, InputArray _means0, InputArray _covs0, InputArray _weights0,
+                OutputArray logLikelihoods, OutputArray labels, OutputArray probs) CV_OVERRIDE
     {
         Mat samplesMat = samples.getMat();
         std::vector<Mat> covs0;
@@ -140,15 +121,12 @@ public:
 
         Mat means0 = _means0.getMat(), weights0 = _weights0.getMat();
 
-        setTrainData(START_E_STEP, samplesMat, 0, !_means0.empty() ? &means0 : 0,
-                     !_covs0.empty() ? &covs0 : 0, !_weights0.empty() ? &weights0 : 0);
+        setTrainData(START_E_STEP, samplesMat, 0, !_means0.empty() ? &means0 : 0, !_covs0.empty() ? &covs0 : 0,
+                     !_weights0.empty() ? &weights0 : 0);
         return doTrain(START_E_STEP, logLikelihoods, labels, probs);
     }
 
-    bool trainM(InputArray samples,
-                InputArray _probs0,
-                OutputArray logLikelihoods,
-                OutputArray labels,
+    bool trainM(InputArray samples, InputArray _probs0, OutputArray logLikelihoods, OutputArray labels,
                 OutputArray probs) CV_OVERRIDE
     {
         Mat samplesMat = samples.getMat();
@@ -166,9 +144,9 @@ public:
         float firstres = 0.f;
         int i, nsamples = samples.rows;
 
-        if( needprobs )
+        if (needprobs)
         {
-            if( _outputs.fixedType() )
+            if (_outputs.fixedType())
                 ptype = _outputs.type();
             _outputs.create(samples.rows, nclusters, ptype);
             probs = _outputs.getMat();
@@ -176,12 +154,12 @@ public:
         else
             nsamples = std::min(nsamples, 1);
 
-        for( i = 0; i < nsamples; i++ )
+        for (i = 0; i < nsamples; i++)
         {
-            if( needprobs )
+            if (needprobs)
                 probsrow = probs.row(i);
             Vec2d res = computeProbabilities(samples.row(i), needprobs ? &probsrow : 0, ptype);
-            if( i == 0 )
+            if (i == 0)
                 firstres = (float)res[1];
         }
         return firstres;
@@ -194,7 +172,7 @@ public:
         CV_Assert(isTrained());
 
         CV_Assert(!sample.empty());
-        if(sample.type() != CV_64FC1)
+        if (sample.type() != CV_64FC1)
         {
             Mat tmp;
             sample.convertTo(tmp, CV_64FC1);
@@ -203,9 +181,9 @@ public:
         sample = sample.reshape(1, 1);
 
         Mat probs;
-        if( _probs.needed() )
+        if (_probs.needed())
         {
-            if( _probs.fixedType() )
+            if (_probs.fixedType())
                 ptype = _probs.type();
             _probs.create(1, nclusters, ptype);
             probs = _probs.getMat();
@@ -214,29 +192,16 @@ public:
         return computeProbabilities(sample, !probs.empty() ? &probs : 0, ptype);
     }
 
-    bool isTrained() const CV_OVERRIDE
-    {
-        return !means.empty();
-    }
+    bool isTrained() const CV_OVERRIDE { return !means.empty(); }
 
-    bool isClassifier() const CV_OVERRIDE
-    {
-        return true;
-    }
+    bool isClassifier() const CV_OVERRIDE { return true; }
 
-    int getVarCount() const CV_OVERRIDE
-    {
-        return means.cols;
-    }
+    int getVarCount() const CV_OVERRIDE { return means.cols; }
 
-    String getDefaultName() const CV_OVERRIDE
-    {
-        return "opencv_ml_em";
-    }
+    String getDefaultName() const CV_OVERRIDE { return "opencv_ml_em"; }
 
-    static void checkTrainData(int startStep, const Mat& samples,
-                               int nclusters, int covMatType, const Mat* probs, const Mat* means,
-                               const std::vector<Mat>* covs, const Mat* weights)
+    static void checkTrainData(int startStep, const Mat& samples, int nclusters, int covMatType, const Mat* probs,
+                               const Mat* means, const std::vector<Mat>* covs, const Mat* weights)
     {
         // Check samples.
         CV_Assert(!samples.empty());
@@ -248,46 +213,38 @@ public:
         // Check training params.
         CV_Assert(nclusters > 0);
         CV_Assert(nclusters <= nsamples);
-        CV_Assert(startStep == START_AUTO_STEP ||
-                  startStep == START_E_STEP ||
-                  startStep == START_M_STEP);
-        CV_Assert(covMatType == COV_MAT_GENERIC ||
-                  covMatType == COV_MAT_DIAGONAL ||
-                  covMatType == COV_MAT_SPHERICAL);
+        CV_Assert(startStep == START_AUTO_STEP || startStep == START_E_STEP || startStep == START_M_STEP);
+        CV_Assert(covMatType == COV_MAT_GENERIC || covMatType == COV_MAT_DIAGONAL
+                  || covMatType == COV_MAT_SPHERICAL);
 
-        CV_Assert(!probs ||
-            (!probs->empty() &&
-             probs->rows == nsamples && probs->cols == nclusters &&
-             (probs->type() == CV_32FC1 || probs->type() == CV_64FC1)));
+        CV_Assert(!probs
+                  || (!probs->empty() && probs->rows == nsamples && probs->cols == nclusters
+                      && (probs->type() == CV_32FC1 || probs->type() == CV_64FC1)));
 
-        CV_Assert(!weights ||
-            (!weights->empty() &&
-             (weights->cols == 1 || weights->rows == 1) && static_cast<int>(weights->total()) == nclusters &&
-             (weights->type() == CV_32FC1 || weights->type() == CV_64FC1)));
+        CV_Assert(!weights
+                  || (!weights->empty() && (weights->cols == 1 || weights->rows == 1)
+                      && static_cast<int>(weights->total()) == nclusters
+                      && (weights->type() == CV_32FC1 || weights->type() == CV_64FC1)));
 
-        CV_Assert(!means ||
-            (!means->empty() &&
-             means->rows == nclusters && means->cols == dim &&
-             means->channels() == 1));
+        CV_Assert(!means
+                  || (!means->empty() && means->rows == nclusters && means->cols == dim && means->channels() == 1));
 
-        CV_Assert(!covs ||
-            (!covs->empty() &&
-             static_cast<int>(covs->size()) == nclusters));
-        if(covs)
+        CV_Assert(!covs || (!covs->empty() && static_cast<int>(covs->size()) == nclusters));
+        if (covs)
         {
             const Size covSize(dim, dim);
-            for(size_t i = 0; i < covs->size(); i++)
+            for (size_t i = 0; i < covs->size(); i++)
             {
                 const Mat& m = (*covs)[i];
                 CV_Assert(!m.empty() && m.size() == covSize && (m.channels() == 1));
             }
         }
 
-        if(startStep == START_E_STEP)
+        if (startStep == START_E_STEP)
         {
             CV_Assert(means);
         }
-        else if(startStep == START_M_STEP)
+        else if (startStep == START_M_STEP)
         {
             CV_Assert(probs);
         }
@@ -295,7 +252,7 @@ public:
 
     static void preprocessSampleData(const Mat& src, Mat& dst, int dstType, bool isAlwaysClone)
     {
-        if(src.type() == dstType && !isAlwaysClone)
+        if (src.type() == dstType && !isAlwaysClone)
             dst = src;
         else
             src.convertTo(dst, dstType);
@@ -305,58 +262,56 @@ public:
     {
         max(probs, 0., probs);
 
-        const double uniformProbability = (double)(1./probs.cols);
-        for(int y = 0; y < probs.rows; y++)
+        const double uniformProbability = (double)(1. / probs.cols);
+        for (int y = 0; y < probs.rows; y++)
         {
             Mat sampleProbs = probs.row(y);
 
             double maxVal = 0;
             minMaxLoc(sampleProbs, 0, &maxVal);
-            if(maxVal < FLT_EPSILON)
+            if (maxVal < FLT_EPSILON)
                 sampleProbs.setTo(uniformProbability);
             else
                 normalize(sampleProbs, sampleProbs, 1, 0, NORM_L1);
         }
     }
 
-    void setTrainData(int startStep, const Mat& samples,
-                      const Mat* probs0,
-                      const Mat* means0,
-                      const std::vector<Mat>* covs0,
-                      const Mat* weights0)
+    void setTrainData(int startStep, const Mat& samples, const Mat* probs0, const Mat* means0,
+                      const std::vector<Mat>* covs0, const Mat* weights0)
     {
         clear();
 
         checkTrainData(startStep, samples, nclusters, covMatType, probs0, means0, covs0, weights0);
 
-        bool isKMeansInit = (startStep == START_AUTO_STEP) || (startStep == START_E_STEP && (covs0 == 0 || weights0 == 0));
+        bool isKMeansInit = (startStep == START_AUTO_STEP)
+                            || (startStep == START_E_STEP && (covs0 == 0 || weights0 == 0));
         // Set checked data
         preprocessSampleData(samples, trainSamples, isKMeansInit ? CV_32FC1 : CV_64FC1, false);
 
         // set probs
-        if(probs0 && startStep == START_M_STEP)
+        if (probs0 && startStep == START_M_STEP)
         {
             preprocessSampleData(*probs0, trainProbs, CV_64FC1, true);
             preprocessProbability(trainProbs);
         }
 
         // set weights
-        if(weights0 && (startStep == START_E_STEP && covs0))
+        if (weights0 && (startStep == START_E_STEP && covs0))
         {
             weights0->convertTo(weights, CV_64FC1);
-            weights = weights.reshape(1,1);
+            weights = weights.reshape(1, 1);
             preprocessProbability(weights);
         }
 
         // set means
-        if(means0 && (startStep == START_E_STEP/* || startStep == START_AUTO_STEP*/))
+        if (means0 && (startStep == START_E_STEP /* || startStep == START_AUTO_STEP*/))
             means0->convertTo(means, isKMeansInit ? CV_32FC1 : CV_64FC1);
 
         // set covs
-        if(covs0 && (startStep == START_E_STEP && weights0))
+        if (covs0 && (startStep == START_E_STEP && weights0))
         {
             covs.resize(nclusters);
-            for(size_t i = 0; i < covs0->size(); i++)
+            for (size_t i = 0; i < covs0->size(); i++)
                 (*covs0)[i].convertTo(covs[i], CV_64FC1);
         }
     }
@@ -365,23 +320,24 @@ public:
     {
         CV_Assert(!covs.empty());
         covsEigenValues.resize(nclusters);
-        if(covMatType == COV_MAT_GENERIC)
+        if (covMatType == COV_MAT_GENERIC)
             covsRotateMats.resize(nclusters);
         invCovsEigenValues.resize(nclusters);
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
             CV_Assert(!covs[clusterIndex].empty());
 
             SVD svd(covs[clusterIndex], SVD::MODIFY_A + SVD::FULL_UV);
 
-            if(covMatType == COV_MAT_SPHERICAL)
+            if (covMatType == COV_MAT_SPHERICAL)
             {
                 double maxSingularVal = svd.w.at<double>(0);
                 covsEigenValues[clusterIndex] = Mat(1, 1, CV_64FC1, Scalar(maxSingularVal));
             }
-            else if(covMatType == COV_MAT_DIAGONAL)
+            else if (covMatType == COV_MAT_DIAGONAL)
             {
-                covsEigenValues[clusterIndex] = covs[clusterIndex].diag().clone(); //Preserve the original order of eigen values.
+                covsEigenValues[clusterIndex] =
+                    covs[clusterIndex].diag().clone(); //Preserve the original order of eigen values.
             }
             else //COV_MAT_GENERIC
             {
@@ -389,7 +345,7 @@ public:
                 covsRotateMats[clusterIndex] = svd.u;
             }
             max(covsEigenValues[clusterIndex], minEigenValue, covsEigenValues[clusterIndex]);
-            invCovsEigenValues[clusterIndex] = 1./covsEigenValues[clusterIndex];
+            invCovsEigenValues[clusterIndex] = 1. / covsEigenValues[clusterIndex];
         }
     }
 
@@ -401,26 +357,25 @@ public:
 
         // Convert samples and means to 32F, because kmeans requires this type.
         Mat trainSamplesFlt, meansFlt;
-        if(trainSamples.type() != CV_32FC1)
+        if (trainSamples.type() != CV_32FC1)
             trainSamples.convertTo(trainSamplesFlt, CV_32FC1);
         else
             trainSamplesFlt = trainSamples;
-        if(!means.empty())
+        if (!means.empty())
         {
-            if(means.type() != CV_32FC1)
+            if (means.type() != CV_32FC1)
                 means.convertTo(meansFlt, CV_32FC1);
             else
                 meansFlt = means;
         }
 
         Mat labels;
-        kmeans(trainSamplesFlt, nclusters, labels,
-               TermCriteria(TermCriteria::COUNT, means.empty() ? 10 : 1, 0.5),
+        kmeans(trainSamplesFlt, nclusters, labels, TermCriteria(TermCriteria::COUNT, means.empty() ? 10 : 1, 0.5),
                10, KMEANS_PP_CENTERS, meansFlt);
 
         // Convert samples and means back to 64F.
         CV_Assert(meansFlt.type() == CV_32FC1);
-        if(trainSamples.type() != CV_64FC1)
+        if (trainSamples.type() != CV_64FC1)
         {
             Mat trainSamplesBuffer;
             trainSamplesFlt.convertTo(trainSamplesBuffer, CV_64FC1);
@@ -431,12 +386,12 @@ public:
         // Compute weights and covs
         weights = Mat(1, nclusters, CV_64FC1, Scalar(0));
         covs.resize(nclusters);
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
             Mat clusterSamples;
-            for(int sampleIndex = 0; sampleIndex < nsamples; sampleIndex++)
+            for (int sampleIndex = 0; sampleIndex < nsamples; sampleIndex++)
             {
-                if(labels.at<int>(sampleIndex) == clusterIndex)
+                if (labels.at<int>(sampleIndex) == clusterIndex)
                 {
                     const Mat sample = trainSamples.row(sampleIndex);
                     clusterSamples.push_back(sample);
@@ -445,8 +400,9 @@ public:
             CV_Assert(!clusterSamples.empty());
 
             calcCovarMatrix(clusterSamples, covs[clusterIndex], means.row(clusterIndex),
-                CV_COVAR_NORMAL + CV_COVAR_ROWS + CV_COVAR_USE_AVG + CV_COVAR_SCALE, CV_64FC1);
-            weights.at<double>(clusterIndex) = static_cast<double>(clusterSamples.rows)/static_cast<double>(nsamples);
+                            CV_COVAR_NORMAL + CV_COVAR_ROWS + CV_COVAR_USE_AVG + CV_COVAR_SCALE, CV_64FC1);
+            weights.at<double>(clusterIndex) = static_cast<double>(clusterSamples.rows)
+                                               / static_cast<double>(nsamples);
         }
 
         decomposeCovs();
@@ -463,12 +419,13 @@ public:
         logWeightDivDet.create(1, nclusters, CV_64FC1);
         // note: logWeightDivDet = log(weight_k) - 0.5 * log(|det(cov_k)|)
 
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
             double logDetCov = 0.;
             const int evalCount = static_cast<int>(covsEigenValues[clusterIndex].total());
-            for(int di = 0; di < evalCount; di++)
-                logDetCov += std::log(covsEigenValues[clusterIndex].at<double>(covMatType != COV_MAT_SPHERICAL ? di : 0));
+            for (int di = 0; di < evalCount; di++)
+                logDetCov += std::log(
+                    covsEigenValues[clusterIndex].at<double>(covMatType != COV_MAT_SPHERICAL ? di : 0));
 
             logWeightDivDet.at<double>(clusterIndex) = logWeights.at<double>(clusterIndex) - 0.5 * logDetCov;
         }
@@ -478,41 +435,40 @@ public:
     {
         int dim = trainSamples.cols;
         // Precompute the empty initial train data in the cases of START_E_STEP and START_AUTO_STEP
-        if(startStep != START_M_STEP)
+        if (startStep != START_M_STEP)
         {
-            if(covs.empty())
+            if (covs.empty())
             {
                 CV_Assert(weights.empty());
                 clusterTrainSamples();
             }
         }
 
-        if(!covs.empty() && covsEigenValues.empty() )
+        if (!covs.empty() && covsEigenValues.empty())
         {
             CV_Assert(invCovsEigenValues.empty());
             decomposeCovs();
         }
 
-        if(startStep == START_M_STEP)
+        if (startStep == START_M_STEP)
             mStep();
 
         double trainLogLikelihood, prevTrainLogLikelihood = 0.;
-        int maxIters = (termCrit.type & TermCriteria::MAX_ITER) ?
-            termCrit.maxCount : DEFAULT_MAX_ITERS;
+        int maxIters = (termCrit.type & TermCriteria::MAX_ITER) ? termCrit.maxCount : DEFAULT_MAX_ITERS;
         double epsilon = (termCrit.type & TermCriteria::EPS) ? termCrit.epsilon : 0.;
 
-        for(int iter = 0; ; iter++)
+        for (int iter = 0;; iter++)
         {
             eStep();
             trainLogLikelihood = sum(trainLogLikelihoods)[0];
 
-            if(iter >= maxIters - 1)
+            if (iter >= maxIters - 1)
                 break;
 
             double trainLogLikelihoodDelta = trainLogLikelihood - prevTrainLogLikelihood;
-            if( iter != 0 &&
-                (trainLogLikelihoodDelta < -DBL_EPSILON ||
-                 trainLogLikelihoodDelta < epsilon * std::fabs(trainLogLikelihood)))
+            if (iter != 0
+                && (trainLogLikelihoodDelta < -DBL_EPSILON
+                    || trainLogLikelihoodDelta < epsilon * std::fabs(trainLogLikelihood)))
                 break;
 
             mStep();
@@ -520,7 +476,7 @@ public:
             prevTrainLogLikelihood = trainLogLikelihood;
         }
 
-        if( trainLogLikelihood <= -DBL_MAX/10000. )
+        if (trainLogLikelihood <= -DBL_MAX / 10000.)
         {
             clear();
             return false;
@@ -528,24 +484,24 @@ public:
 
         // postprocess covs
         covs.resize(nclusters);
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
-            if(covMatType == COV_MAT_SPHERICAL)
+            if (covMatType == COV_MAT_SPHERICAL)
             {
                 covs[clusterIndex].create(dim, dim, CV_64FC1);
                 setIdentity(covs[clusterIndex], Scalar(covsEigenValues[clusterIndex].at<double>(0)));
             }
-            else if(covMatType == COV_MAT_DIAGONAL)
+            else if (covMatType == COV_MAT_DIAGONAL)
             {
                 covs[clusterIndex] = Mat::diag(covsEigenValues[clusterIndex]);
             }
         }
 
-        if(labels.needed())
+        if (labels.needed())
             trainLabels.copyTo(labels);
-        if(probs.needed())
+        if (probs.needed())
             trainProbs.copyTo(probs);
-        if(logLikelihoods.needed())
+        if (logLikelihoods.needed())
             trainLogLikelihoods.copyTo(logLikelihoods);
 
         trainSamples.release();
@@ -573,28 +529,29 @@ public:
 
         Mat L(1, nclusters, CV_64FC1), centeredSample(1, dim, CV_64F);
         int i, label = 0;
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
             const double* mptr = means.ptr<double>(clusterIndex);
             double* dptr = centeredSample.ptr<double>();
-            if( stype == CV_32F )
+            if (stype == CV_32F)
             {
                 const float* sptr = sample.ptr<float>();
-                for( i = 0; i < dim; i++ )
+                for (i = 0; i < dim; i++)
                     dptr[i] = sptr[i] - mptr[i];
             }
             else
             {
                 const double* sptr = sample.ptr<double>();
-                for( i = 0; i < dim; i++ )
+                for (i = 0; i < dim; i++)
                     dptr[i] = sptr[i] - mptr[i];
             }
 
-            Mat rotatedCenteredSample = covMatType != COV_MAT_GENERIC ?
-                    centeredSample : centeredSample * covsRotateMats[clusterIndex];
+            Mat rotatedCenteredSample = covMatType != COV_MAT_GENERIC
+                                            ? centeredSample
+                                            : centeredSample * covsRotateMats[clusterIndex];
 
             double Lval = 0;
-            for(int di = 0; di < dim; di++)
+            for (int di = 0; di < dim; di++)
             {
                 double w = invCovsEigenValues[clusterIndex].at<double>(covMatType != COV_MAT_SPHERICAL ? di : 0);
                 double val = rotatedCenteredSample.at<double>(di);
@@ -603,13 +560,13 @@ public:
             CV_DbgAssert(!logWeightDivDet.empty());
             L.at<double>(clusterIndex) = logWeightDivDet.at<double>(clusterIndex) - 0.5 * Lval;
 
-            if(L.at<double>(clusterIndex) > L.at<double>(label))
+            if (L.at<double>(clusterIndex) > L.at<double>(label))
                 label = clusterIndex;
         }
 
         double maxLVal = L.at<double>(label);
         double expDiffSum = 0;
-        for( i = 0; i < L.cols; i++ )
+        for (i = 0; i < L.cols; i++)
         {
             double v = std::exp(L.at<double>(i) - maxLVal);
             L.at<double>(i) = v;
@@ -617,11 +574,11 @@ public:
         }
 
         CV_Assert(expDiffSum > 0);
-        if(probs)
-            L.convertTo(*probs, ptype, 1./expDiffSum);
+        if (probs)
+            L.convertTo(*probs, ptype, 1. / expDiffSum);
 
         Vec2d res;
-        res[0] = std::log(expDiffSum)  + maxLVal - 0.5 * dim * CV_LOG2PI;
+        res[0] = std::log(expDiffSum) + maxLVal - 0.5 * dim * CV_LOG2PI;
         res[1] = label;
 
         return res;
@@ -639,7 +596,7 @@ public:
         CV_DbgAssert(trainSamples.type() == CV_64FC1);
         CV_DbgAssert(means.type() == CV_64FC1);
 
-        for(int sampleIndex = 0; sampleIndex < trainSamples.rows; sampleIndex++)
+        for (int sampleIndex = 0; sampleIndex < trainSamples.rows; sampleIndex++)
         {
             Mat sampleProbs = trainProbs.row(sampleIndex);
             Vec2d res = computeProbabilities(trainSamples.row(sampleIndex), &sampleProbs, CV_64F);
@@ -664,19 +621,19 @@ public:
         const double minPosWeight = trainSamples.rows * DBL_EPSILON;
         double minWeight = DBL_MAX;
         int minWeightClusterIndex = -1;
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
-            if(weights.at<double>(clusterIndex) <= minPosWeight)
+            if (weights.at<double>(clusterIndex) <= minPosWeight)
                 continue;
 
-            if(weights.at<double>(clusterIndex) < minWeight)
+            if (weights.at<double>(clusterIndex) < minWeight)
             {
                 minWeight = weights.at<double>(clusterIndex);
                 minWeightClusterIndex = clusterIndex;
             }
 
             Mat clusterMean = means.row(clusterIndex);
-            for(int sampleIndex = 0; sampleIndex < trainSamples.rows; sampleIndex++)
+            for (int sampleIndex = 0; sampleIndex < trainSamples.rows; sampleIndex++)
                 clusterMean += trainProbs.at<double>(sampleIndex, clusterIndex) * trainSamples.row(sampleIndex);
             clusterMean /= weights.at<double>(clusterIndex);
         }
@@ -684,52 +641,52 @@ public:
         // Update covsEigenValues and invCovsEigenValues
         covs.resize(nclusters);
         covsEigenValues.resize(nclusters);
-        if(covMatType == COV_MAT_GENERIC)
+        if (covMatType == COV_MAT_GENERIC)
             covsRotateMats.resize(nclusters);
         invCovsEigenValues.resize(nclusters);
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
-            if(weights.at<double>(clusterIndex) <= minPosWeight)
+            if (weights.at<double>(clusterIndex) <= minPosWeight)
                 continue;
 
-            if(covMatType != COV_MAT_SPHERICAL)
+            if (covMatType != COV_MAT_SPHERICAL)
                 covsEigenValues[clusterIndex].create(1, dim, CV_64FC1);
             else
                 covsEigenValues[clusterIndex].create(1, 1, CV_64FC1);
 
-            if(covMatType == COV_MAT_GENERIC)
+            if (covMatType == COV_MAT_GENERIC)
                 covs[clusterIndex].create(dim, dim, CV_64FC1);
 
-            Mat clusterCov = covMatType != COV_MAT_GENERIC ?
-                covsEigenValues[clusterIndex] : covs[clusterIndex];
+            Mat clusterCov = covMatType != COV_MAT_GENERIC ? covsEigenValues[clusterIndex] : covs[clusterIndex];
 
             clusterCov = Scalar(0);
 
             Mat centeredSample;
-            for(int sampleIndex = 0; sampleIndex < trainSamples.rows; sampleIndex++)
+            for (int sampleIndex = 0; sampleIndex < trainSamples.rows; sampleIndex++)
             {
                 centeredSample = trainSamples.row(sampleIndex) - means.row(clusterIndex);
 
-                if(covMatType == COV_MAT_GENERIC)
-                    clusterCov += trainProbs.at<double>(sampleIndex, clusterIndex) * centeredSample.t() * centeredSample;
+                if (covMatType == COV_MAT_GENERIC)
+                    clusterCov += trainProbs.at<double>(sampleIndex, clusterIndex) * centeredSample.t()
+                                  * centeredSample;
                 else
                 {
                     double p = trainProbs.at<double>(sampleIndex, clusterIndex);
-                    for(int di = 0; di < dim; di++ )
+                    for (int di = 0; di < dim; di++)
                     {
                         double val = centeredSample.at<double>(di);
-                        clusterCov.at<double>(covMatType != COV_MAT_SPHERICAL ? di : 0) += p*val*val;
+                        clusterCov.at<double>(covMatType != COV_MAT_SPHERICAL ? di : 0) += p * val * val;
                     }
                 }
             }
 
-            if(covMatType == COV_MAT_SPHERICAL)
+            if (covMatType == COV_MAT_SPHERICAL)
                 clusterCov /= dim;
 
             clusterCov /= weights.at<double>(clusterIndex);
 
             // Update covsRotateMats for COV_MAT_GENERIC only
-            if(covMatType == COV_MAT_GENERIC)
+            if (covMatType == COV_MAT_GENERIC)
             {
                 SVD svd(covs[clusterIndex], SVD::MODIFY_A + SVD::FULL_UV);
                 covsEigenValues[clusterIndex] = svd.w;
@@ -739,18 +696,18 @@ public:
             max(covsEigenValues[clusterIndex], minEigenValue, covsEigenValues[clusterIndex]);
 
             // update invCovsEigenValues
-            invCovsEigenValues[clusterIndex] = 1./covsEigenValues[clusterIndex];
+            invCovsEigenValues[clusterIndex] = 1. / covsEigenValues[clusterIndex];
         }
 
-        for(int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
+        for (int clusterIndex = 0; clusterIndex < nclusters; clusterIndex++)
         {
-            if(weights.at<double>(clusterIndex) <= minPosWeight)
+            if (weights.at<double>(clusterIndex) <= minPosWeight)
             {
                 Mat clusterMean = means.row(clusterIndex);
                 means.row(minWeightClusterIndex).copyTo(clusterMean);
                 covs[minWeightClusterIndex].copyTo(covs[clusterIndex]);
                 covsEigenValues[minWeightClusterIndex].copyTo(covsEigenValues[clusterIndex]);
-                if(covMatType == COV_MAT_GENERIC)
+                if (covMatType == COV_MAT_GENERIC)
                     covsRotateMats[minWeightClusterIndex].copyTo(covsRotateMats[clusterIndex]);
                 invCovsEigenValues[minWeightClusterIndex].copyTo(invCovsEigenValues[clusterIndex]);
             }
@@ -763,17 +720,20 @@ public:
     void write_params(FileStorage& fs) const
     {
         fs << "nclusters" << nclusters;
-        fs << "cov_mat_type" << (covMatType == COV_MAT_SPHERICAL ? String("spherical") :
-                                 covMatType == COV_MAT_DIAGONAL ? String("diagonal") :
-                                 covMatType == COV_MAT_GENERIC ? String("generic") :
-                                 format("unknown_%d", covMatType));
+        fs << "cov_mat_type"
+           << (covMatType == COV_MAT_SPHERICAL
+                   ? String("spherical")
+                   : covMatType == COV_MAT_DIAGONAL
+                         ? String("diagonal")
+                         : covMatType == COV_MAT_GENERIC ? String("generic") : format("unknown_%d", covMatType));
         writeTermCrit(fs, termCrit);
     }
 
     void write(FileStorage& fs) const CV_OVERRIDE
     {
         writeFormat(fs);
-        fs << "training_params" << "{";
+        fs << "training_params"
+           << "{";
         write_params(fs);
         fs << "}";
         fs << "weights" << weights;
@@ -781,8 +741,9 @@ public:
 
         size_t i, n = covs.size();
 
-        fs << "covs" << "[";
-        for( i = 0; i < n; i++ )
+        fs << "covs"
+           << "[";
+        for (i = 0; i < n; i++)
             fs << covs[i];
         fs << "]";
     }
@@ -791,9 +752,8 @@ public:
     {
         nclusters = (int)fn["nclusters"];
         String s = (String)fn["cov_mat_type"];
-        covMatType = s == "spherical" ? COV_MAT_SPHERICAL :
-                             s == "diagonal" ? COV_MAT_DIAGONAL :
-                             s == "generic" ? COV_MAT_GENERIC : -1;
+        covMatType = s == "spherical" ? COV_MAT_SPHERICAL
+                                      : s == "diagonal" ? COV_MAT_DIAGONAL : s == "generic" ? COV_MAT_GENERIC : -1;
         CV_Assert(covMatType >= 0);
         termCrit = readTermCrit(fn);
     }
@@ -811,7 +771,7 @@ public:
         int i, n = (int)cfn.size();
         covs.resize(n);
 
-        for( i = 0; i < n; i++, ++cfn_it )
+        for (i = 0; i < n; i++, ++cfn_it)
             (*cfn_it) >> covs[i];
 
         decomposeCovs();
@@ -842,17 +802,13 @@ public:
     Mat logWeightDivDet;
 };
 
-Ptr<EM> EM::create()
-{
-    return makePtr<EMImpl>();
-}
+Ptr<EM> EM::create() { return makePtr<EMImpl>(); }
 
 Ptr<EM> EM::load(const String& filepath, const String& nodeName)
 {
     return Algorithm::load<EM>(filepath, nodeName);
 }
 
-}
-} // namespace cv
+}} // namespace cv::ml
 
 /* End of file. */

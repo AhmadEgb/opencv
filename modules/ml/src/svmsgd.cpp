@@ -52,10 +52,7 @@ using std::endl;
 *                        Stochastic Gradient Descent SVM Classifier                      *
 \****************************************************************************************/
 
-namespace cv
-{
-namespace ml
-{
+namespace cv { namespace ml {
 
 class SVMSGDImpl CV_FINAL : public SVMSGD
 {
@@ -67,7 +64,7 @@ public:
 
     virtual bool train(const Ptr<TrainData>& data, int) CV_OVERRIDE;
 
-    virtual float predict( InputArray samples, OutputArray results=noArray(), int flags = 0 ) const CV_OVERRIDE;
+    virtual float predict(InputArray samples, OutputArray results = noArray(), int flags = 0) const CV_OVERRIDE;
 
     virtual bool isClassifier() const CV_OVERRIDE;
 
@@ -75,9 +72,9 @@ public:
 
     virtual void clear() CV_OVERRIDE;
 
-    virtual void write(FileStorage &fs) const CV_OVERRIDE;
+    virtual void write(FileStorage& fs) const CV_OVERRIDE;
 
-    virtual void read(const FileNode &fn) CV_OVERRIDE;
+    virtual void read(const FileNode& fn) CV_OVERRIDE;
 
     virtual Mat getWeights() CV_OVERRIDE { return weights_; }
 
@@ -85,7 +82,7 @@ public:
 
     virtual int getVarCount() const CV_OVERRIDE { return weights_.cols; }
 
-    virtual String getDefaultName() const CV_OVERRIDE {return "opencv_ml_svmsgd";}
+    virtual String getDefaultName() const CV_OVERRIDE { return "opencv_ml_svmsgd"; }
 
     virtual void setOptimalParameters(int svmsgdType = ASGD, int marginType = SOFT_MARGIN) CV_OVERRIDE;
 
@@ -103,19 +100,20 @@ public:
     inline void setTermCriteria(const cv::TermCriteria& val) CV_OVERRIDE { params.termCrit = val; }
 
 private:
-    void updateWeights(InputArray sample, bool positive, float stepSize, Mat &weights);
+    void updateWeights(InputArray sample, bool positive, float stepSize, Mat& weights);
 
-    void writeParams( FileStorage &fs ) const;
+    void writeParams(FileStorage& fs) const;
 
-    void readParams( const FileNode &fn );
+    void readParams(const FileNode& fn);
 
     static inline bool isPositive(float val) { return val > 0; }
 
-    static void normalizeSamples(Mat &matrix, Mat &average, float &multiplier);
+    static void normalizeSamples(Mat& matrix, Mat& average, float& multiplier);
 
     float calcShift(InputArray _samples, InputArray _responses) const;
 
-    static void makeExtendedTrainSamples(const Mat &trainSamples, Mat &extendedTrainSamples, Mat &average, float &multiplier);
+    static void makeExtendedTrainSamples(const Mat& trainSamples, Mat& extendedTrainSamples, Mat& average,
+                                         float& multiplier);
 
     // Vector with SVM weights
     Mat weights_;
@@ -135,10 +133,7 @@ private:
     SVMSGDParams params;
 };
 
-Ptr<SVMSGD> SVMSGD::create()
-{
-    return makePtr<SVMSGDImpl>();
-}
+Ptr<SVMSGD> SVMSGD::create() { return makePtr<SVMSGDImpl>(); }
 
 Ptr<SVMSGD> SVMSGD::load(const String& filepath, const String& nodeName)
 {
@@ -146,13 +141,13 @@ Ptr<SVMSGD> SVMSGD::load(const String& filepath, const String& nodeName)
 }
 
 
-void SVMSGDImpl::normalizeSamples(Mat &samples, Mat &average, float &multiplier)
+void SVMSGDImpl::normalizeSamples(Mat& samples, Mat& average, float& multiplier)
 {
     int featuresCount = samples.cols;
     int samplesCount = samples.rows;
 
     average = Mat(1, featuresCount, samples.type());
-    CV_Assert(average.type() ==  CV_32FC1);
+    CV_Assert(average.type() == CV_32FC1);
     for (int featureIndex = 0; featureIndex < featuresCount; featureIndex++)
     {
         average.at<float>(featureIndex) = static_cast<float>(mean(samples.col(featureIndex))[0]);
@@ -170,7 +165,8 @@ void SVMSGDImpl::normalizeSamples(Mat &samples, Mat &average, float &multiplier)
     samples *= multiplier;
 }
 
-void SVMSGDImpl::makeExtendedTrainSamples(const Mat &trainSamples, Mat &extendedTrainSamples, Mat &average, float &multiplier)
+void SVMSGDImpl::makeExtendedTrainSamples(const Mat& trainSamples, Mat& extendedTrainSamples, Mat& average,
+                                          float& multiplier)
 {
     Mat normalizedTrainSamples = trainSamples.clone();
     int samplesCount = normalizedTrainSamples.rows;
@@ -187,7 +183,7 @@ void SVMSGDImpl::updateWeights(InputArray _sample, bool positive, float stepSize
 
     int response = positive ? 1 : -1; // ensure that trainResponses are -1 or 1
 
-    if ( sample.dot(weights) * response > 1)
+    if (sample.dot(weights) * response > 1)
     {
         // Not a support vector, only apply weight decay
         weights *= (1.f - stepSize * params.marginRegularization);
@@ -201,14 +197,14 @@ void SVMSGDImpl::updateWeights(InputArray _sample, bool positive, float stepSize
 
 float SVMSGDImpl::calcShift(InputArray _samples, InputArray _responses) const
 {
-    float margin[2] = { std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
+    float margin[2] = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
 
     Mat trainSamples = _samples.getMat();
     int trainSamplesCount = trainSamples.rows;
 
     Mat trainResponses = _responses.getMat();
 
-    CV_Assert(trainResponses.type() ==  CV_32FC1);
+    CV_Assert(trainResponses.type() == CV_32FC1);
     for (int samplesIndex = 0; samplesIndex < trainSamplesCount; samplesIndex++)
     {
         Mat currentSample = trainSamples.row(samplesIndex);
@@ -231,12 +227,12 @@ float SVMSGDImpl::calcShift(InputArray _samples, InputArray _responses) const
 bool SVMSGDImpl::train(const Ptr<TrainData>& data, int)
 {
     clear();
-    CV_Assert( isClassifier() );   //toDo: consider
+    CV_Assert(isClassifier()); //toDo: consider
 
     Mat trainSamples = data->getTrainSamples();
 
     int featureCount = trainSamples.cols;
-    Mat trainResponses = data->getTrainResponses();        // (trainSamplesCount x 1) matrix
+    Mat trainResponses = data->getTrainResponses(); // (trainSamplesCount x 1) matrix
 
     CV_Assert(trainResponses.rows == trainSamples.rows);
 
@@ -248,7 +244,7 @@ bool SVMSGDImpl::train(const Ptr<TrainData>& data, int)
     int positiveCount = countNonZero(trainResponses >= 0);
     int negativeCount = countNonZero(trainResponses < 0);
 
-    if ( positiveCount <= 0 || negativeCount <= 0 )
+    if (positiveCount <= 0 || negativeCount <= 0)
     {
         weights_ = Mat::zeros(1, featureCount, CV_32F);
         shift_ = (positiveCount > 0) ? 1.f : -1.f;
@@ -273,27 +269,30 @@ bool SVMSGDImpl::train(const Ptr<TrainData>& data, int)
 
     RNG rng(0);
 
-    CV_Assert (params.termCrit.type & TermCriteria::COUNT || params.termCrit.type & TermCriteria::EPS);
+    CV_Assert(params.termCrit.type & TermCriteria::COUNT || params.termCrit.type & TermCriteria::EPS);
     int maxCount = (params.termCrit.type & TermCriteria::COUNT) ? params.termCrit.maxCount : INT_MAX;
     double epsilon = (params.termCrit.type & TermCriteria::EPS) ? params.termCrit.epsilon : 0;
 
     double err = DBL_MAX;
-    CV_Assert (trainResponses.type() == CV_32FC1);
+    CV_Assert(trainResponses.type() == CV_32FC1);
     // Stochastic gradient descent SVM
     for (int iter = 0; (iter < maxCount) && (err > epsilon); iter++)
     {
-        int randomNumber = rng.uniform(0, extendedTrainSamplesCount);             //generate sample number
+        int randomNumber = rng.uniform(0, extendedTrainSamplesCount); //generate sample number
 
         Mat currentSample = extendedTrainSamples.row(randomNumber);
 
-        float stepSize = params.initialStepSize * std::pow((1 + params.marginRegularization * params.initialStepSize * (float)iter), (-params.stepDecreasingPower));    //update stepSize
+        float stepSize = params.initialStepSize
+                         * std::pow((1 + params.marginRegularization * params.initialStepSize * (float)iter),
+                                    (-params.stepDecreasingPower)); //update stepSize
 
-        updateWeights( currentSample, isPositive(trainResponses.at<float>(randomNumber)), stepSize, extendedWeights );
+        updateWeights(currentSample, isPositive(trainResponses.at<float>(randomNumber)), stepSize, extendedWeights);
 
         //average weights (only for ASGD model)
         if (params.svmsgdType == ASGD)
         {
-            averageExtendedWeights = ((float)iter/ (1 + (float)iter)) * averageExtendedWeights  + extendedWeights / (1 + (float) iter);
+            averageExtendedWeights = ((float)iter / (1 + (float)iter)) * averageExtendedWeights
+                                     + extendedWeights / (1 + (float)iter);
             err = norm(averageExtendedWeights - previousWeights);
             averageExtendedWeights.copyTo(previousWeights);
         }
@@ -313,7 +312,8 @@ bool SVMSGDImpl::train(const Ptr<TrainData>& data, int)
     weights_ = extendedWeights(roi);
     weights_ *= multiplier;
 
-    CV_Assert((params.marginType == SOFT_MARGIN || params.marginType == HARD_MARGIN) && (extendedWeights.type() ==  CV_32FC1));
+    CV_Assert((params.marginType == SOFT_MARGIN || params.marginType == HARD_MARGIN)
+              && (extendedWeights.type() == CV_32FC1));
 
     if (params.marginType == SOFT_MARGIN)
     {
@@ -327,23 +327,23 @@ bool SVMSGDImpl::train(const Ptr<TrainData>& data, int)
     return true;
 }
 
-float SVMSGDImpl::predict( InputArray _samples, OutputArray _results, int ) const
+float SVMSGDImpl::predict(InputArray _samples, OutputArray _results, int) const
 {
     float result = 0;
     cv::Mat samples = _samples.getMat();
     int nSamples = samples.rows;
     cv::Mat results;
 
-    CV_Assert( samples.cols == weights_.cols && samples.type() == CV_32FC1);
+    CV_Assert(samples.cols == weights_.cols && samples.type() == CV_32FC1);
 
-    if( _results.needed() )
+    if (_results.needed())
     {
-        _results.create( nSamples, 1, samples.type() );
+        _results.create(nSamples, 1, samples.type());
         results = _results.getMat();
     }
     else
     {
-        CV_Assert( nSamples == 1 );
+        CV_Assert(nSamples == 1);
         results = Mat(1, 1, CV_32FC1, &result);
     }
 
@@ -360,30 +360,26 @@ float SVMSGDImpl::predict( InputArray _samples, OutputArray _results, int ) cons
 bool SVMSGDImpl::isClassifier() const
 {
     return (params.svmsgdType == SGD || params.svmsgdType == ASGD)
-            &&
-            (params.marginType == SOFT_MARGIN || params.marginType == HARD_MARGIN)
-            &&
-            (params.marginRegularization > 0) && (params.initialStepSize > 0) && (params.stepDecreasingPower >= 0);
+           && (params.marginType == SOFT_MARGIN || params.marginType == HARD_MARGIN)
+           && (params.marginRegularization > 0) && (params.initialStepSize > 0)
+           && (params.stepDecreasingPower >= 0);
 }
 
-bool SVMSGDImpl::isTrained() const
-{
-    return !weights_.empty();
-}
+bool SVMSGDImpl::isTrained() const { return !weights_.empty(); }
 
 void SVMSGDImpl::write(FileStorage& fs) const
 {
-    if( !isTrained() )
-        CV_Error( CV_StsParseError, "SVMSGD model data is invalid, it hasn't been trained" );
+    if (!isTrained())
+        CV_Error(CV_StsParseError, "SVMSGD model data is invalid, it hasn't been trained");
 
     writeFormat(fs);
-    writeParams( fs );
+    writeParams(fs);
 
     fs << "weights" << weights_;
     fs << "shift" << shift_;
 }
 
-void SVMSGDImpl::writeParams( FileStorage& fs ) const
+void SVMSGDImpl::writeParams(FileStorage& fs) const
 {
     String SvmsgdTypeStr;
 
@@ -421,51 +417,49 @@ void SVMSGDImpl::writeParams( FileStorage& fs ) const
     fs << "initialStepSize" << params.initialStepSize;
     fs << "stepDecreasingPower" << params.stepDecreasingPower;
 
-    fs << "term_criteria" << "{:";
-    if( params.termCrit.type & TermCriteria::EPS )
+    fs << "term_criteria"
+       << "{:";
+    if (params.termCrit.type & TermCriteria::EPS)
         fs << "epsilon" << params.termCrit.epsilon;
-    if( params.termCrit.type & TermCriteria::COUNT )
+    if (params.termCrit.type & TermCriteria::COUNT)
         fs << "iterations" << params.termCrit.maxCount;
     fs << "}";
 }
-void SVMSGDImpl::readParams( const FileNode& fn )
+void SVMSGDImpl::readParams(const FileNode& fn)
 {
     String svmsgdTypeStr = (String)fn["svmsgdType"];
-    int svmsgdType =
-            svmsgdTypeStr == "SGD" ? SGD :
-                                     svmsgdTypeStr == "ASGD" ? ASGD : -1;
+    int svmsgdType = svmsgdTypeStr == "SGD" ? SGD : svmsgdTypeStr == "ASGD" ? ASGD : -1;
 
-    if( svmsgdType < 0 )
-        CV_Error( CV_StsParseError, "Missing or invalid SVMSGD type" );
+    if (svmsgdType < 0)
+        CV_Error(CV_StsParseError, "Missing or invalid SVMSGD type");
 
     params.svmsgdType = svmsgdType;
 
     String marginTypeStr = (String)fn["marginType"];
-    int marginType =
-            marginTypeStr == "SOFT_MARGIN" ? SOFT_MARGIN :
-                                             marginTypeStr == "HARD_MARGIN" ? HARD_MARGIN : -1;
+    int marginType = marginTypeStr == "SOFT_MARGIN" ? SOFT_MARGIN
+                                                    : marginTypeStr == "HARD_MARGIN" ? HARD_MARGIN : -1;
 
-    if( marginType < 0 )
-        CV_Error( CV_StsParseError, "Missing or invalid margin type" );
+    if (marginType < 0)
+        CV_Error(CV_StsParseError, "Missing or invalid margin type");
 
     params.marginType = marginType;
 
-    CV_Assert ( fn["marginRegularization"].isReal() );
+    CV_Assert(fn["marginRegularization"].isReal());
     params.marginRegularization = (float)fn["marginRegularization"];
 
-    CV_Assert ( fn["initialStepSize"].isReal() );
+    CV_Assert(fn["initialStepSize"].isReal());
     params.initialStepSize = (float)fn["initialStepSize"];
 
-    CV_Assert ( fn["stepDecreasingPower"].isReal() );
+    CV_Assert(fn["stepDecreasingPower"].isReal());
     params.stepDecreasingPower = (float)fn["stepDecreasingPower"];
 
     FileNode tcnode = fn["term_criteria"];
     CV_Assert(!tcnode.empty());
     params.termCrit.epsilon = (double)tcnode["epsilon"];
     params.termCrit.maxCount = (int)tcnode["iterations"];
-    params.termCrit.type = (params.termCrit.epsilon > 0 ? TermCriteria::EPS : 0) +
-            (params.termCrit.maxCount > 0 ? TermCriteria::COUNT : 0);
-    CV_Assert ((params.termCrit.type & TermCriteria::COUNT || params.termCrit.type & TermCriteria::EPS));
+    params.termCrit.type = (params.termCrit.epsilon > 0 ? TermCriteria::EPS : 0)
+                           + (params.termCrit.maxCount > 0 ? TermCriteria::COUNT : 0);
+    CV_Assert((params.termCrit.type & TermCriteria::COUNT || params.termCrit.type & TermCriteria::EPS));
 }
 
 void SVMSGDImpl::read(const FileNode& fn)
@@ -497,8 +491,8 @@ void SVMSGDImpl::setOptimalParameters(int svmsgdType, int marginType)
     {
     case SGD:
         params.svmsgdType = SGD;
-        params.marginType = (marginType == SOFT_MARGIN) ? SOFT_MARGIN :
-                                                          (marginType == HARD_MARGIN) ? HARD_MARGIN : -1;
+        params.marginType = (marginType == SOFT_MARGIN) ? SOFT_MARGIN
+                                                        : (marginType == HARD_MARGIN) ? HARD_MARGIN : -1;
         params.marginRegularization = 0.0001f;
         params.initialStepSize = 0.05f;
         params.stepDecreasingPower = 1.f;
@@ -507,8 +501,8 @@ void SVMSGDImpl::setOptimalParameters(int svmsgdType, int marginType)
 
     case ASGD:
         params.svmsgdType = ASGD;
-        params.marginType = (marginType == SOFT_MARGIN) ? SOFT_MARGIN :
-                                                          (marginType == HARD_MARGIN) ? HARD_MARGIN : -1;
+        params.marginType = (marginType == SOFT_MARGIN) ? SOFT_MARGIN
+                                                        : (marginType == HARD_MARGIN) ? HARD_MARGIN : -1;
         params.marginRegularization = 0.00001f;
         params.initialStepSize = 0.05f;
         params.stepDecreasingPower = 0.75f;
@@ -516,8 +510,7 @@ void SVMSGDImpl::setOptimalParameters(int svmsgdType, int marginType)
         break;
 
     default:
-        CV_Error( CV_StsParseError, "SVMSGD model data is invalid" );
+        CV_Error(CV_StsParseError, "SVMSGD model data is invalid");
     }
 }
-}   //ml
-}   //cv
+}} // namespace cv::ml

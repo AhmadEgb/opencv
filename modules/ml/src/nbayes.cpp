@@ -40,19 +40,15 @@
 
 #include "precomp.hpp"
 
-namespace cv {
-namespace ml {
+namespace cv { namespace ml {
 
 
 class NormalBayesClassifierImpl : public NormalBayesClassifier
 {
 public:
-    NormalBayesClassifierImpl()
-    {
-        nallvars = 0;
-    }
+    NormalBayesClassifierImpl() { nallvars = 0; }
 
-    bool train( const Ptr<TrainData>& trainData, int flags ) CV_OVERRIDE
+    bool train(const Ptr<TrainData>& trainData, int flags) CV_OVERRIDE
     {
         const float min_variation = FLT_EPSILON;
         Mat responses = trainData->getNormCatResponses();
@@ -67,7 +63,7 @@ public:
         int __nallvars = trainData->getNAllVars();
         bool update = (flags & UPDATE_MODEL) != 0;
 
-        if( !update )
+        if (!update)
         {
             nallvars = __nallvars;
             count.resize(nclasses);
@@ -77,14 +73,14 @@ public:
             inv_eigen_values.resize(nclasses);
             cov_rotate_mats.resize(nclasses);
 
-            for( cls = 0; cls < nclasses; cls++ )
+            for (cls = 0; cls < nclasses; cls++)
             {
-                count[cls]            = Mat::zeros( 1, nvars, CV_32SC1 );
-                sum[cls]              = Mat::zeros( 1, nvars, CV_64FC1 );
-                productsum[cls]       = Mat::zeros( nvars, nvars, CV_64FC1 );
-                avg[cls]              = Mat::zeros( 1, nvars, CV_64FC1 );
-                inv_eigen_values[cls] = Mat::zeros( 1, nvars, CV_64FC1 );
-                cov_rotate_mats[cls]  = Mat::zeros( nvars, nvars, CV_64FC1 );
+                count[cls] = Mat::zeros(1, nvars, CV_32SC1);
+                sum[cls] = Mat::zeros(1, nvars, CV_64FC1);
+                productsum[cls] = Mat::zeros(nvars, nvars, CV_64FC1);
+                avg[cls] = Mat::zeros(1, nvars, CV_64FC1);
+                inv_eigen_values[cls] = Mat::zeros(1, nvars, CV_64FC1);
+                cov_rotate_mats[cls] = Mat::zeros(nvars, nvars, CV_64FC1);
             }
 
             var_idx = __var_idx;
@@ -95,20 +91,18 @@ public:
         else
         {
             // check that the new training data has the same dimensionality etc.
-            if( nallvars != __nallvars ||
-                var_idx.size() != __var_idx.size() ||
-                norm(var_idx, __var_idx, NORM_INF) != 0 ||
-                cls_labels.size() != __cls_labels.size() ||
-                norm(cls_labels, __cls_labels, NORM_INF) != 0 )
-                CV_Error( CV_StsBadArg,
-                "The new training data is inconsistent with the original training data; varIdx and the class labels should be the same" );
+            if (nallvars != __nallvars || var_idx.size() != __var_idx.size()
+                || norm(var_idx, __var_idx, NORM_INF) != 0 || cls_labels.size() != __cls_labels.size()
+                || norm(cls_labels, __cls_labels, NORM_INF) != 0)
+                CV_Error(CV_StsBadArg, "The new training data is inconsistent with the original training data; "
+                                       "varIdx and the class labels should be the same");
         }
 
-        Mat cov( nvars, nvars, CV_64FC1 );
+        Mat cov(nvars, nvars, CV_64FC1);
         int nsamples = samples.rows;
 
         // process train data (count, sum , productsum)
-        for( s = 0; s < nsamples; s++ )
+        for (s = 0; s < nsamples; s++)
         {
             cls = responses.at<int>(s);
             int* count_data = count[cls].ptr<int>();
@@ -116,20 +110,20 @@ public:
             double* prod_data = productsum[cls].ptr<double>();
             const float* train_vec = samples.ptr<float>(s);
 
-            for( c1 = 0; c1 < nvars; c1++, prod_data += nvars )
+            for (c1 = 0; c1 < nvars; c1++, prod_data += nvars)
             {
                 double val1 = train_vec[c1];
                 sum_data[c1] += val1;
                 count_data[c1]++;
-                for( c2 = c1; c2 < nvars; c2++ )
-                    prod_data[c2] += train_vec[c2]*val1;
+                for (c2 = c1; c2 < nvars; c2++)
+                    prod_data[c2] += train_vec[c2] * val1;
             }
         }
 
         Mat vt;
 
         // calculate avg, covariance matrix, c
-        for( cls = 0; cls < nclasses; cls++ )
+        for (cls = 0; cls < nclasses; cls++)
         {
             double det = 1;
             int i, j;
@@ -140,7 +134,7 @@ public:
 
             completeSymm(productsum[cls], 0);
 
-            for( j = 0; j < nvars; j++ )
+            for (j = 0; j < nvars; j++)
             {
                 int n = count_data[j];
                 avg_data[j] = n ? sum1[j] / n : 0.;
@@ -150,7 +144,7 @@ public:
             avg_data = avg[cls].ptr<double>();
             sum1 = sum[cls].ptr<double>();
 
-            for( i = 0; i < nvars; i++ )
+            for (i = 0; i < nvars; i++)
             {
                 double* avg2_data = avg[cls].ptr<double>();
                 double* sum2 = sum[cls].ptr<double>();
@@ -160,7 +154,7 @@ public:
                 double avg1 = avg_data[i];
                 int _count = count_data[i];
 
-                for( j = 0; j <= i; j++ )
+                for (j = 0; j <= i; j++)
                 {
                     double avg2 = avg2_data[j];
                     double cov_val = prod_data[j] - avg1 * sum2[j] - avg2 * s1val + avg1 * avg2 * _count;
@@ -169,12 +163,12 @@ public:
                 }
             }
 
-            completeSymm( cov, 1 );
+            completeSymm(cov, 1);
 
             SVD::compute(cov, w, cov_rotate_mats[cls], noArray());
             transpose(cov_rotate_mats[cls], cov_rotate_mats[cls]);
             cv::max(w, min_variation, w);
-            for( j = 0; j < nvars; j++ )
+            for (j = 0; j < nvars; j++)
                 det *= w.at<double>(j);
 
             divide(1., w, w);
@@ -187,11 +181,9 @@ public:
     class NBPredictBody : public ParallelLoopBody
     {
     public:
-        NBPredictBody( const Mat& _c, const vector<Mat>& _cov_rotate_mats,
-                       const vector<Mat>& _inv_eigen_values,
-                       const vector<Mat>& _avg,
-                       const Mat& _samples, const Mat& _vidx, const Mat& _cls_labels,
-                       Mat& _results, Mat& _results_prob, bool _rawOutput )
+        NBPredictBody(const Mat& _c, const vector<Mat>& _cov_rotate_mats, const vector<Mat>& _inv_eigen_values,
+                      const vector<Mat>& _avg, const Mat& _samples, const Mat& _vidx, const Mat& _cls_labels,
+                      Mat& _results, Mat& _results_prob, bool _rawOutput)
         {
             c = &_c;
             cov_rotate_mats = &_cov_rotate_mats;
@@ -232,25 +224,26 @@ public:
             if (results)
             {
                 rtype = results->type();
-                rstep = results->isContinuous() ? 1 : results->step/results->elemSize();
+                rstep = results->isContinuous() ? 1 : results->step / results->elemSize();
             }
             if (results_prob)
             {
                 rptype = results_prob->type();
-                rpstep = results_prob->isContinuous() ? results_prob->cols : results_prob->step/results_prob->elemSize();
+                rpstep = results_prob->isContinuous() ? results_prob->cols
+                                                      : results_prob->step / results_prob->elemSize();
             }
             // allocate memory and initializing headers for calculating
-            cv::AutoBuffer<double> _buffer(nvars*2);
+            cv::AutoBuffer<double> _buffer(nvars * 2);
             double* _diffin = _buffer.data();
             double* _diffout = _buffer.data() + nvars;
-            Mat diffin( 1, nvars, CV_64FC1, _diffin );
-            Mat diffout( 1, nvars, CV_64FC1, _diffout );
+            Mat diffin(1, nvars, CV_64FC1, _diffin);
+            Mat diffout(1, nvars, CV_64FC1, _diffout);
 
-            for(int k = range.start; k < range.end; k++ )
+            for (int k = range.start; k < range.end; k++)
             {
                 double opt = FLT_MAX;
 
-                for(int i = 0; i < nclasses; i++ )
+                for (int i = 0; i < nclasses; i++)
                 {
                     double cur = c->at<double>(i);
                     const Mat& u = cov_rotate_mats->at(i);
@@ -260,65 +253,64 @@ public:
                     const float* x = samples->ptr<float>(k);
 
                     // cov = u w u'  -->  cov^(-1) = u w^(-1) u'
-                    for(int j = 0; j < nvars; j++ )
+                    for (int j = 0; j < nvars; j++)
                         _diffin[j] = avg_data[j] - x[vptr ? vptr[j] : j];
 
-                    gemm( diffin, u, 1, noArray(), 0, diffout, GEMM_2_T );
-                    for(int j = 0; j < nvars; j++ )
+                    gemm(diffin, u, 1, noArray(), 0, diffout, GEMM_2_T);
+                    for (int j = 0; j < nvars; j++)
                     {
                         double d = _diffout[j];
-                        cur += d*d*w.ptr<double>()[j];
+                        cur += d * d * w.ptr<double>()[j];
                     }
 
-                    if( cur < opt )
+                    if (cur < opt)
                     {
                         cls = i;
                         opt = cur;
                     }
-                    probability = exp( -0.5 * cur );
+                    probability = exp(-0.5 * cur);
 
-                    if( results_prob )
+                    if (results_prob)
                     {
-                        if ( rptype == CV_32FC1 )
-                            results_prob->ptr<float>()[k*rpstep + i] = (float)probability;
+                        if (rptype == CV_32FC1)
+                            results_prob->ptr<float>()[k * rpstep + i] = (float)probability;
                         else
-                            results_prob->ptr<double>()[k*rpstep + i] = probability;
+                            results_prob->ptr<double>()[k * rpstep + i] = probability;
                     }
                 }
 
                 int ival = rawOutput ? cls : cls_labels->at<int>(cls);
-                if( results )
+                if (results)
                 {
-                    if( rtype == CV_32SC1 )
-                        results->ptr<int>()[k*rstep] = ival;
+                    if (rtype == CV_32SC1)
+                        results->ptr<int>()[k * rstep] = ival;
                     else
-                        results->ptr<float>()[k*rstep] = (float)ival;
+                        results->ptr<float>()[k * rstep] = (float)ival;
                 }
             }
         }
     };
 
-    float predict( InputArray _samples, OutputArray _results, int flags ) const CV_OVERRIDE
+    float predict(InputArray _samples, OutputArray _results, int flags) const CV_OVERRIDE
     {
         return predictProb(_samples, _results, noArray(), flags);
     }
 
-    float predictProb( InputArray _samples, OutputArray _results, OutputArray _resultsProb, int flags ) const CV_OVERRIDE
+    float predictProb(InputArray _samples, OutputArray _results, OutputArray _resultsProb, int flags) const CV_OVERRIDE
     {
-        int value=0;
+        int value = 0;
         Mat samples = _samples.getMat(), results, resultsProb;
         int nsamples = samples.rows, nclasses = (int)cls_labels.total();
         bool rawOutput = (flags & RAW_OUTPUT) != 0;
 
-        if( samples.type() != CV_32F || samples.cols != nallvars )
-            CV_Error( CV_StsBadArg,
-                     "The input samples must be 32f matrix with the number of columns = nallvars" );
+        if (samples.type() != CV_32F || samples.cols != nallvars)
+            CV_Error(CV_StsBadArg, "The input samples must be 32f matrix with the number of columns = nallvars");
 
-        if( (samples.rows > 1) && (! _results.needed()) )
-            CV_Error( CV_StsNullPtr,
-                     "When the number of input samples is >1, the output vector of results must be passed" );
+        if ((samples.rows > 1) && (!_results.needed()))
+            CV_Error(CV_StsNullPtr,
+                     "When the number of input samples is >1, the output vector of results must be passed");
 
-        if( _results.needed() )
+        if (_results.needed())
         {
             _results.create(nsamples, 1, CV_32S);
             results = _results.getMat();
@@ -326,20 +318,20 @@ public:
         else
             results = Mat(1, 1, CV_32S, &value);
 
-        if( _resultsProb.needed() )
+        if (_resultsProb.needed())
         {
             _resultsProb.create(nsamples, nclasses, CV_32F);
             resultsProb = _resultsProb.getMat();
         }
 
         cv::parallel_for_(cv::Range(0, nsamples),
-                          NBPredictBody(c, cov_rotate_mats, inv_eigen_values, avg, samples,
-                                       var_idx, cls_labels, results, resultsProb, rawOutput));
+                          NBPredictBody(c, cov_rotate_mats, inv_eigen_values, avg, samples, var_idx, cls_labels,
+                                        results, resultsProb, rawOutput));
 
         return (float)value;
     }
 
-    void write( FileStorage& fs ) const CV_OVERRIDE
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         int nclasses = (int)cls_labels.total(), i;
 
@@ -347,32 +339,43 @@ public:
         fs << "var_count" << (var_idx.empty() ? nallvars : (int)var_idx.total());
         fs << "var_all" << nallvars;
 
-        if( !var_idx.empty() )
+        if (!var_idx.empty())
             fs << "var_idx" << var_idx;
         fs << "cls_labels" << cls_labels;
 
-        fs << "count" << "[";
-        for( i = 0; i < nclasses; i++ )
+        fs << "count"
+           << "[";
+        for (i = 0; i < nclasses; i++)
             fs << count[i];
 
-        fs << "]" << "sum" << "[";
-        for( i = 0; i < nclasses; i++ )
+        fs << "]"
+           << "sum"
+           << "[";
+        for (i = 0; i < nclasses; i++)
             fs << sum[i];
 
-        fs << "]" << "productsum" << "[";
-        for( i = 0; i < nclasses; i++ )
+        fs << "]"
+           << "productsum"
+           << "[";
+        for (i = 0; i < nclasses; i++)
             fs << productsum[i];
 
-        fs << "]" << "avg" << "[";
-        for( i = 0; i < nclasses; i++ )
+        fs << "]"
+           << "avg"
+           << "[";
+        for (i = 0; i < nclasses; i++)
             fs << avg[i];
 
-        fs << "]" << "inv_eigen_values" << "[";
-        for( i = 0; i < nclasses; i++ )
+        fs << "]"
+           << "inv_eigen_values"
+           << "[";
+        for (i = 0; i < nclasses; i++)
             fs << inv_eigen_values[i];
 
-        fs << "]" << "cov_rotate_mats" << "[";
-        for( i = 0; i < nclasses; i++ )
+        fs << "]"
+           << "cov_rotate_mats"
+           << "[";
+        for (i = 0; i < nclasses; i++)
             fs << cov_rotate_mats[i];
 
         fs << "]";
@@ -380,31 +383,27 @@ public:
         fs << "c" << c;
     }
 
-    void read( const FileNode& fn ) CV_OVERRIDE
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         clear();
 
         fn["var_all"] >> nallvars;
 
-        if( nallvars <= 0 )
-            CV_Error( CV_StsParseError,
-                     "The field \"var_count\" of NBayes classifier is missing or non-positive" );
+        if (nallvars <= 0)
+            CV_Error(CV_StsParseError, "The field \"var_count\" of NBayes classifier is missing or non-positive");
 
         fn["var_idx"] >> var_idx;
         fn["cls_labels"] >> cls_labels;
 
         int nclasses = (int)cls_labels.total(), i;
 
-        if( cls_labels.empty() || nclasses < 1 )
-            CV_Error( CV_StsParseError, "No or invalid \"cls_labels\" in NBayes classifier" );
+        if (cls_labels.empty() || nclasses < 1)
+            CV_Error(CV_StsParseError, "No or invalid \"cls_labels\" in NBayes classifier");
 
-        FileNodeIterator
-            count_it = fn["count"].begin(),
-            sum_it = fn["sum"].begin(),
-            productsum_it = fn["productsum"].begin(),
-            avg_it = fn["avg"].begin(),
-            inv_eigen_values_it = fn["inv_eigen_values"].begin(),
-            cov_rotate_mats_it = fn["cov_rotate_mats"].begin();
+        FileNodeIterator count_it = fn["count"].begin(), sum_it = fn["sum"].begin(),
+                         productsum_it = fn["productsum"].begin(), avg_it = fn["avg"].begin(),
+                         inv_eigen_values_it = fn["inv_eigen_values"].begin(),
+                         cov_rotate_mats_it = fn["cov_rotate_mats"].begin();
 
         count.resize(nclasses);
         sum.resize(nclasses);
@@ -413,8 +412,8 @@ public:
         inv_eigen_values.resize(nclasses);
         cov_rotate_mats.resize(nclasses);
 
-        for( i = 0; i < nclasses; i++, ++count_it, ++sum_it, ++productsum_it, ++avg_it,
-                                    ++inv_eigen_values_it, ++cov_rotate_mats_it )
+        for (i = 0; i < nclasses;
+             i++, ++count_it, ++sum_it, ++productsum_it, ++avg_it, ++inv_eigen_values_it, ++cov_rotate_mats_it)
         {
             *count_it >> count[i];
             *sum_it >> sum[i];
@@ -464,7 +463,6 @@ Ptr<NormalBayesClassifier> NormalBayesClassifier::load(const String& filepath, c
     return Algorithm::load<NormalBayesClassifier>(filepath, nodeName);
 }
 
-}
-}
+}} // namespace cv::ml
 
 /* End of file. */
