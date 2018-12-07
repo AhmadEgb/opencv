@@ -1,0 +1,17 @@
+# --- gPhoto2 ---
+if(NOT HAVE_GPHOTO2 AND PKG_CONFIG_FOUND)
+  pkg_check_modules(GPHOTO2 libgphoto2 QUIET)
+  if(GPHOTO2_FOUND)
+    set(HAVE_GPHOTO2 TRUE)
+  endif()
+endif()
+
+if(HAVE_GPHOTO2)
+  add_library(ocv::3rdparty::gphoto2 INTERFACE IMPORTED)
+  set_target_properties(ocv::3rdparty::gphoto2 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${GPHOTO2_INCLUDE_DIRS}"
+    INTERFACE_LINK_LIBRARIES "${GPHOTO2_LIBRARIES}"
+    INTERFACE_COMPILE_DEFINITIONS "HAVE_GPHOTO2")
+endif()
+
+set(HAVE_GPHOTO2 ${HAVE_GPHOTO2} PARENT_SCOPE)
