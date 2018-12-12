@@ -92,7 +92,7 @@ static const struct VideoBackendInfo builtin_backends[] =
 #endif
 
 #ifdef HAVE_LIBREALSENSE
-    DECLARE_BACKEND(CAP_INTELPERC, "INTEL_REALSENSE", MODE_CAPTURE_BY_INDEX),
+    DECLARE_BACKEND(CAP_REALSENSE, "INTEL_REALSENSE", MODE_CAPTURE_BY_INDEX),
 #endif
 
     // OpenCV file-based only
@@ -408,7 +408,7 @@ void VideoCapture_create(CvCapture*& capture, Ptr<IVideoCapture>& icap, VideoCap
         break;
 #endif
 #ifdef HAVE_LIBREALSENSE
-    case CAP_INTELPERC:
+    case CAP_REALSENSE:
         TRY_OPEN(makePtr<VideoCapture_LibRealsense>(index));
         break;
 #endif
