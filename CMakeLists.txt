@@ -221,7 +221,7 @@ OCV_OPTION(BUILD_ITT                "Build Intel ITT from source"        (NOT MI
 # ===================================================
 OCV_OPTION(WITH_1394 "Include IEEE1394 support" ON
   VISIBLE_IF NOT ANDROID AND NOT IOS AND NOT WINRT
-  VERIFY HAVE_DC1394)
+  VERIFY HAVE_DC1394_2)
 OCV_OPTION(WITH_AVFOUNDATION "Use AVFoundation for Video I/O (iOS/Mac)" ON
   VISIBLE_IF APPLE
   VERIFY HAVE_AVFOUNDATION)
