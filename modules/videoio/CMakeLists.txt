@@ -61,24 +61,24 @@ if(HAVE_MFX)
     ${CMAKE_CURRENT_LIST_DIR}/src/cap_mfx_common.hpp
     ${CMAKE_CURRENT_LIST_DIR}/src/cap_mfx_reader.hpp
     ${CMAKE_CURRENT_LIST_DIR}/src/cap_mfx_writer.hpp)
-  list(APPEND tgts ocv::3rdparty::mediasdk)
+  list(APPEND tgts ocv.3rdparty.mediasdk)
 endif()
 
 if(HAVE_DSHOW)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_dshow.cpp)
   list(APPEND videoio_hdrs ${CMAKE_CURRENT_LIST_DIR}/src/cap_dshow.hpp)
-  list(APPEND tgts ocv::3rdparty::dshow)
+  list(APPEND tgts ocv.3rdparty.dshow)
 endif()
 
 if(HAVE_MSMF)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_msmf.hpp)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_msmf.cpp)
-  list(APPEND tgts ocv::3rdparty::msmf)
+  list(APPEND tgts ocv.3rdparty.msmf)
 endif()
 
 if(HAVE_XINE)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_xine.cpp)
-  list(APPEND tgts ocv::3rdparty::xine)
+  list(APPEND tgts ocv.3rdparty.xine)
 endif(HAVE_XINE)
 
 if(HAVE_DC1394_2)
@@ -98,28 +98,28 @@ endif()
 
 if(HAVE_OPENNI2)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_openni2.cpp)
-  list(APPEND tgts ocv::3rdparty::openni2)
+  list(APPEND tgts ocv.3rdparty.openni2)
 endif(HAVE_OPENNI2)
 
 if(HAVE_XIMEA)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_ximea.cpp)
-  list(APPEND tgts ocv::3rdparty::ximea)
+  list(APPEND tgts ocv.3rdparty.ximea)
 endif(HAVE_XIMEA)
 
 if(HAVE_FFMPEG)
   list(APPEND videoio_hdrs ${CMAKE_CURRENT_LIST_DIR}/src/cap_ffmpeg_impl.hpp)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_ffmpeg.cpp)
-  list(APPEND tgts ocv::3rdparty::ffmpeg)
+  list(APPEND tgts ocv.3rdparty.ffmpeg)
 endif(HAVE_FFMPEG)
 
 if(HAVE_PVAPI)
   set(videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_pvapi.cpp ${videoio_srcs})
-  list(APPEND tgts ocv::3rdparty::pvapi)
+  list(APPEND tgts ocv.3rdparty.pvapi)
 endif()
 
 if(HAVE_ARAVIS_API)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_aravis.cpp)
-  list(APPEND tgts ocv::3rdparty::aravis)
+  list(APPEND tgts ocv.3rdparty.aravis)
 endif(HAVE_ARAVIS_API)
 
 if(HAVE_AVFOUNDATION)
@@ -128,17 +128,17 @@ if(HAVE_AVFOUNDATION)
   else()
     list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_avfoundation_mac.mm)
   endif()
-  list(APPEND tgts ocv::3rdparty::avfoundation)
+  list(APPEND tgts ocv.3rdparty.avfoundation)
 endif()
 
 if(HAVE_LIBREALSENSE)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_librealsense.cpp)
-  list(APPEND tgts ocv::3rdparty::librealsense)
+  list(APPEND tgts ocv.3rdparty.librealsense)
 endif(HAVE_LIBREALSENSE)
 
 if(HAVE_GPHOTO2)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_gphoto2.cpp)
-  list(APPEND tgts ocv::3rdparty::gphoto2)
+  list(APPEND tgts ocv.3rdparty.gphoto2)
 endif(HAVE_GPHOTO2)
 
 if(HAVE_CAP_IOS)
@@ -146,7 +146,7 @@ if(HAVE_CAP_IOS)
     ${CMAKE_CURRENT_LIST_DIR}/src/cap_ios_abstract_camera.mm
     ${CMAKE_CURRENT_LIST_DIR}/src/cap_ios_photo_camera.mm
     ${CMAKE_CURRENT_LIST_DIR}/src/cap_ios_video_camera.mm)
-  list(APPEND tgts ocv::3rdparty::cap_ios)
+  list(APPEND tgts ocv.3rdparty.cap_ios)
 endif()
 
 ocv_set_module_sources(HEADERS ${videoio_ext_hdrs} ${videoio_hdrs} SOURCES ${videoio_srcs})
@@ -155,7 +155,7 @@ ocv_create_module()
 ocv_add_accuracy_tests()
 ocv_add_perf_tests()
 
-target_link_libraries(${the_module} PRIVATE ${tgts})
+ocv_target_link_libraries(${the_module} LINK_PRIVATE ${tgts})
 
 # copy FFmpeg dll to the output folder
 if(WIN32 AND HAVE_FFMPEG_WRAPPER)

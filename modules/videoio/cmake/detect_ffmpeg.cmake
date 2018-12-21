@@ -60,11 +60,7 @@ if(HAVE_FFMPEG)
   if(HAVE_FFMPEG_WRAPPER)
     list(APPEND defs "HAVE_FFMPEG_WRAPPER")
   endif()
-  add_library(ocv::3rdparty::ffmpeg INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::ffmpeg PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${FFMPEG_INCLUDE_DIRS}"
-    INTERFACE_LINK_LIBRARIES "${FFMPEG_LIBRARIES}"
-    INTERFACE_COMPILE_DEFINITIONS "${defs}")
+  add_3p_target(ffmpeg "${FFMPEG_INCLUDE_DIRS}" "${FFMPEG_LIBRARIES}" "${defs}")
 endif()
 
 set(HAVE_FFMPEG ${HAVE_FFMPEG} PARENT_SCOPE)

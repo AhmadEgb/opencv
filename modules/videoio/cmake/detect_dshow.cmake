@@ -8,9 +8,7 @@ if(NOT HAVE_DSHOW)
 endif()
 
 if(HAVE_DSHOW)
-  add_library(ocv::3rdparty::dshow INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::dshow PROPERTIES
-    INTERFACE_COMPILE_DEFINITIONS "HAVE_DSHOW")
+  add_3p_target(dshow "" "" "HAVE_DSHOW")
 endif()
 
 set(HAVE_DSHOW ${HAVE_DSHOW} PARENT_SCOPE)

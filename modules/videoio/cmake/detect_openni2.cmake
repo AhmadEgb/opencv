@@ -43,12 +43,7 @@ if(HAVE_OPENNI2)
   string(REGEX REPLACE ".*ONI_VERSION_MINOR[^0-9]+([0-9]+).*" "\\1" ver_minor "${ver_strings}")
   string(REGEX REPLACE ".*ONI_VERSION_MAINTENANCE[^0-9]+([0-9]+).*" "\\1" ver_maint "${ver_strings}")
   set(OPENNI2_VERSION "${ver_major}.${ver_minor}.${ver_maint}" PARENT_SCOPE) # informational
-
-  add_library(ocv::3rdparty::openni2 INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::openni2 PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${OPENNI2_INCLUDE_DIRS}"
-    INTERFACE_LINK_LIBRARIES "${OPENNI2_LIBRARIES}"
-    INTERFACE_COMPILE_DEFINITIONS "HAVE_OPENNI2")
+  add_3p_target(openni2 "${OPENNI2_INCLUDE_DIRS}" "${OPENNI2_LIBRARIES}" "HAVE_OPENNI2")
 endif()
 
 set(HAVE_OPENNI2 ${HAVE_OPENNI2} PARENT_SCOPE)

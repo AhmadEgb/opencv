@@ -9,10 +9,7 @@ if(APPLE AND IOS)
     "-framework CoreVideo"
     "-framework QuartzCore"
     "-framework UIKit")
-  add_library(ocv::3rdparty::cap_ios INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::cap_ios PROPERTIES
-    INTERFACE_LINK_LIBRARIES "${libs}"
-    INTERFACE_COMPILE_DEFINITIONS "HAVE_CAP_IOS")
+  add_3p_target(cap_ios "" "${libs}" "HAVE_CAP_IOS")
 endif()
 
 set(HAVE_CAP_IOS ${HAVE_CAP_IOS} PARENT_SCOPE)

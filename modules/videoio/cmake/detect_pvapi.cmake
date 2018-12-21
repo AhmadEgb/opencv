@@ -17,11 +17,7 @@ if(NOT HAVE_PVAPI)
 endif()
 
 if(HAVE_PVAPI)
-  add_library(ocv::3rdparty::pvapi INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::pvapi PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${PVAPI_INCLUDE}"
-    INTERFACE_LINK_LIBRARIES "${PVAPI_LIBRARY}"
-  INTERFACE_COMPILE_DEFINITIONS "HAVE_PVAPI")
+  add_3p_target(pvapi "${PVAPI_INCLUDE}" "${PVAPI_LIBRARY}" "HAVE_PVAPI")
 endif()
 
 set(HAVE_PVAPI ${HAVE_PVAPI} PARENT_SCOPE)

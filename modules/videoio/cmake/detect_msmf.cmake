@@ -18,9 +18,7 @@ if(HAVE_MSMF)
   if(HAVE_MSMF_DXVA)
     list(APPEND defs "HAVE_MSMF_DXVA")
   endif()
-  add_library(ocv::3rdparty::msmf INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::msmf PROPERTIES
-    INTERFACE_COMPILE_DEFINITIONS "${defs}")
+  add_3p_target(msmf "" "" "${defs}")
 endif()
 
 set(HAVE_MSMF ${HAVE_MSMF} PARENT_SCOPE)

@@ -23,11 +23,7 @@ if(NOT HAVE_XIMEA)
 endif()
 
 if(HAVE_XIMEA)
-  add_library(ocv::3rdparty::ximea INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::ximea PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${XIMEA_INCLUDE}"
-    INTERFACE_LINK_LIBRARIES "${XIMEA_LIBRARY}"
-    INTERFACE_COMPILE_DEFINITIONS "HAVE_XIMEA")
+  add_3p_target(ximea "${XIMEA_INCLUDE}" "${XIMEA_LIBRARY}" "HAVE_XIMEA")
 endif()
 
 set(HAVE_XIMEA ${HAVE_XIMEA} PARENT_SCOPE)

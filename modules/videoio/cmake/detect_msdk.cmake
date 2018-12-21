@@ -41,11 +41,7 @@ if(HAVE_MFX AND UNIX)
 endif()
 
 if(HAVE_MFX)
-  add_library(ocv::3rdparty::mediasdk INTERFACE IMPORTED)
-  set_target_properties(ocv::3rdparty::mediasdk PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${MFX_INCLUDE_DIRS}"
-    INTERFACE_LINK_LIBRARIES "${MFX_LIBRARIES}"
-    INTERFACE_COMPILE_DEFINITIONS "HAVE_MFX")
+  add_3p_target(mediasdk "${MFX_INCLUDE_DIRS}" "${MFX_LIBRARIES}" "HAVE_MFX")
 endif()
 
 set(HAVE_MFX ${HAVE_MFX} PARENT_SCOPE)
