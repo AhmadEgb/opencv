@@ -83,17 +83,17 @@ endif(HAVE_XINE)
 
 if(HAVE_DC1394_2)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_dc1394_v2.cpp)
-  list(APPEND tgts ocv::3rdparty::dc1394_2)
+  list(APPEND tgts ocv.3rdparty.dc1394_2)
 endif(HAVE_DC1394_2)
 
 if(HAVE_GSTREAMER)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_gstreamer.cpp)
-  list(APPEND tgts ocv::3rdparty::gstreamer)
+  list(APPEND tgts ocv.3rdparty.gstreamer)
 endif(HAVE_GSTREAMER)
 
 if(HAVE_V4L)
   list(APPEND videoio_srcs ${CMAKE_CURRENT_LIST_DIR}/src/cap_v4l.cpp)
-  list(APPEND tgts ocv::3rdparty::v4l)
+  list(APPEND tgts ocv.3rdparty.v4l)
 endif()
 
 if(HAVE_OPENNI2)
@@ -151,9 +151,11 @@ endif()
 
 ocv_set_module_sources(HEADERS ${videoio_ext_hdrs} ${videoio_hdrs} SOURCES ${videoio_srcs})
 ocv_module_include_directories()
-ocv_create_module(${tgts})
+ocv_create_module()
 ocv_add_accuracy_tests()
 ocv_add_perf_tests()
+
+target_link_libraries(${the_module} PRIVATE ${tgts})
 
 # copy FFmpeg dll to the output folder
 if(WIN32 AND HAVE_FFMPEG_WRAPPER)

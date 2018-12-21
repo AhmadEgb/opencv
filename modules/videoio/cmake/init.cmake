@@ -4,6 +4,16 @@ macro(add_backend backend_id cond_var)
   endif()
 endmacro()
 
+macro(add_3p_target name inc link def)
+  add_library(ocv.3rdparty.${name} INTERFACE)
+  set_target_properties(ocv.3rdparty.${name} PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${inc}"
+    INTERFACE_LINK_LIBRARIES "${link}"
+    INTERFACE_COMPILE_DEFINITIONS "${def}")
+  export(TARGETS ocv.3rdparty.${name} APPEND FILE "${CMAKE_BINARY_DIR}/OpenCVModules.cmake")
+  install(TARGETS ocv.3rdparty.${name} EXPORT OpenCVModules)
+endmacro()
+
 add_backend("ffmpeg" WITH_FFMPEG)
 add_backend("gstreamer" WITH_GSTREAMER)
 add_backend("v4l" WITH_V4L)
